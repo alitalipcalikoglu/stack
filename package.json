@@ -1,0 +1,27 @@
+{
+  "name": "@atc-web/stack",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Set up, wire and run every atc-web service with the console in one command: dependencies, secrets, API keys, env files, gateway routes, console services.json, first admin",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alitalipcalikoglu/stack.git"
+  },
+  "type": "module",
+  "bin": { "atc-stack": "bin/stack.js" },
+  "engines": { "node": ">=22.13" },
+  "scripts": {
+    "setup": "node bin/stack.js setup",
+    "up": "node bin/stack.js up",
+    "dev": "node bin/stack.js dev",
+    "down": "node bin/stack.js down",
+    "status": "node bin/stack.js status",
+    "test": "node --disable-warning=ExperimentalWarning --test \"test/**/*.test.js\"",
+    "typecheck": "tsc -p jsconfig.json"
+  },
+  "devDependencies": {
+    "@types/node": "22.20.3",
+    "typescript": "7.0.2"
+  }
+}
