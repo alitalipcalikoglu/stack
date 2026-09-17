@@ -142,7 +142,16 @@ export class SetupContext {
     };
   }
 
-  /** Gateway routes for a local stack: auth, media and JWKS through the gateway; nothing else. */
+  /**
+   * Gateway routes for a local stack: auth, media and JWKS through the gateway; nothing else.
+   *
+   * `stripPrefix` only ever removes a literal substring of the caller's own URL — gateway has no
+   * path-rewrite/insert capability (`gateway/src/route-table.js`'s `rewrite()`) — so the public URL
+   * a caller must use is `pathPrefix` followed by the target's real upstream path verbatim (e.g.
+   * `/api/auth/` + `/v1/auth/login` = `/api/auth/v1/auth/login` for auth's real `POST /v1/auth/login`,
+   * documented and tested in `gateway/examples/public-route-with-injected-key.md` and
+   * `gateway/examples/user-authenticated-route.md`). It is not a shorthand for the upstream path.
+   */
   gatewayRoutes() {
     const existing = join(this.dir('gateway'), 'routes.json');
     if (existsSync(existing) && !this.local) return JSON.parse(readFileSync(existing, 'utf8'));

@@ -183,3 +183,32 @@ generator). A fix-only follow-up has been flagged (see the spawned task chip; no
 per the reviewer's explicit scope instruction not to exceed Stage 1). The Stage 1 integration test
 does not exercise the broken generated route — it defines its own correct one — specifically so it
 would not silently mask this.
+
+### Stage 1.1 correction: this was not a generator bug
+
+Re-investigated in Stage 1.1 by re-reading `gateway/src/route-table.js`'s actual rewrite semantics
+and, critically, gateway's own pre-existing documentation for this exact route shape:
+`gateway/examples/public-route-with-injected-key.md` and `gateway/examples/user-authenticated-route.md`.
+
+`stripPrefix` only ever removes a literal, contiguous substring of the caller's own request path
+(`RouteTable.rewrite()`: `path.slice(route.stripPrefix.length)`) — gateway has no path-insertion or
+rewrite-to capability. It follows that the caller-facing URL for a route built this way is always
+`pathPrefix` followed by the target's real upstream path *verbatim*: for `auth-public`
+(`pathPrefix: '/api/auth/'`, `stripPrefix: '/api/auth'`) that is `/api/auth/v1/auth/login`, not
+`/api/auth/login`. Gateway's own official example for this identical `auth-public` route shape
+documents exactly this: "`fetch('https://api.example.com/api/auth/v1/auth/login', ...)`" →
+"What auth receives: `POST /v1/auth/login`". Feeding that same math through by hand confirms it:
+stripping the 9-character `/api/auth` from `/api/auth/v1/auth/login` leaves `/v1/auth/login`, which
+is auth's real route. The `media-user` route is the same pattern (`/api/media/v1/files` →
+`/v1/files`), also already documented in `gateway/examples/user-authenticated-route.md` and
+`gateway/examples/cors.md`.
+
+The Stage 1 integration test called the *short* form (`/api/auth/login`) instead, got a 404, and
+misdiagnosed the generator as broken rather than the test's own assumed calling convention. There
+was no defect in `stack/src/setup-context.js`, and none of its route values have changed.
+`stack/test/integration/gateway-auth-audit.test.js` now calls the real, unmodified
+`SetupContext.gatewayRoutes()` output directly (only rebinding upstream origins from the manifest's
+fixed ports to the test's ephemeral ones) for both the auth login flow and a new media-user upload
+regression, over real spawned processes, proving the generator's actual output has always worked.
+The previously spawned follow-up task chip for "fixing" this has been withdrawn — see the Stage 1.1
+report.
