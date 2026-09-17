@@ -16,7 +16,6 @@
  *   How the service appears in the console's `services.json`.
  */
 
-/** @type {Service[]} */
 /**
  * Every service forwards its write and security events to the audit service with its own write-role key.
  * @param {import('./setup-context.js').SetupContext} c
@@ -25,6 +24,7 @@
  */
 const auditEnv = (c, id) => ({ AUDIT_URL: String(c.url('audit')), AUDIT_API_KEY: String(c.issue('audit', id, 'write')) });
 
+/** @type {Service[]} */
 export const SERVICES = [
   {
     id: 'notify', port: 3001, keysVar: 'NOTIFY_API_KEYS',
