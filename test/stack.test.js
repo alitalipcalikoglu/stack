@@ -61,6 +61,13 @@ test('setup wires every service: secrets, keys, URLs, console files; second run 
   assert.equal(env('console').RATELIMIT_API_KEY, keys('ratelimit', 'RATELIMIT_API_KEYS').console.secret);
   assert.equal(env('console').GEO_API_KEY, keys('geo', 'GEO_API_KEYS').console.secret);
   const auditKeys = keys('audit', 'AUDIT_API_KEYS');
+  {
+    // A key issued earlier with another role is re-issued with the manifest's role, same secret.
+    const ctx2 = new SetupContext({ root, host: '127.0.0.1', local: true, run: async () => {} });
+    const before = ctx2.issue('audit', 'someone', 'read');
+    assert.equal(ctx2.issue('audit', 'someone', 'write'), before);
+    assert.match(ctx2.env('audit').get('AUDIT_API_KEYS') ?? '', /someone:[0-9a-f]{64}:write/);
+  }
   assert.deepEqual([auditKeys.console.role, auditKeys.flags.role, env('flags').AUDIT_API_KEY, env('flags').AUDIT_URL.endsWith(':3005')], ['readwrite', 'write', auditKeys.flags.secret, true], 'every service gets a write key for audit; the console reads and writes');
   assert.deepEqual([keys('ratelimit', 'RATELIMIT_API_KEYS').gateway.role, keys('geo', 'GEO_API_KEYS').gateway.role, env('gateway').RATELIMIT_API_KEY, env('gateway').GEO_URL.endsWith(':3012')], ['check', 'read', keys('ratelimit', 'RATELIMIT_API_KEYS').gateway.secret, true]);
   assert.equal(env('geo').MMDB_PATH, '', 'operator-owned value kept empty');

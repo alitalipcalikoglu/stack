@@ -97,8 +97,14 @@ export class SetupContext {
     if (!service.keysVar) throw new Error(`${issuer} issues no API keys`);
     const e = this.env(issuer);
     const entries = (e.get(service.keysVar) ?? '').split(',').map((s) => s.trim()).filter((s) => s && !EnvFile.PLACEHOLDER.test(s.split(':')[1] ?? ''));
-    let entry = entries.find((s) => s.split(':')[0] === holder);
-    if (!entry) {
+    const at = entries.findIndex((s) => s.split(':')[0] === holder);
+    let entry = at >= 0 ? entries[at] : null;
+    if (entry && (entry.split(':')[2] ?? '') !== (role ?? '')) {
+      // The manifest asks for another role than the one issued earlier: keep the secret, update the role.
+      entry = [holder, entry.split(':')[1], ...(role ? [role] : [])].join(':');
+      entries[at] = entry;
+      e.set(service.keysVar, entries.join(','));
+    } else if (!entry) {
       entry = [holder, randomBytes(32).toString('hex'), ...(role ? [role] : [])].join(':');
       entries.push(entry);
       e.set(service.keysVar, entries.join(','));
