@@ -9,8 +9,15 @@ import { SetupContext } from './setup-context.js';
 import { Snapshot } from './snapshot.js';
 
 /**
+ * One row of {@link Stack#matrix}: reachability plus a defensively-parsed `/v1/info`.
+ * @typedef {{ id: string, url: string, ok: boolean } & ({ infoOk: true, version: string|null, apiVersion: string|null, schemaVersion: number|null, serviceCore: string|null, capabilities: string[] } | { infoOk: false, infoError: string })} MatrixRow
+ */
+
+/**
  * The commands: `setup` (dependencies, secrets, keys, env files, routes, console build, first
- * admin), `up`/`down` (PM2), `dev` (foreground, all processes, one terminal), `status`.
+ * admin), `up`/`down` (PM2), `dev` (foreground, all processes, one terminal), `status` (health and
+ * readiness) and its `matrix()` variant (Stage 7: version/contract matrix from each service's own
+ * `/v1/info`).
  */
 export class Stack {
   /**
@@ -98,6 +105,97 @@ export class Stack {
     }
     for (const r of rows) this.log(`${r.id.padEnd(11)} ${r.ok ? 'ok  ' : 'DOWN'}  health=${r.health ?? '-'} ready=${r.ready ?? '-'}  ${r.url}`);
     return rows;
+  }
+
+  /**
+   * Stage 7: version/contract matrix across every service, read from each one's own `/v1/info` —
+   * an operator visibility tool, never a runtime coupling mechanism (per plan: NO STARTUP CHECK,
+   * services with different `serviceCore` majors must keep starting and serving traffic
+   * unaffected by this command; it only ever reads and reports).
+   *
+   * Reachability (`/health`+`/ready`) and the `/v1/info` fetch are independent and both fully
+   * tolerant of failure per service: one unreachable, too-old (no `/v1/info` route yet, 404) or
+   * malformed (non-JSON, or JSON that isn't an object) service never aborts the whole command or
+   * throws — that row just carries `infoOk: false` and a human-readable `infoError`, every other
+   * row still reports normally. Every `/v1/info` field is read defensively (wrong type / missing
+   * -> `null`, matching the console About view's tolerance), so an older or partial contract shape
+   * degrades to `null`s instead of a crash — a real mixed-version rollout must be able to run this
+   * safely mid-migration.
+   * @returns {Promise<MatrixRow[]>}
+   */
+  async matrix() {
+    /** @type {MatrixRow[]} */
+    const rows = [];
+    for (const s of SERVICES) {
+      const url = this.#url(s.id);
+      const health = await this.#probe(`${url}/health`);
+      const ready = await this.#probe(`${url}/ready`);
+      const info = await this.#info(url);
+      rows.push({ id: s.id, url, ok: health === 200 && ready === 200, ...info });
+    }
+    this.#printMatrix(rows);
+    return rows;
+  }
+
+  /**
+   * Tolerant `GET <url>/v1/info`: network failure, non-2xx (including a 404 from a service that
+   * hasn't adopted the route yet), non-JSON body, or a JSON body that isn't an object all become
+   * `{ infoOk: false, infoError }` rather than a thrown error. On success, each contract field is
+   * read defensively — present but wrong-typed (or simply absent, an older/partial contract) reads
+   * as `null`/`[]`, never crashes the caller.
+   * @param {string} url
+   * @returns {Promise<{ infoOk: true, version: string|null, apiVersion: string|null, schemaVersion: number|null, serviceCore: string|null, capabilities: string[] } | { infoOk: false, infoError: string }>}
+   */
+  async #info(url) {
+    /** @type {Response} */
+    let res;
+    try {
+      res = await this.fetch(`${url}/v1/info`, { signal: AbortSignal.timeout(3_000) });
+    } catch (err) {
+      return { infoOk: false, infoError: `unreachable: ${err instanceof Error ? err.message : String(err)}` };
+    }
+    if (!res.ok) return { infoOk: false, infoError: res.status === 404 ? 'no /v1/info (older version)' : `responded ${res.status}` };
+    /** @type {any} */
+    let body;
+    try {
+      body = await res.json();
+    } catch {
+      return { infoOk: false, infoError: 'malformed /v1/info response (not JSON)' };
+    }
+    if (!body || typeof body !== 'object') return { infoOk: false, infoError: 'malformed /v1/info response (not an object)' };
+    return {
+      infoOk: true,
+      version: typeof body.version === 'string' ? body.version : null,
+      apiVersion: typeof body.apiVersion === 'string' ? body.apiVersion : null,
+      schemaVersion: typeof body.schemaVersion === 'number' ? body.schemaVersion : null,
+      serviceCore: typeof body.serviceCore === 'string' ? body.serviceCore : null,
+      capabilities: Array.isArray(body.capabilities) ? body.capabilities.filter((/** @type {unknown} */ c) => typeof c === 'string') : [],
+    };
+  }
+
+  /** @param {MatrixRow[]} rows */
+  #printMatrix(rows) {
+    const col = (/** @type {string} */ s, /** @type {number} */ n) => (s.length > n ? `${s.slice(0, n - 1)}…` : s.padEnd(n));
+    this.log([col('SERVICE', 13), col('STATUS', 6), col('VERSION', 9), col('API', 5), col('SCHEMA', 7), col('SERVICE-CORE', 14), 'CAPABILITIES'].join(''));
+    for (const r of rows) {
+      const status = r.ok ? 'ok' : 'DOWN';
+      const version = r.infoOk ? (r.version ?? '-') : '?';
+      const api = r.infoOk ? (r.apiVersion ?? '-') : '?';
+      const schema = r.infoOk ? String(r.schemaVersion ?? '-') : '?';
+      const core = r.infoOk ? (r.serviceCore ?? '-') : '?';
+      const caps = r.infoOk ? (r.capabilities.length ? r.capabilities.join(',') : '-') : `(${r.infoError})`;
+      this.log([col(r.id, 13), col(status, 6), col(version, 9), col(api, 5), col(schema, 7), col(core, 14), caps].join(''));
+    }
+    /** @type {Map<string, string[]>} */
+    const majors = new Map();
+    for (const r of rows) {
+      if (!r.infoOk || !r.serviceCore) continue;
+      const major = r.serviceCore.split('.')[0];
+      majors.set(major, [...(majors.get(major) ?? []), r.id]);
+    }
+    if (majors.size > 1) {
+      this.log(`\n⚠ serviceCore major version mismatch across services (informational only — no service refuses to start or serve traffic over this): ${[...majors.entries()].map(([m, ids]) => `v${m}.x: ${ids.join(', ')}`).join('  |  ')}`);
+    }
   }
 
   /**
