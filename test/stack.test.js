@@ -22,6 +22,7 @@ const TEMPLATES = /** @type {Record<string, string>} */ ({
   'webhook-out': 'PORT=3009\nHOST=0.0.0.0\nSECRETS_KEY=REPLACE_WITH_64_HEX_CHARS\nWEBHOOK_API_KEYS=console:REPLACE_WITH_64_HEX_CHARS,shop-backend:REPLACE_WITH_64_HEX_CHARS:publish\nTARGET_ALLOW_HTTP=false\nTARGET_ALLOW_PRIVATE=false\nTARGET_ALLOWED_HOSTS=\n',
   search: 'PORT=3010\nHOST=0.0.0.0\nSEARCH_API_KEYS=console:REPLACE_WITH_64_HEX_CHARS,shop-backend:REPLACE_WITH_64_HEX_CHARS:write:products\n',
   ratelimit: 'PORT=3011\nHOST=0.0.0.0\nRATELIMIT_API_KEYS=console:REPLACE_WITH_64_HEX_CHARS,gateway:REPLACE_WITH_64_HEX_CHARS:check\n',
+  geo: 'PORT=3012\nHOST=0.0.0.0\nMMDB_PATH=\nASN_MMDB_PATH=\nGEO_API_KEYS=console:REPLACE_WITH_64_HEX_CHARS,shop-backend:REPLACE_WITH_64_HEX_CHARS:read\n',
   gateway: 'PORT=3000\nHOST=0.0.0.0\nMETRICS_TOKEN=\nAUTH_API_KEY=REPLACE_WITH_THE_GATEWAY_KEY_FROM_AUTH_API_KEYS\nMEDIA_API_KEY=REPLACE_WITH_THE_GATEWAY_KEY_FROM_MEDIA_API_KEYS\nNOTIFY_API_KEY=REPLACE_WITH_THE_GATEWAY_KEY_FROM_NOTIFY_API_KEYS\n',
   console: 'PORT=3004\nHOST=0.0.0.0\nCOOKIE_SECURE=true\nNOTIFY_API_KEY=REPLACE_WITH_THE_CONSOLE_KEY_FROM_NOTIFY_API_KEYS\nAUTH_API_KEY=REPLACE_WITH\nMEDIA_API_KEY=REPLACE_WITH\nGATEWAY_METRICS_TOKEN=REPLACE_WITH\nAUDIT_API_KEY=REPLACE_WITH\nSHORTLINK_API_KEY=REPLACE_WITH\nFLAGS_API_KEY=REPLACE_WITH\nSCHEDULER_API_KEY=REPLACE_WITH\nWEBHOOK_OUT_API_KEY=REPLACE_WITH\nSEARCH_API_KEY=REPLACE_WITH\n',
 });
@@ -58,6 +59,8 @@ test('setup wires every service: secrets, keys, URLs, console files; second run 
   assert.equal(env('console').WEBHOOK_OUT_API_KEY, keys('webhook-out', 'WEBHOOK_API_KEYS').console.secret);
   assert.equal(env('console').SEARCH_API_KEY, keys('search', 'SEARCH_API_KEYS').console.secret);
   assert.equal(env('console').RATELIMIT_API_KEY, keys('ratelimit', 'RATELIMIT_API_KEYS').console.secret);
+  assert.equal(env('console').GEO_API_KEY, keys('geo', 'GEO_API_KEYS').console.secret);
+  assert.equal(env('geo').MMDB_PATH, '', 'operator-owned value kept empty');
   assert.deepEqual(Object.keys(keys('search', 'SEARCH_API_KEYS')), ['console'], 'template placeholders dropped');
   assert.equal(env('console').GATEWAY_METRICS_TOKEN, env('gateway').METRICS_TOKEN);
   assert.equal(env('console').COOKIE_SECURE, 'false');

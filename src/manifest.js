@@ -78,6 +78,12 @@ export const SERVICES = [
     console: { type: 'ratelimit', label: 'Rate limits', keyEnv: 'RATELIMIT_API_KEY' },
   },
   {
+    id: 'geo', port: 3012, keysVar: 'GEO_API_KEYS',
+    // MMDB_PATH stays as the operator sets it (empty = no IP geolocation; see geo/examples/ip-databases.md).
+    env: (c) => ({ MMDB_PATH: c.keep('geo', 'MMDB_PATH', ''), ASN_MMDB_PATH: c.keep('geo', 'ASN_MMDB_PATH', '') }),
+    console: { type: 'geo', label: 'Geo', keyEnv: 'GEO_API_KEY' },
+  },
+  {
     id: 'gateway', port: 3000,
     env: (c) => ({ METRICS_TOKEN: c.secret('gateway', 'METRICS_TOKEN'), AUTH_API_KEY: c.issue('auth', 'gateway'), MEDIA_API_KEY: c.issue('media', 'gateway'), NOTIFY_API_KEY: c.issue('notify', 'gateway') }),
     files: (c) => ({ 'routes.json': `${JSON.stringify(c.gatewayRoutes(), null, 2)}\n` }),
