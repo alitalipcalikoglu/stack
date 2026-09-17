@@ -54,12 +54,15 @@ test('setup wires every service: secrets, keys, URLs, console files; second run 
   for (const id of Object.keys(TEMPLATES)) assert.equal(/REPLACE_WITH/.test(written[`${id}/.env`]), false, `${id} has no placeholders left`);
   // Console holds a key issued by every service it shows, with the right role.
   assert.equal(env('console').FLAGS_API_KEY, keys('flags', 'FLAGS_API_KEYS').console.secret);
-  assert.equal(keys('audit', 'AUDIT_API_KEYS').console.role, 'read');
+  assert.equal(keys('audit', 'AUDIT_API_KEYS').console.role, 'readwrite');
   assert.equal(env('console').AUDIT_API_KEY, keys('audit', 'AUDIT_API_KEYS').console.secret);
   assert.equal(env('console').WEBHOOK_OUT_API_KEY, keys('webhook-out', 'WEBHOOK_API_KEYS').console.secret);
   assert.equal(env('console').SEARCH_API_KEY, keys('search', 'SEARCH_API_KEYS').console.secret);
   assert.equal(env('console').RATELIMIT_API_KEY, keys('ratelimit', 'RATELIMIT_API_KEYS').console.secret);
   assert.equal(env('console').GEO_API_KEY, keys('geo', 'GEO_API_KEYS').console.secret);
+  const auditKeys = keys('audit', 'AUDIT_API_KEYS');
+  assert.deepEqual([auditKeys.console.role, auditKeys.flags.role, env('flags').AUDIT_API_KEY, env('flags').AUDIT_URL.endsWith(':3005')], ['readwrite', 'write', auditKeys.flags.secret, true], 'every service gets a write key for audit; the console reads and writes');
+  assert.deepEqual([keys('ratelimit', 'RATELIMIT_API_KEYS').gateway.role, keys('geo', 'GEO_API_KEYS').gateway.role, env('gateway').RATELIMIT_API_KEY, env('gateway').GEO_URL.endsWith(':3012')], ['check', 'read', keys('ratelimit', 'RATELIMIT_API_KEYS').gateway.secret, true]);
   assert.equal(env('geo').MMDB_PATH, '', 'operator-owned value kept empty');
   assert.deepEqual(Object.keys(keys('search', 'SEARCH_API_KEYS')), ['console'], 'template placeholders dropped');
   assert.equal(env('console').GATEWAY_METRICS_TOKEN, env('gateway').METRICS_TOKEN);

@@ -17,16 +17,20 @@
  */
 
 /** @type {Service[]} */
+/** Every service forwards its write and security events to the audit service with its own write-role key. @param {import('./setup-context.js').SetupContext} c @param {string} id */
+const auditEnv = (c, id) => ({ AUDIT_URL: c.url('audit'), AUDIT_API_KEY: c.issue('audit', id, 'write') });
+
 export const SERVICES = [
   {
     id: 'notify', port: 3001, keysVar: 'NOTIFY_API_KEYS',
-    env: (c) => ({ SMTP_URL: c.keep('notify', 'SMTP_URL', 'json:'), SMTP_FROM: c.keep('notify', 'SMTP_FROM', '"atc-web <no-reply@localhost>"'), WEBHOOK_SIGNING_SECRET: c.secret('notify', 'WEBHOOK_SIGNING_SECRET'), WEBHOOK_ALLOW_HTTP: c.local ? 'true' : c.keep('notify', 'WEBHOOK_ALLOW_HTTP', 'false') }),
+    env: (c) => ({ ...auditEnv(c, 'notify'), SMTP_URL: c.keep('notify', 'SMTP_URL', 'json:'), SMTP_FROM: c.keep('notify', 'SMTP_FROM', '"atc-web <no-reply@localhost>"'), WEBHOOK_SIGNING_SECRET: c.secret('notify', 'WEBHOOK_SIGNING_SECRET'), WEBHOOK_ALLOW_HTTP: c.local ? 'true' : c.keep('notify', 'WEBHOOK_ALLOW_HTTP', 'false') }),
     console: { type: 'notify', label: 'Notify', keyEnv: 'NOTIFY_API_KEY', polling: { enabled: true, intervalSec: 30 } },
   },
   {
     id: 'auth', port: 3002, keysVar: 'AUTH_API_KEYS',
     prepare: async (c) => { if (!c.exists('auth', 'keys/jwt-private.pem')) await c.run('auth', ['npm', 'run', 'keygen']); },
     env: (c) => ({
+      ...auditEnv(c, 'auth'),
       NOTIFY_URL: c.url('notify'), NOTIFY_API_KEY: c.issue('notify', 'auth'), JWT_ISSUER: c.url('gateway'), JWT_AUDIENCE: c.keep('auth', 'JWT_AUDIENCE', 'app'),
       APP_NAME: c.keep('auth', 'APP_NAME', 'atc-web'), // Links in verification mails point at your web app, which auth insists is https; a local stack has no app yet.
       VERIFY_URL_TEMPLATE: c.keep('auth', 'VERIFY_URL_TEMPLATE', `https://${c.host}/verify-email?token={token}`), RESET_URL_TEMPLATE: c.keep('auth', 'RESET_URL_TEMPLATE', `https://${c.host}/reset-password?token={token}`),
@@ -35,7 +39,7 @@ export const SERVICES = [
   },
   {
     id: 'media', port: 3003, keysVar: 'MEDIA_API_KEYS',
-    env: (c) => ({ PUBLIC_BASE_URL: c.publicUrl('media'), SIGNING_SECRET: c.secret('media', 'SIGNING_SECRET'), CORS_ORIGINS: c.keep('media', 'CORS_ORIGINS', c.url('gateway')) }),
+    env: (c) => ({ ...auditEnv(c, 'media'), PUBLIC_BASE_URL: c.publicUrl('media'), SIGNING_SECRET: c.secret('media', 'SIGNING_SECRET'), CORS_ORIGINS: c.keep('media', 'CORS_ORIGINS', c.url('gateway')) }),
     console: { type: 'media', label: 'Media', keyEnv: 'MEDIA_API_KEY' },
   },
   {
@@ -45,18 +49,19 @@ export const SERVICES = [
   },
   {
     id: 'shortlink', port: 3006, keysVar: 'SHORTLINK_API_KEYS',
-    env: (c) => ({ PUBLIC_BASE_URL: c.publicUrl('shortlink'), HASH_SECRET: c.secret('shortlink', 'HASH_SECRET') }),
+    env: (c) => ({ ...auditEnv(c, 'shortlink'), PUBLIC_BASE_URL: c.publicUrl('shortlink'), HASH_SECRET: c.secret('shortlink', 'HASH_SECRET') }),
     console: { type: 'shortlink', label: 'Shortlink', keyEnv: 'SHORTLINK_API_KEY' },
   },
   {
     id: 'flags', port: 3007, keysVar: 'FLAGS_API_KEYS',
-    env: () => ({}),
+    env: (c) => ({ ...auditEnv(c, 'flags'),}),
     console: { type: 'flags', label: 'Flags', keyEnv: 'FLAGS_API_KEY' },
   },
   {
     id: 'scheduler', port: 3008, keysVar: 'SCHEDULER_API_KEYS',
     env: (c) => ({
       SIGNING_SECRET: c.secret('scheduler', 'SIGNING_SECRET'),
+      ...auditEnv(c, 'scheduler'),
       TARGET_KEYS: `flags:${c.issue('flags', 'scheduler', 'write')},notify:${c.issue('notify', 'scheduler')},webhook-out:${c.issue('webhook-out', 'scheduler', 'publish')}`,
       ...c.outbound('scheduler'),
     }),
@@ -64,28 +69,32 @@ export const SERVICES = [
   },
   {
     id: 'webhook-out', port: 3009, keysVar: 'WEBHOOK_API_KEYS',
-    env: (c) => ({ SECRETS_KEY: c.secret('webhook-out', 'SECRETS_KEY'), ...c.outbound('webhook-out') }),
+    env: (c) => ({ ...auditEnv(c, 'webhook-out'), SECRETS_KEY: c.secret('webhook-out', 'SECRETS_KEY'), ...c.outbound('webhook-out') }),
     console: { type: 'webhook-out', label: 'Webhooks', keyEnv: 'WEBHOOK_OUT_API_KEY' },
   },
   {
     id: 'search', port: 3010, keysVar: 'SEARCH_API_KEYS',
-    env: () => ({}),
+    env: (c) => ({ ...auditEnv(c, 'search'),}),
     console: { type: 'search', label: 'Search', keyEnv: 'SEARCH_API_KEY' },
   },
   {
     id: 'ratelimit', port: 3011, keysVar: 'RATELIMIT_API_KEYS',
-    env: () => ({}),
+    env: (c) => ({ ...auditEnv(c, 'ratelimit'),}),
     console: { type: 'ratelimit', label: 'Rate limits', keyEnv: 'RATELIMIT_API_KEY' },
   },
   {
     id: 'geo', port: 3012, keysVar: 'GEO_API_KEYS',
     // MMDB_PATH stays as the operator sets it (empty = no IP geolocation; see geo/examples/ip-databases.md).
-    env: (c) => ({ MMDB_PATH: c.keep('geo', 'MMDB_PATH', ''), ASN_MMDB_PATH: c.keep('geo', 'ASN_MMDB_PATH', '') }),
+    env: (c) => ({ ...auditEnv(c, 'geo'), MMDB_PATH: c.keep('geo', 'MMDB_PATH', ''), ASN_MMDB_PATH: c.keep('geo', 'ASN_MMDB_PATH', '') }),
     console: { type: 'geo', label: 'Geo', keyEnv: 'GEO_API_KEY' },
   },
   {
     id: 'gateway', port: 3000,
-    env: (c) => ({ METRICS_TOKEN: c.secret('gateway', 'METRICS_TOKEN'), AUTH_API_KEY: c.issue('auth', 'gateway'), MEDIA_API_KEY: c.issue('media', 'gateway'), NOTIFY_API_KEY: c.issue('notify', 'gateway') }),
+    env: (c) => ({
+      METRICS_TOKEN: c.secret('gateway', 'METRICS_TOKEN'), AUTH_API_KEY: c.issue('auth', 'gateway'), MEDIA_API_KEY: c.issue('media', 'gateway'), NOTIFY_API_KEY: c.issue('notify', 'gateway'),
+      // Routes may declare "policy" (central rate limits) and "geo": true (X-Geo-* headers); the keys are issued here so routes.json can use them at once.
+      RATELIMIT_URL: c.url('ratelimit'), RATELIMIT_API_KEY: c.issue('ratelimit', 'gateway', 'check'), GEO_URL: c.url('geo'), GEO_API_KEY: c.issue('geo', 'gateway', 'read'),
+    }),
     files: (c) => ({ 'routes.json': `${JSON.stringify(c.gatewayRoutes(), null, 2)}\n` }),
     console: { type: 'gateway', label: 'Gateway', metricsTokenEnv: 'GATEWAY_METRICS_TOKEN' },
   },
@@ -102,4 +111,4 @@ export const SERVICES = [
 ];
 
 /** Roles the console's key needs per service; everything else gets the issuer's default role. */
-export const CONSOLE_ROLES = /** @type {Record<string, string>} */ ({ audit: 'read' });
+export const CONSOLE_ROLES = /** @type {Record<string, string>} */ ({ audit: 'readwrite' }); // reads events and forwards its own log
