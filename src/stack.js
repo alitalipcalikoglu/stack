@@ -115,9 +115,16 @@ export class Stack {
 
   /**
    * Restore a snapshot written by {@link backup}. Stops the affected services under PM2, restores
-   * their files (validated before anything is touched — see {@link Snapshot.restore}), starts them
-   * again, and waits for `/ready`. Refuses (via `Snapshot.restore`) before stopping anything when
-   * the snapshot is missing, corrupt, or newer than what the running code supports.
+   * their files (validated before anything is touched, and reverted as a whole if any item fails
+   * partway — see {@link Snapshot.restore}), then:
+   * - `restored`: starts every affected service on the new snapshot and waits for `/ready`.
+   * - `rolled_back`: the restore failed but every item is confirmed back at its original state —
+   *   starts every affected service on that original state (safe: it's what was running before this
+   *   call) and throws, so the caller still sees this as a failed restore.
+   * - `rollback_incomplete`: the restore failed AND reverting at least one item also failed. Nothing
+   *   is started — a stopped service is safer than one started against a file in an unknown state.
+   *   Throws with every affected item's exact state (`rolledBack` vs `rollbackFailed`) for the
+   *   operator to check by hand before starting anything.
    * @param {string} dir
    * @param {{ service?: string }} [o] Restrict to one service; default every service the snapshot covers.
    */
@@ -129,10 +136,21 @@ export class Stack {
     const ids = services ?? [...new Set(manifest.entries.map((e) => e.service))];
     for (const id of ids) { this.log(`${id}: pm2 stop`); await this.#run(this.root, ['pm2', 'stop', id, '--silent']).catch(() => {}); }
     const result = await snapshot.restore(dir, { services });
+
+    if (result.outcome === 'rollback_incomplete') {
+      this.log(`\nCRITICAL: restore failed and rollback did not fully succeed. Nothing was restarted.`);
+      this.log(`confirmed reverted to original: ${result.rolledBack.join(', ') || 'none'}`);
+      this.log(`UNKNOWN STATE, needs manual inspection: ${result.rollbackFailed.map((r) => `${r.service}/${r.path} (${r.error})`).join(', ')}`);
+      throw new Error(`restore failed and rollback is incomplete for: ${result.rollbackFailed.map((r) => `${r.service}/${r.path}`).join(', ')} — services left stopped, inspect .before-restore-${result.runId} copies before starting anything`);
+    }
+
     for (const id of ids) { this.log(`${id}: pm2 start`); await this.#run(this.root, ['pm2', 'start', id, '--silent']).catch(() => {}); }
     const ready = await this.#waitReady(20_000, ids);
     for (const r of ready) this.log(`${r.id.padEnd(11)} ${r.ok ? 'ready' : 'NOT READY'}  ${r.url}`);
-    if (result.failed) throw new Error(`restore failed at ${result.failed.service}: ${result.failed.error} (restored: ${result.restored.join(', ') || 'none'}; skipped: ${result.skipped.join(', ') || 'none'})`);
+
+    if (result.outcome === 'rolled_back') {
+      throw new Error(`restore failed at ${result.failed?.service}/${result.failed?.path} (${result.failed?.phase}): ${result.failed?.error} — rolled back cleanly, every service restarted on its original data`);
+    }
     return result;
   }
 

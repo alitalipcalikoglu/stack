@@ -58,7 +58,9 @@ test('backup then restore round-trips a real service database (ratelimit) unchan
   live.close();
 
   const result = await snap.restore(snapshotDir);
-  assert.deepEqual(result, { restored: ['ratelimit/data/ratelimit.db'], failed: null, skipped: [] });
+  assert.equal(result.outcome, 'restored');
+  assert.deepEqual(result, { outcome: 'restored', restored: ['ratelimit/data/ratelimit.db'], failed: null, rolledBack: [], rollbackFailed: [], skipped: [], runId: result.runId });
+  assert.equal(typeof result.runId, 'string');
 
   const restored = await openDb(dir);
   const names = /** @type {any[]} */ (restored.prepare('SELECT name FROM policies ORDER BY name').all()).map((r) => r.name);
@@ -95,6 +97,7 @@ test('backup then restore round-trips a real service database plus its extra dir
   live.close();
 
   const result = await snap.restore(snapshotDir);
+  assert.equal(result.outcome, 'restored');
   assert.equal(result.failed, null);
   assert.equal(result.restored.length, 3, 'db + objects + variants all restored');
 
@@ -147,8 +150,8 @@ test('restore refuses a manifest entry that resolves outside the snapshot or the
   await assert.rejects(() => snap.restore(snapshotDir), /escapes/);
 });
 
-test('a partial restore failure restores what it can, reports the rest, and leaves the failed target recoverable', async () => {
-  const root = mkdtempSync(join(fixtureRoot, 'partial-'));
+test('a real permission failure preparing one target rolls back everything and touches no live content', async () => {
+  const root = mkdtempSync(join(fixtureRoot, 'prep-fail-'));
   const mediaDir = realServiceFixture(root, 'media', 'DATA_DIR=./data/files\n');
   const rtDir = realServiceFixture(root, 'ratelimit');
   mkdirSync(join(mediaDir, 'data', 'files', 'objects'), { recursive: true });
@@ -159,17 +162,113 @@ test('a partial restore failure restores what it can, reports the rest, and leav
   const snap = new Snapshot({ root, exec: fakeExec });
   const { dir: snapshotDir } = await snap.create();
 
-  // Simulate a real I/O failure restoring ratelimit's database (e.g. a locked or read-only disk)
-  // while leaving media restorable — ratelimit sorts after media in manifest.entries.
-  mkdirSync(join(rtDir, 'data'), { recursive: true });
+  // A genuine OS-level failure: ratelimit's data/ directory forbids the rename phase 1 needs to
+  // move its live database aside. media sorts before ratelimit in manifest.entries, so both of
+  // media's items (db, objects) have already been moved aside successfully by the time this hits —
+  // this proves phase 1's own abort path reverts a real partial prepare, not just a hypothetical one.
   chmodSync(join(rtDir, 'data'), 0o500);
   try {
     const result = await snap.restore(snapshotDir);
-    assert.equal(result.restored.some((r) => r.startsWith('media/')), true, 'media (processed first) still restored');
-    assert.ok(result.failed && result.failed.service.startsWith('ratelimit/'), 'ratelimit reported as the failure, not silently dropped');
+    assert.equal(result.outcome, 'rolled_back');
+    assert.equal(result.failed?.phase, 'prepare');
+    assert.ok(result.failed?.service === 'ratelimit', result.failed?.service);
+    assert.equal(result.rollbackFailed.length, 0);
+    assert.equal(result.rolledBack.length, 2, 'media db and media objects — the two items phase 1 actually moved aside before hitting ratelimit — confirmed reverted');
+    assert.equal(existsSync(join(mediaDir, 'data', 'media.db')), true, 'media db back in place');
+    assert.equal(existsSync(join(mediaDir, 'data', 'files', 'objects', 'x.bin')), true, 'media object back in place');
+    assert.equal(readdirSync(join(mediaDir, 'data')).some((f) => f.includes('.before-restore-')), false, 'no leftover aside for media — phase 1 abort moved it straight back');
+    assert.equal(existsSync(join(rtDir, 'data', 'ratelimit.db')), true, "ratelimit's own db was never even moved — the failed target itself was never touched");
   } finally {
     chmodSync(join(rtDir, 'data'), 0o700);
   }
+});
+
+test('regression: at least two targets applied successfully, a real I/O failure on the third rolls all three back to their pre-restore state', async () => {
+  const root = mkdtempSync(join(fixtureRoot, 'apply-fail-'));
+  const mediaDir = realServiceFixture(root, 'media', 'DATA_DIR=./data/files\n');
+  const rtDir = realServiceFixture(root, 'ratelimit');
+  mkdirSync(join(mediaDir, 'data', 'files', 'objects'), { recursive: true });
+  writeFileSync(join(mediaDir, 'data', 'files', 'objects', 'x.bin'), 'blob v1');
+  const mdb = await openDb(mediaDir);
+  mdb.prepare("INSERT INTO blobs (sha256, size, mime, created_at) VALUES ('x', 1, 'text/plain', 0)").run();
+  mdb.close();
+  const rtdb = await openDb(rtDir);
+  rtdb.prepare("INSERT INTO policies (name, limits, created_by, created_at, updated_at) VALUES ('v1', '[]', 'test', 0, 0)").run();
+  rtdb.close();
+
+  const snap = new Snapshot({ root, exec: fakeExec });
+  const { dir: snapshotDir } = await snap.create();
+
+  // Mutate every live target after the backup, so "reverted to pre-restore" is distinguishable from
+  // "left on the snapshot's content" for all three items.
+  writeFileSync(join(mediaDir, 'data', 'files', 'objects', 'x.bin'), 'blob v2 (mutated after backup)');
+  const mdb2 = await openDb(mediaDir);
+  mdb2.prepare("UPDATE blobs SET mime = 'application/mutated' WHERE sha256 = 'x'").run();
+  mdb2.close();
+  const rtdb2 = await openDb(rtDir);
+  rtdb2.prepare("UPDATE policies SET created_by = 'mutated' WHERE name = 'v1'").run();
+  rtdb2.prepare("INSERT INTO policies (name, limits, created_by, created_at, updated_at) VALUES ('v2', '[]', 'mutated', 0, 0)").run();
+  rtdb2.close();
+
+  // manifest.entries order (ALL_SERVICES): media/db, media/objects, ratelimit/db — inject a
+  // deterministic apply-phase failure on the third, after the first two have genuinely been applied.
+  let applyCount = 0;
+  const snapWithFault = new Snapshot({
+    root, exec: fakeExec,
+    _fault: (op, target) => {
+      if (op !== 'apply') return false;
+      applyCount++;
+      return target.endsWith(join('ratelimit', 'data', 'ratelimit.db'));
+    },
+  });
+  const result = await snapWithFault.restore(snapshotDir);
+
+  assert.equal(result.outcome, 'rolled_back');
+  assert.equal(applyCount, 3, 'both media items applied before the ratelimit apply was reached and faulted');
+  assert.equal(result.failed?.phase, 'apply');
+  assert.equal(result.failed?.service, 'ratelimit');
+  assert.equal(result.rollbackFailed.length, 0);
+  assert.deepEqual(result.rolledBack.sort(), ['media/data/files/objects', 'media/data/media.db', 'ratelimit/data/ratelimit.db'].sort());
+
+  assert.equal(readFileSync(join(mediaDir, 'data', 'files', 'objects', 'x.bin'), 'utf8'), 'blob v2 (mutated after backup)', 'media object reverted to its pre-restore (mutated) content, not left on the snapshot');
+  const mediaCheck = await openDb(mediaDir);
+  assert.equal(/** @type {any} */ (mediaCheck.prepare("SELECT mime FROM blobs WHERE sha256 = 'x'").get())?.mime, 'application/mutated', 'media db reverted to pre-restore, even though its apply succeeded');
+  mediaCheck.close();
+  const rtCheck = await openDb(rtDir);
+  const names = /** @type {any[]} */ (rtCheck.prepare('SELECT name FROM policies ORDER BY name').all()).map((r) => r.name);
+  assert.deepEqual(names, ['v1', 'v2'], 'ratelimit (the failed target) is also back at its pre-restore state — safe and deterministic, not left half-written');
+  rtCheck.close();
+});
+
+test('rollback-incomplete: a second failure during rollback itself is reported distinctly, never as an ordinary restore failure', async () => {
+  const root = mkdtempSync(join(fixtureRoot, 'rollback-incomplete-'));
+  const mediaDir = realServiceFixture(root, 'media', 'DATA_DIR=./data/files\n');
+  const rtDir = realServiceFixture(root, 'ratelimit');
+  mkdirSync(join(mediaDir, 'data', 'files', 'objects'), { recursive: true });
+  writeFileSync(join(mediaDir, 'data', 'files', 'objects', 'x.bin'), 'blob');
+  (await openDb(mediaDir)).close();
+  (await openDb(rtDir)).close();
+
+  const snap = new Snapshot({ root, exec: fakeExec });
+  const { dir: snapshotDir } = await snap.create();
+
+  // ratelimit's apply fails (as above); rolling back media's db aside back into place *also* fails —
+  // e.g. its aside copy has become unreadable/gone by the time rollback runs.
+  const snapWithFault = new Snapshot({
+    root, exec: fakeExec,
+    _fault: (op, target) => {
+      if (op === 'apply') return target.endsWith(join('ratelimit', 'data', 'ratelimit.db'));
+      if (op === 'rollback') return target.endsWith(join('media', 'data', 'media.db'));
+      return false;
+    },
+  });
+  const result = await snapWithFault.restore(snapshotDir);
+
+  assert.equal(result.outcome, 'rollback_incomplete', 'never reported as a plain restore failure');
+  assert.equal(result.restored.length, 0);
+  assert.equal(result.failed?.service, 'ratelimit');
+  assert.deepEqual(result.rollbackFailed, [{ service: 'media', path: 'data/media.db', error: `injected failure: rollback ${join(mediaDir, 'data', 'media.db')}` }]);
+  assert.deepEqual(result.rolledBack.sort(), ['media/data/files/objects', 'ratelimit/data/ratelimit.db'].sort(), 'the two items whose rollback did succeed are still named individually');
 });
 
 test('restore refuses a schema newer than the running service supports, via the real Database forward-version guard', async () => {

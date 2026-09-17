@@ -67,15 +67,57 @@ well-formed, every recorded database and directory is present with a matching ch
 incomplete or corrupted backup is refused outright), and every database is opened, through the
 target service's own current code, from a temporary staged copy — which is also where a snapshot
 whose schema is newer than what the running code supports gets rejected (`ConfigError`), before
-anything is touched. Only after every item in scope passes does restore stop the affected services
-(PM2), replace their files, start them again, and wait for `/ready`.
+anything is touched.
 
-Each service is restored independently. If a failure happens partway through (a full disk, a
-permissions problem), whatever was already restored stays restored, the service that failed is
-reported by name with the underlying error, and anything not yet reached is left untouched — restore
-never leaves a service in between an old and a new database file: the live file it's about to
-replace is moved aside to `<path>.before-restore-<timestamp>` (never deleted) immediately before the
-replacement is written, and moved back if the replacement itself fails.
+### All-or-nothing across the items in scope
+
+Applying a validated restore is two steps, both scoped to one `runId`:
+
+1. **Prepare** — every live file/directory about to be replaced is moved aside to
+   `<path>.before-restore-<runId>` (never deleted), one item at a time.
+2. **Apply** — the validated snapshot content is written into each target in turn.
+
+If *anything* fails in either step, restore reverts every item this run had already touched, using
+the aside copies `prepare` just made, so a failed restore never leaves some services on the new
+snapshot and others on the old one. Only after both steps succeed for every item does restore stop
+being reversible for this run and go on to (re)start PM2. The outcome is always one of three:
+
+- **`restored`** — every item now has the snapshot's content; affected services are started on it.
+- **`rolled_back`** — the restore failed, but every item is confirmed back at its exact pre-restore
+  state; affected services are started on that original state. The command still exits non-zero (it
+  was a failed restore), but nothing was lost.
+- **`rollback_incomplete`** — the restore failed *and* reverting at least one item also failed (its
+  aside copy went missing mid-run, a second disk error, …). **Nothing is (re)started** — a stopped
+  service is safer than one started against a file whose state is now unknown. The error names every
+  item and whether it's confirmed reverted or unknown, and points at its `.before-restore-<runId>`
+  copy; check that copy by hand before starting anything.
+
+`rollback_incomplete` is never reported as an ordinary restore failure — it is a distinct outcome
+specifically because "the rollback also failed" needs a human to look, not a retry.
+
+### What this is not: a cross-service transaction
+
+This is a best-effort, in-process saga — not a filesystem transaction spanning every service's
+files. It protects against *ordinary* failures during apply (a permissions problem, a full disk, a
+missing aside copy): every one of those is caught and rolled back as described above. It does **not**
+protect against the process running `stack restore` itself being killed, or the machine losing power,
+partway through the apply step. If that happens: some targets may be on the new content, others on
+the old, `.before-restore-<runId>` copies sit next to whichever targets were already touched, and
+there is no automatic detection or resume on the next run — compare the aside copies against the
+current files by hand, decide per item, and re-run `restore` (it re-validates from the snapshot every
+time) once you're confident about the starting state. This is a deliberate scope decision: a
+restore-journal that detects and resumes an interrupted run is real complexity for a failure mode
+(the operator's own machine or process dying mid-restore, while every affected service is already
+stopped) that ordinary in-process error handling doesn't need to solve.
+
+### Retention
+
+`.before-restore-<runId>` copies are **never deleted automatically**, whether the restore succeeded,
+rolled back, or left `rollback_incomplete` — deleting them automatically is exactly the kind of
+"probably fine" behavior that turns into lost data the one time it wasn't. Every copy from the same
+`restore` call shares the same `runId` (its timestamp), so `ls`-ing a service's data directory for
+`*.before-restore-2026-*` shows you everything one run touched. Clean them up by hand once you're
+confident you no longer need them.
 
 ## Rollback
 

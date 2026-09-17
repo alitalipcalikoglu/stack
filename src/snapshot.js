@@ -51,6 +51,23 @@ const DB_SERVICES = SERVICES.map((s) => s.id).filter((id) => id !== 'gateway');
 const ALL_SERVICES = [...new Set([...DB_SERVICES, ...Object.keys(EXTRA_PATHS)])];
 
 /**
+ * @typedef {object} RestoreResult
+ * @property {'restored'|'rolled_back'|'rollback_incomplete'} outcome `restored`: every requested item
+ *   is now on the snapshot's content. `rolled_back`: the restore failed but every item is confirmed
+ *   back at its pre-restore state. `rollback_incomplete`: the restore failed AND reverting at least
+ *   one item also failed — check `rollbackFailed` before assuming anything about that item's state
+ *   (it may be a partial write, or, in the worst case, absent).
+ * @property {string[]} restored Items now on the snapshot's content — only non-empty when `outcome === 'restored'`.
+ * @property {{ service: string, path: string, phase: 'prepare'|'apply', error: string }|null} failed
+ *   The item whose prepare/apply step actually failed, or `null` when `outcome === 'restored'`.
+ * @property {string[]} rolledBack `service/path` labels confirmed reverted to their pre-restore state.
+ * @property {{ service: string, path: string, error: string }[]} rollbackFailed Items where reverting
+ *   itself failed — never treat these as safe; their live state must be checked by hand.
+ * @property {string[]} skipped Requested services the manifest doesn't cover.
+ * @property {string} runId Shared suffix on every `.before-restore-<runId>` aside path this call created.
+ */
+
+/**
  * Creates and restores whole-stack snapshots. A snapshot is a plain directory: `manifest.json`
  * (schema version, per-service package version and DB schema version, a sha256 per backed-up item)
  * plus one subfolder per service holding its database file and any extra paths from
@@ -61,11 +78,34 @@ const ALL_SERVICES = [...new Set([...DB_SERVICES, ...Object.keys(EXTRA_PATHS)])]
  * manifest is well-formed, every recorded file/directory is present with a matching hash, and every
  * database, opened from a staged copy through the service's own (current) `Database` subclass,
  * migrates cleanly — which is also where a snapshot newer than the running code gets rejected,
- * since that is exactly the check `Database`'s constructor already makes. Each service is restored
- * independently: the live file is moved aside (never deleted) to `<path>.before-restore-<ts>` before
- * the validated copy is put in its place, and a failure partway through leaves already-restored
- * services restored, the failed one untouched (its `.before-restore-*` aside file removed again,
- * since nothing was actually replaced), and every later service untouched.
+ * since that is exactly the check `Database`'s constructor already makes.
+ *
+ * Applying is two phases, both scoped to one `runId` shared by every item in the call:
+ *
+ * 1. **Prepare** — every live target that exists is moved aside (never deleted) to
+ *    `<path>.before-restore-<runId>`, one item at a time. If moving a target aside itself fails,
+ *    nothing has been applied yet: whatever was already moved aside in this phase is moved straight
+ *    back and `restore()` reports `rolled_back` (or `rollback_incomplete` if even that move-back
+ *    fails) with nothing changed.
+ * 2. **Apply** — the validated snapshot content is written into each target in turn. If an item
+ *    fails here, every item already applied in this phase (plus the failed one itself) is reverted
+ *    from its phase-1 aside copy, so a failed restore never leaves some services on the new snapshot
+ *    and others on the old one — either every requested item ends up on the snapshot (`restored`) or
+ *    every one of them ends up back where it started (`rolled_back`). If reverting an item itself
+ *    fails (its aside copy is gone, e.g.), that is reported as `rollback_incomplete`, distinctly from
+ *    an ordinary failure, with exactly which items are on which side of the swap.
+ *
+ * This is a best-effort, in-process saga, not a cross-service filesystem transaction: there is no
+ * atomicity guarantee across a process kill or power loss mid-apply. A crash between phase 1 and the
+ * end of phase 2 leaves some targets on the new content and some `.before-restore-<runId>` aside
+ * copies sitting next to the rest, with no automatic detection or resume on the next run — an
+ * operator must compare the aside copies against the current files by hand. This is a deliberate
+ * scope decision (see `stack/docs/UPGRADE.md`), not an oversight: a restore-journal that detects and
+ * resumes an interrupted run is real complexity for a failure mode (concurrent process kill during a
+ * restore, which itself needs services already stopped) that in-process error handling does not need.
+ *
+ * `.before-restore-<runId>` copies are never deleted automatically, on success or failure — see
+ * `stack/docs/UPGRADE.md` for retention.
  */
 export class Snapshot {
   /**
@@ -73,11 +113,16 @@ export class Snapshot {
    * @param {string} o.root Workspace root (parent of every service folder).
    * @param {(cwd: string, argv: string[], opts?: { stdio?: 'inherit'|'pipe' }) => Promise<{ code: number, out: string }>} o.exec
    * @param {(line: string) => void} [o.log]
+   * @param {(op: 'prepare'|'apply'|'rollback', target: string) => boolean} [o._fault] Test-only
+   *   injection hook: when it returns true for a given phase and target, that filesystem step
+   *   throws instead of running, so a specific failure (including a second one, during rollback
+   *   itself) can be produced deterministically. Never set outside tests.
    */
-  constructor({ root, exec, log = () => {} }) {
+  constructor({ root, exec, log = () => {}, _fault }) {
     this.root = root;
     this.exec = exec;
     this.log = log;
+    this._fault = _fault ?? (() => false);
   }
 
   /**
@@ -135,7 +180,7 @@ export class Snapshot {
    * @param {string} snapshotDir
    * @param {{ services?: string[] }} [o] Restrict to these service ids; default every service the
    *   manifest covers.
-   * @returns {Promise<{ restored: string[], failed: { service: string, error: string }|null, skipped: string[] }>}
+   * @returns {Promise<RestoreResult>}
    */
   async restore(snapshotDir, { services } = {}) {
     const dir = resolve(snapshotDir);
@@ -157,26 +202,99 @@ export class Snapshot {
       if (actualHash !== entry.sha256) throw new Error(`${entry.service}/${entry.path}: checksum mismatch (corrupt backup)`);
       Snapshot.#assertNoSymlinks(src);
       const target = Snapshot.#assertInside(serviceDir, join(serviceDir, entry.path));
-      plan.push({ entry, src, target, serviceDir });
+      plan.push({ entry, src, target, serviceDir, label: `${entry.service}/${entry.path}` });
     }
     for (const { entry, src, serviceDir } of plan) {
       if (entry.kind !== 'db') continue;
       await this.#validateStagedDb(serviceDir, src, entry);
     }
-
-    const restored = [];
     const skipped = wanted.filter((id) => !plan.some((p) => p.entry.service === id));
-    let failed = null;
-    for (const { entry, src, target } of plan) {
-      if (failed) break;
+    const runId = Snapshot.#timestamp();
+
+    // Phase 1 — prepare: move every existing target aside (never delete), one at a time. A failure
+    // here means nothing has been applied yet, so undoing it is just moving back what this phase
+    // itself already moved.
+    /** @type {{ item: any, aside: string|null }[]} */
+    const prepared = [];
+    for (const item of plan) {
       try {
-        await this.#swap(entry, src, target);
-        restored.push(`${entry.service}/${entry.path}`);
+        prepared.push({ item, aside: this.#moveAside(item.target, runId) });
       } catch (err) {
-        failed = { service: `${entry.service}/${entry.path}`, error: err instanceof Error ? err.message : String(err) };
+        return this.#abortPrepare(prepared, item, err, skipped, runId);
       }
     }
-    return { restored, failed, skipped };
+
+    // Phase 2 — apply: write the validated snapshot content into each target.
+    /** @type {{ item: any, aside: string|null }[]} */
+    const applied = [];
+    for (const { item, aside } of prepared) {
+      try {
+        this.#applyContent(item.entry, item.src, item.target);
+        applied.push({ item, aside });
+      } catch (err) {
+        return this.#rollbackApplied(applied, { item, aside }, err, skipped, runId);
+      }
+    }
+
+    return { outcome: 'restored', restored: applied.map(({ item }) => item.label), failed: null, rolledBack: [], rollbackFailed: [], skipped, runId };
+  }
+
+  /**
+   * Phase-1 failure: revert whatever this call already moved aside; nothing was ever applied.
+   * @param {{ item: any, aside: string|null }[]} prepared @param {any} failedItem @param {unknown} err
+   * @param {string[]} skipped @param {string} runId
+   * @returns {RestoreResult}
+   */
+  #abortPrepare(prepared, failedItem, err, skipped, runId) {
+    const rolledBack = [];
+    const rollbackFailed = [];
+    for (const { item, aside } of prepared) {
+      if (!aside) { rolledBack.push(item.label); continue; }
+      try {
+        this.#revert(aside, item.target, 'rollback');
+        rolledBack.push(item.label);
+      } catch (revertErr) {
+        rollbackFailed.push({ service: item.entry.service, path: item.entry.path, error: Snapshot.#msg(revertErr) });
+      }
+    }
+    return {
+      outcome: rollbackFailed.length ? 'rollback_incomplete' : 'rolled_back',
+      restored: [],
+      failed: { service: failedItem.entry.service, path: failedItem.entry.path, phase: 'prepare', error: Snapshot.#msg(err) },
+      rolledBack,
+      rollbackFailed,
+      skipped,
+      runId,
+    };
+  }
+
+  /**
+   * Phase-2 failure: revert the failed item itself plus every item already applied before it, each
+   * from its own phase-1 aside copy.
+   * @param {{ item: any, aside: string|null }[]} applied @param {{ item: any, aside: string|null }} failed
+   * @param {unknown} err @param {string[]} skipped @param {string} runId
+   * @returns {RestoreResult}
+   */
+  #rollbackApplied(applied, failed, err, skipped, runId) {
+    const rolledBack = [];
+    const rollbackFailed = [];
+    for (const { item, aside } of [failed, ...[...applied].reverse()]) {
+      try {
+        this.#revert(aside, item.target, 'rollback');
+        rolledBack.push(item.label);
+      } catch (revertErr) {
+        rollbackFailed.push({ service: item.entry.service, path: item.entry.path, error: Snapshot.#msg(revertErr) });
+      }
+    }
+    return {
+      outcome: rollbackFailed.length ? 'rollback_incomplete' : 'rolled_back',
+      restored: [],
+      failed: { service: failed.item.entry.service, path: failed.item.entry.path, phase: 'apply', error: Snapshot.#msg(err) },
+      rolledBack,
+      rollbackFailed,
+      skipped,
+      runId,
+    };
   }
 
   /**
@@ -204,28 +322,49 @@ export class Snapshot {
   }
 
   /**
-   * Move the live path aside (never delete), then move the validated snapshot copy into place. On
-   * any failure after the live path has been moved aside, it is moved back — the live path is never
-   * left missing.
+   * Phase 1 primitive: move a live target aside if it exists, so phase 2 can freely overwrite it and
+   * still have something to revert to. Returns the aside path, or `null` when there was nothing to
+   * move (the target didn't exist before this restore — its correct "reverted" state is absent).
+   * @param {string} target @param {string} runId
+   * @returns {string|null}
+   */
+  #moveAside(target, runId) {
+    if (this._fault('prepare', target)) throw new Error(`injected failure: prepare ${target}`);
+    if (!existsSync(target)) return null;
+    const aside = `${target}.before-restore-${runId}`;
+    mkdirSync(dirname(aside), { recursive: true });
+    renameSync(target, aside);
+    return aside;
+  }
+
+  /**
+   * Phase 2 primitive: write the validated snapshot copy into `target` (which phase 1 already
+   * cleared, directly or via `#moveAside`).
    * @param {any} entry @param {string} src @param {string} target
    */
-  async #swap(entry, src, target) {
-    const asideDir = `${target}.before-restore-${Snapshot.#timestamp()}`;
-    let movedAside = false;
-    try {
-      if (existsSync(target)) {
-        mkdirSync(dirname(asideDir), { recursive: true });
-        renameSync(target, asideDir);
-        movedAside = true;
-      }
-      mkdirSync(dirname(target), { recursive: true });
-      if (entry.kind === 'dir') Snapshot.#copyDir(src, target);
-      else Snapshot.#copyFile(src, target);
-    } catch (err) {
-      if (existsSync(target)) rmSync(target, { recursive: true, force: true });
-      if (movedAside) renameSync(asideDir, target);
-      throw err;
-    }
+  #applyContent(entry, src, target) {
+    if (this._fault('apply', target)) throw new Error(`injected failure: apply ${target}`);
+    mkdirSync(dirname(target), { recursive: true });
+    if (entry.kind === 'dir') Snapshot.#copyDir(src, target);
+    else Snapshot.#copyFile(src, target);
+  }
+
+  /**
+   * Rollback primitive: discard whatever now sits at `target` (a phase-2 write, possibly partial)
+   * and move the phase-1 aside copy back — or, when there was no aside copy (the target legitimately
+   * didn't exist before), just clear `target` again. Throws (uncaught, by design — the caller records
+   * it as a `rollbackFailed` entry) if the aside copy is itself gone or the filesystem refuses.
+   * @param {string|null} aside @param {string} target @param {'rollback'} op
+   */
+  #revert(aside, target, op) {
+    if (this._fault(op, target)) throw new Error(`injected failure: ${op} ${target}`);
+    if (existsSync(target)) rmSync(target, { recursive: true, force: true });
+    if (aside) renameSync(aside, target);
+  }
+
+  /** @param {unknown} err */
+  static #msg(err) {
+    return err instanceof Error ? err.message : String(err);
   }
 
   /** @param {string} serviceDir */
