@@ -7,12 +7,12 @@ No runtime dependencies. Node 22.13+.
 ## Layout it expects
 
 ```
-atc-web/
+<any folder>/
   stack/          this repo
   notify/  auth/  media/  audit/  shortlink/  flags/  scheduler/  webhook-out/  search/  ratelimit/  geo/  gateway/  console/
 ```
 
-Each sibling folder is a clone of `github.com/alitalipcalikoglu/<name>`. The workspace root itself is not a repository.
+Each sibling folder is a clone of `github.com/alitalipcalikoglu/<name>`. The workspace root can have any name and is not a repository; the stack finds the services relative to its own folder.
 
 ## Quick start
 
