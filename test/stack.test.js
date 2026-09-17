@@ -6,6 +6,9 @@ import { after, test } from 'node:test';
 import { EnvFile } from '../src/env-file.js';
 import { SERVICES } from '../src/manifest.js';
 import { SetupContext } from '../src/setup-context.js';
+// Real gateway validation (Stage 9), not a reimplementation — same pattern as snapshot.test.js
+// exercising other services' real `Database` through the workspace checkout.
+import { RouteTable } from '../../gateway/src/route-table.js';
 
 const root = mkdtempSync(join(tmpdir(), 'atc-stack-'));
 after(() => rmSync(root, { recursive: true, force: true }));
@@ -109,6 +112,10 @@ test('setup wires every service: secrets, keys, URLs, console files; second run 
   const mediaUser = routes.routes.find((/** @type {any} */ r) => r.id === 'media-user');
   assert.deepEqual([mediaUser.pathPrefix, mediaUser.stripPrefix], ['/api/media/', '/api/media']);
   assert.equal('/api/media/v1/files'.slice(mediaUser.stripPrefix.length), '/v1/files');
+  // Stage 9: generated routes.json must parse cleanly under the gateway's own (real) validation —
+  // in particular, none of these routes declares `policy`, so the new failOpen-required rule never
+  // rejects the local-stack default. Proven against the actual gateway code, not a copy of its rules.
+  assert.doesNotThrow(() => RouteTable.parse(routes, { AUTH_API_KEY: 'a'.repeat(40), MEDIA_API_KEY: 'm'.repeat(40) }));
 
   // Second run: nothing regenerated.
   const again = new SetupContext({ root, host: '127.0.0.1', local: true, run: async () => {} });
