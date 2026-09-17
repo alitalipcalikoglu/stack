@@ -50,6 +50,29 @@ A snapshot is a plain directory (`stack/backups/<timestamp>/` by default, or `--
 and one subfolder per service. There is no archive/compression step — pipe it through `tar`/`zip`
 yourself if you want one file to move around or store off-host.
 
+## Rotating a secret-sealing or signing key
+
+Three services hold a key file or env-var key that seals or signs something, each with its own
+online rotation path (current + previous, no downtime, no forced re-enrol/re-issue): `auth`'s JWT
+signing key (`keys/`, `JWT_PREVIOUS_PUBLIC_KEY_PATH`), `audit`'s anchor signing key
+(`keys/`, `ANCHOR_PREVIOUS_PUBLIC_KEY_PATH`), and `console`'s TOTP-sealing key
+(`SECRETS_KEY`/`SECRETS_PREVIOUS_KEY`, no file — env only). The exact steps differ per service (see
+each one's own README — console's "Rotating SECRETS_KEY" is the most involved, since it actively
+reseals stored data rather than just accepting either key going forward), but the shape is the same:
+
+1. Generate the new key/pair.
+2. Configure it as current, and the old one as previous.
+3. Restart that one service. Confirm it started clean (no `ConfigError`) and, for console
+   specifically, that the reseal actually completed (see its README).
+4. Once confident nothing still needs the old key, remove the "previous" config and restart again.
+
+**Backups taken before a rotation completes** are sealed/signed under whatever key was live at that
+time — restoring one may need a key you have since retired from live config. Keep a retired key
+alongside any backup snapshot taken before you removed it, for as long as you might restore that
+snapshot; `stack backup` does not capture `SECRETS_KEY`/`SECRETS_PREVIOUS_KEY` (they're `.env`
+values, deliberately excluded — see "What's covered" above), so this is entirely on your own secret
+management, not something a snapshot restore recovers for you.
+
 ## Restore
 
 ```
