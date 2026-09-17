@@ -9,7 +9,7 @@ No runtime dependencies. Node 22.13+.
 ```
 atc-web/
   stack/          this repo
-  notify/  auth/  media/  audit/  shortlink/  flags/  scheduler/  webhook-out/  search/  gateway/  console/
+  notify/  auth/  media/  audit/  shortlink/  flags/  scheduler/  webhook-out/  search/  ratelimit/  gateway/  console/
 ```
 
 Each sibling folder is a clone of `github.com/alitalipcalikoglu/<name>`. The workspace root itself is not a repository.
@@ -62,6 +62,7 @@ Options: `--root <dir>` (default: the parent of this checkout), `--admin-email <
 | media | 3003 | | scheduler | 3008 |
 | console | 3004 | | webhook-out | 3009 |
 | | | | search | 3010 |
+| | | | ratelimit | 3011 |
 
 ## Adding a service
 
