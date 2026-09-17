@@ -1,11 +1,12 @@
 import { spawn } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
-import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { dirname, join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { EnvFile } from './env-file.js';
 import { SERVICES } from './manifest.js';
 import { SetupContext } from './setup-context.js';
+import { Snapshot } from './snapshot.js';
 
 /**
  * The commands: `setup` (dependencies, secrets, keys, env files, routes, console build, first
@@ -99,6 +100,42 @@ export class Stack {
     return rows;
   }
 
+  /**
+   * Snapshot every stateful service's database plus the non-database state a database restore
+   * alone cannot reconstruct (media's blob storage, auth's JWT keys, gateway's routes.json,
+   * console's services.json). Safe to run against a live stack — no service is stopped.
+   * @param {{ dir?: string }} [o]
+   */
+  async backup({ dir } = {}) {
+    const snapshot = new Snapshot({ root: this.root, exec: this.exec, log: this.log });
+    const { dir: written, manifest } = await snapshot.create({ dir });
+    this.log(`backup written to ${written} (${manifest.entries.length} items)`);
+    return { dir: written, manifest };
+  }
+
+  /**
+   * Restore a snapshot written by {@link backup}. Stops the affected services under PM2, restores
+   * their files (validated before anything is touched — see {@link Snapshot.restore}), starts them
+   * again, and waits for `/ready`. Refuses (via `Snapshot.restore`) before stopping anything when
+   * the snapshot is missing, corrupt, or newer than what the running code supports.
+   * @param {string} dir
+   * @param {{ service?: string }} [o] Restrict to one service; default every service the snapshot covers.
+   */
+  async restore(dir, { service } = {}) {
+    await this.#requirePm2();
+    const snapshot = new Snapshot({ root: this.root, exec: this.exec, log: this.log });
+    const services = service ? [service] : undefined;
+    const manifest = /** @type {{ entries: { service: string }[] }} */ (JSON.parse(readFileSync(join(resolve(dir), 'manifest.json'), 'utf8')));
+    const ids = services ?? [...new Set(manifest.entries.map((e) => e.service))];
+    for (const id of ids) { this.log(`${id}: pm2 stop`); await this.#run(this.root, ['pm2', 'stop', id, '--silent']).catch(() => {}); }
+    const result = await snapshot.restore(dir, { services });
+    for (const id of ids) { this.log(`${id}: pm2 start`); await this.#run(this.root, ['pm2', 'start', id, '--silent']).catch(() => {}); }
+    const ready = await this.#waitReady(20_000, ids);
+    for (const r of ready) this.log(`${r.id.padEnd(11)} ${r.ok ? 'ready' : 'NOT READY'}  ${r.url}`);
+    if (result.failed) throw new Error(`restore failed at ${result.failed.service}: ${result.failed.error} (restored: ${result.restored.join(', ') || 'none'}; skipped: ${result.skipped.join(', ') || 'none'})`);
+    return result;
+  }
+
   /** @param {string} id */
   #url(id) {
     const env = EnvFile.load(join(this.root, id, '.env'));
@@ -115,10 +152,10 @@ export class Stack {
     }
   }
 
-  /** @param {number} timeoutMs */
-  async #waitReady(timeoutMs) {
+  /** @param {number} timeoutMs @param {string[]} [ids] Restrict to these service ids; default every service. */
+  async #waitReady(timeoutMs, ids) {
     const deadline = Date.now() + timeoutMs;
-    const pending = new Set(SERVICES.map((s) => s.id));
+    const pending = new Set(ids ?? SERVICES.map((s) => s.id));
     /** @type {{ id: string, url: string, ok: boolean }[]} */
     const out = [];
     while (pending.size && Date.now() < deadline) {

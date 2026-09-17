@@ -5,8 +5,10 @@ import { Stack } from '../src/stack.js';
 
 /**
  * atc-stack <command> [options]
- *   setup   --root <dir> --host <host> --public --install --admin-email <email> --admin-password <pw>
+ *   setup    --root <dir> --host <host> --public --install --admin-email <email> --admin-password <pw>
  *   up | down | status | dev   --root <dir>
+ *   backup   --root <dir> --dir <snapshot dir>                     (default dir: <root>/backups/<timestamp>)
+ *   restore  <snapshot dir> --root <dir> --service <id>             (default: every service the snapshot covers)
  * `--root` defaults to the parent folder of this checkout (the workspace with one folder per service).
  */
 export class Cli {
@@ -15,18 +17,20 @@ export class Cli {
     const [command, ...rest] = argv;
     /** @type {Record<string, string|boolean>} */
     const flags = {};
+    /** @type {string[]} */
+    const positional = [];
     for (let i = 0; i < rest.length; i++) {
       const a = rest[i];
-      if (!a.startsWith('--')) continue;
+      if (!a.startsWith('--')) { positional.push(a); continue; }
       const next = rest[i + 1];
       if (next !== undefined && !next.startsWith('--')) { flags[a.slice(2)] = next; i++; } else flags[a.slice(2)] = true;
     }
-    return { command, flags };
+    return { command, flags, positional };
   }
 
   /** @param {string[]} argv */
   static async main(argv) {
-    const { command, flags } = Cli.parse(argv);
+    const { command, flags, positional } = Cli.parse(argv);
     const root = resolve(String(flags.root ?? resolve(new URL('../..', import.meta.url).pathname)));
     const stack = new Stack({ root });
     switch (command) {
@@ -42,8 +46,20 @@ export class Cli {
       case 'down': await stack.down(); return 0;
       case 'status': { const rows = await stack.status(); return rows.every((r) => r.ok) ? 0 : 1; }
       case 'dev': await stack.dev(); return 0;
+      case 'backup': {
+        const r = await stack.backup({ dir: flags.dir === undefined ? undefined : String(flags.dir) });
+        console.log(`\nbackup written to ${r.dir}`);
+        return 0;
+      }
+      case 'restore': {
+        if (!positional[0]) { console.error('usage: atc-stack restore <snapshot dir> [--root dir] [--service id]'); return 2; }
+        const r = await stack.restore(positional[0], { service: flags.service === undefined ? undefined : String(flags.service) });
+        console.log(`\nrestored: ${r.restored.join(', ') || 'none'}`);
+        if (r.skipped.length) console.log(`skipped (not in snapshot): ${r.skipped.join(', ')}`);
+        return 0;
+      }
       default:
-        console.log('usage: atc-stack setup [--root dir] [--host host] [--public] [--install] [--admin-email e] [--admin-password p] | up | down | status | dev');
+        console.log('usage: atc-stack setup [--root dir] [--host host] [--public] [--install] [--admin-email e] [--admin-password p] | up | down | status | dev | backup [--dir dir] | restore <snapshot dir> [--service id]');
         return 2;
     }
   }

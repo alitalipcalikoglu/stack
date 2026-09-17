@@ -17,6 +17,8 @@
     "dev": "node bin/stack.js dev",
     "down": "node bin/stack.js down",
     "status": "node bin/stack.js status",
+    "backup": "node bin/stack.js backup",
+    "restore": "node bin/stack.js restore",
     "test": "node --disable-warning=ExperimentalWarning --test \"test/**/*.test.js\"",
     "typecheck": "tsc -p jsconfig.json"
   },
