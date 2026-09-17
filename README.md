@@ -32,6 +32,16 @@ npm run status     # /health and /ready of every service
 npm run down       # pm2 delete every app
 ```
 
+Backup and restore:
+
+```bash
+npm run backup                                   # snapshot every service's database and other state
+npm run restore -- backups/<timestamp>            # stop, restore, start, wait for /ready
+```
+
+See [docs/UPGRADE.md](docs/UPGRADE.md) for what's covered, restore's validation and atomicity, and
+rollback after a bad upgrade.
+
 ## What `setup` does
 
 1. **Dependencies**: `npm ci` in every folder that has no `node_modules` (or all with `--install`).
@@ -102,7 +112,8 @@ A new service is part of the stack from its first release. In the same delivery:
 | `EnvFile` | `src/env-file.js` | `.env` read/modify/write that keeps comments and order |
 | `SERVICES` | `src/manifest.js` | The service list: ports, keys, env, files, console entry |
 | `SetupContext` | `src/setup-context.js` | In-memory envs, secrets, key issuing, routes and services.json, save |
-| `Stack` | `src/stack.js` | `setup`, `up`, `down`, `dev`, `status`, first admin |
+| `Stack` | `src/stack.js` | `setup`, `up`, `down`, `dev`, `status`, `backup`, `restore`, first admin |
+| `Snapshot` | `src/snapshot.js` | Whole-workspace backup creation and validated restore |
 | `Cli` | `bin/stack.js` | Argument parsing |
 
 ## Documentation
@@ -110,6 +121,7 @@ A new service is part of the stack from its first release. In the same delivery:
 - [docs/ARCHITECTURE_AUDIT.md](docs/ARCHITECTURE_AUDIT.md) — the platform-wide architecture review: what exists, what's missing, severity, proposed changes.
 - [docs/IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md) — the staged plan carrying that review out.
 - [docs/OBSERVABILITY.md](docs/OBSERVABILITY.md) — the request-id/`traceparent` propagation rules and structured-log field vocabulary every service is measured against.
+- [docs/UPGRADE.md](docs/UPGRADE.md) — how migrations apply on upgrade, what `backup`/`restore` cover, restore's validation and atomicity, and rollback.
 - [docs/READINESS_TEMPLATE.md](docs/READINESS_TEMPLATE.md) — the 19-section production-readiness contract; every service has its own filled copy at `<service>/docs/READINESS.md`.
 - [test/integration/](test/integration/) — cross-service integration tests that spawn real service processes (`STACK_INTEGRATION=1 npm test`; plain `npm test` stays fast and spawns nothing).
 
