@@ -163,3 +163,23 @@ No service will be promoted to C/D in this plan; each README will say so.
 | 25 | Stack | Backup/restore/upgrade/compat confirmed missing; secret provider not applicable now |
 | 26 | API/worker separation | Confirmed for notify, scheduler, webhook-out |
 | 27 | Single/multi-node contract | Confirmed missing as a document; classification above |
+
+## Addendum, discovered during Stage 1
+
+Found while building the real multi-process integration test
+(`stack/test/integration/gateway-auth-audit.test.js`), not present in the original discovery pass
+because gateway's own test suite proxies to a fake echo upstream that cannot catch a path mismatch
+against a real service's actual routes:
+
+`SetupContext.gatewayRoutes()` (`stack/src/setup-context.js`) generates the `auth-public` route as
+`{ pathPrefix: '/api/auth/', stripPrefix: '/api/auth', upstreams: [this.url('auth')], ... }`. Auth's
+real routes live under `/v1/auth/*` (`auth/src/http/auth-api.js` registers `#registerV1` at prefix
+`/v1`, with `POST /auth/login` inside it). Stripping `/api/auth` from `/api/auth/login` leaves
+`/login`, which does not exist on auth — every login/register/refresh/etc. call made through a
+*real deployed* gateway using this generated `routes.json` would 404. This is a P0 correctness bug
+in generated production configuration, separate from anything in the original table above and not
+covered by Stage 0's scope (P0 fixes were auth/audit/media/geo application code, not stack's route
+generator). A fix-only follow-up has been flagged (see the spawned task chip; not fixed in Stage 1,
+per the reviewer's explicit scope instruction not to exceed Stage 1). The Stage 1 integration test
+does not exercise the broken generated route — it defines its own correct one — specifically so it
+would not silently mask this.

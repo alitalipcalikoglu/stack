@@ -105,6 +105,14 @@ A new service is part of the stack from its first release. In the same delivery:
 | `Stack` | `src/stack.js` | `setup`, `up`, `down`, `dev`, `status`, first admin |
 | `Cli` | `bin/stack.js` | Argument parsing |
 
+## Documentation
+
+- [docs/ARCHITECTURE_AUDIT.md](docs/ARCHITECTURE_AUDIT.md) — the platform-wide architecture review: what exists, what's missing, severity, proposed changes.
+- [docs/IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md) — the staged plan carrying that review out.
+- [docs/OBSERVABILITY.md](docs/OBSERVABILITY.md) — the request-id/`traceparent` propagation rules and structured-log field vocabulary every service is measured against.
+- [docs/READINESS_TEMPLATE.md](docs/READINESS_TEMPLATE.md) — the 19-section production-readiness contract; every service has its own filled copy at `<service>/docs/READINESS.md`.
+- [test/integration/](test/integration/) — cross-service integration tests that spawn real service processes (`STACK_INTEGRATION=1 npm test`; plain `npm test` stays fast and spawns nothing).
+
 ## License
 
 MIT, see [LICENSE](LICENSE).
