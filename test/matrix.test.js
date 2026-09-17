@@ -15,15 +15,16 @@ for (const s of SERVICES) {
 
 /**
  * One scenario per real service id, covering every mixed-version/failure case the plan asks for:
- * matching serviceCore majors (the common case), a different major (mismatch warning), a service
- * with no service-core dependency at all (gateway, real design), an unreachable service, a
- * malformed (non-JSON) /v1/info body, a too-old service with no /v1/info route yet (404), and an
+ * matching serviceCore majors (the common case), a different MINOR of the same major (must stay
+ * silent — only a major mismatch warns), a different major (mismatch warning), a service with no
+ * service-core dependency at all (gateway, real design), an unreachable service, a malformed
+ * (non-JSON) /v1/info body, a too-old service with no /v1/info route yet (404), and an
  * older-but-valid /v1/info response missing fields the current contract added later.
- * @type {Record<string, 'ok'|'mismatch'|'noCore'|'unreachable'|'malformed'|'notFound'|'partial'>}
+ * @type {Record<string, 'ok'|'minor'|'mismatch'|'noCore'|'unreachable'|'malformed'|'notFound'|'partial'>}
  */
 const SCENARIO = {
-  notify: 'ok', auth: 'ok', scheduler: 'ok', 'webhook-out': 'ok', search: 'ok', geo: 'ok', console: 'ok',
-  media: 'mismatch', gateway: 'noCore', shortlink: 'unreachable', audit: 'malformed', flags: 'notFound', ratelimit: 'partial',
+  notify: 'ok', auth: 'ok', scheduler: 'ok', 'webhook-out': 'ok', search: 'ok', console: 'ok',
+  geo: 'minor', media: 'mismatch', gateway: 'noCore', shortlink: 'unreachable', audit: 'malformed', flags: 'notFound', ratelimit: 'partial',
 };
 
 /** @type {typeof fetch} */
@@ -37,7 +38,7 @@ const fetchMock = async (input) => {
   if (scenario === 'notFound') return /** @type {any} */ ({ status: 404, ok: false });
   if (scenario === 'malformed') return /** @type {any} */ ({ status: 200, ok: true, json: async () => { throw new Error('not json'); } });
   if (scenario === 'partial') return /** @type {any} */ ({ status: 200, ok: true, json: async () => ({ service: id, version: '0.9.0' }) });
-  const serviceCore = scenario === 'mismatch' ? '2.0.0' : scenario === 'noCore' ? null : '1.10.0';
+  const serviceCore = scenario === 'mismatch' ? '2.0.0' : scenario === 'noCore' ? null : scenario === 'minor' ? '1.9.0' : '1.10.0';
   return /** @type {any} */ ({
     status: 200, ok: true,
     json: async () => ({ service: id, version: '1.0.0', apiVersion: 'v1', capabilities: ['x', 'y'], schemaVersion: scenario === 'noCore' ? null : 1, serviceCore }),
@@ -59,6 +60,9 @@ test('matrix(): reachability and /v1/info are independent per row; one bad servi
 
   assert.equal(byId.gateway.infoOk, true, 'a service with no service-core dependency still has a valid /v1/info');
   assert.equal(byId.gateway.serviceCore, null);
+
+  assert.equal(byId.geo.infoOk, true);
+  assert.equal(byId.geo.serviceCore, '1.9.0', 'a different MINOR is visible in the row, not hidden');
 
   assert.equal(byId.shortlink.ok, false, 'unreachable: health/ready also fail');
   assert.equal(byId.shortlink.infoOk, false);
@@ -89,6 +93,8 @@ test('matrix(): reachability and /v1/info are independent per row; one bad servi
   assert.ok(warning, 'mismatch is surfaced as a visible warning');
   assert.match(warning ?? '', /media/);
   assert.doesNotMatch(warning ?? '', /gateway/, 'a null serviceCore (no dependency) is excluded from the major-mismatch comparison, not treated as its own "major"');
+  assert.match(warning ?? '', /v1\.x: [^|]*\bgeo\b/, 'geo (serviceCore 1.9.0) is grouped under the same "v1.x" major as everyone else, not flagged as its own mismatch — only the major differs, not the minor');
+  assert.doesNotMatch(warning ?? '', /v1\.9/, 'grouping is by MAJOR only; a minor-only difference never creates its own bucket');
 });
 
 test('matrix(): a mismatched serviceCore major never affects the ok/exit-code semantics (no startup check, no runtime coupling)', async () => {
