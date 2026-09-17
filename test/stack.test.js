@@ -20,8 +20,9 @@ const TEMPLATES = /** @type {Record<string, string>} */ ({
   flags: 'PORT=3007\nHOST=0.0.0.0\nFLAGS_API_KEYS=console:REPLACE_WITH_64_HEX_CHARS,shop-backend:REPLACE_WITH_64_HEX_CHARS:read:prod\n',
   scheduler: 'PORT=3008\nHOST=0.0.0.0\nSCHEDULER_API_KEYS=console:REPLACE_WITH_64_HEX_CHARS\nSIGNING_SECRET=REPLACE_WITH_64_HEX_CHARS\nTARGET_KEYS=flags:REPLACE_WITH_THE_SCHEDULER_KEY_FROM_FLAGS_API_KEYS\nTARGET_ALLOW_HTTP=false\nTARGET_ALLOW_PRIVATE=false\nTARGET_ALLOWED_HOSTS=\n',
   'webhook-out': 'PORT=3009\nHOST=0.0.0.0\nSECRETS_KEY=REPLACE_WITH_64_HEX_CHARS\nWEBHOOK_API_KEYS=console:REPLACE_WITH_64_HEX_CHARS,shop-backend:REPLACE_WITH_64_HEX_CHARS:publish\nTARGET_ALLOW_HTTP=false\nTARGET_ALLOW_PRIVATE=false\nTARGET_ALLOWED_HOSTS=\n',
+  search: 'PORT=3010\nHOST=0.0.0.0\nSEARCH_API_KEYS=console:REPLACE_WITH_64_HEX_CHARS,shop-backend:REPLACE_WITH_64_HEX_CHARS:write:products\n',
   gateway: 'PORT=3000\nHOST=0.0.0.0\nMETRICS_TOKEN=\nAUTH_API_KEY=REPLACE_WITH_THE_GATEWAY_KEY_FROM_AUTH_API_KEYS\nMEDIA_API_KEY=REPLACE_WITH_THE_GATEWAY_KEY_FROM_MEDIA_API_KEYS\nNOTIFY_API_KEY=REPLACE_WITH_THE_GATEWAY_KEY_FROM_NOTIFY_API_KEYS\n',
-  console: 'PORT=3004\nHOST=0.0.0.0\nCOOKIE_SECURE=true\nNOTIFY_API_KEY=REPLACE_WITH_THE_CONSOLE_KEY_FROM_NOTIFY_API_KEYS\nAUTH_API_KEY=REPLACE_WITH\nMEDIA_API_KEY=REPLACE_WITH\nGATEWAY_METRICS_TOKEN=REPLACE_WITH\nAUDIT_API_KEY=REPLACE_WITH\nSHORTLINK_API_KEY=REPLACE_WITH\nFLAGS_API_KEY=REPLACE_WITH\nSCHEDULER_API_KEY=REPLACE_WITH\nWEBHOOK_OUT_API_KEY=REPLACE_WITH\n',
+  console: 'PORT=3004\nHOST=0.0.0.0\nCOOKIE_SECURE=true\nNOTIFY_API_KEY=REPLACE_WITH_THE_CONSOLE_KEY_FROM_NOTIFY_API_KEYS\nAUTH_API_KEY=REPLACE_WITH\nMEDIA_API_KEY=REPLACE_WITH\nGATEWAY_METRICS_TOKEN=REPLACE_WITH\nAUDIT_API_KEY=REPLACE_WITH\nSHORTLINK_API_KEY=REPLACE_WITH\nFLAGS_API_KEY=REPLACE_WITH\nSCHEDULER_API_KEY=REPLACE_WITH\nWEBHOOK_OUT_API_KEY=REPLACE_WITH\nSEARCH_API_KEY=REPLACE_WITH\n',
 });
 for (const [id, text] of Object.entries(TEMPLATES)) { mkdirSync(join(root, id), { recursive: true }); writeFileSync(join(root, id, '.env.example'), text); }
 mkdirSync(join(root, 'auth', 'keys'), { recursive: true }); writeFileSync(join(root, 'auth', 'keys', 'jwt-private.pem'), 'x');
@@ -54,6 +55,8 @@ test('setup wires every service: secrets, keys, URLs, console files; second run 
   assert.equal(keys('audit', 'AUDIT_API_KEYS').console.role, 'read');
   assert.equal(env('console').AUDIT_API_KEY, keys('audit', 'AUDIT_API_KEYS').console.secret);
   assert.equal(env('console').WEBHOOK_OUT_API_KEY, keys('webhook-out', 'WEBHOOK_API_KEYS').console.secret);
+  assert.equal(env('console').SEARCH_API_KEY, keys('search', 'SEARCH_API_KEYS').console.secret);
+  assert.deepEqual(Object.keys(keys('search', 'SEARCH_API_KEYS')), ['console'], 'template placeholders dropped');
   assert.equal(env('console').GATEWAY_METRICS_TOKEN, env('gateway').METRICS_TOKEN);
   assert.equal(env('console').COOKIE_SECURE, 'false');
   assert.match(env('gateway').METRICS_TOKEN, /^[0-9a-f]{64}$/);

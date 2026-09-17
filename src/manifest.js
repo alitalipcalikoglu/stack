@@ -68,6 +68,11 @@ export const SERVICES = [
     console: { type: 'webhook-out', label: 'Webhooks', keyEnv: 'WEBHOOK_OUT_API_KEY' },
   },
   {
+    id: 'search', port: 3010, keysVar: 'SEARCH_API_KEYS',
+    env: () => ({}),
+    console: { type: 'search', label: 'Search', keyEnv: 'SEARCH_API_KEY' },
+  },
+  {
     id: 'gateway', port: 3000,
     env: (c) => ({ METRICS_TOKEN: c.secret('gateway', 'METRICS_TOKEN'), AUTH_API_KEY: c.issue('auth', 'gateway'), MEDIA_API_KEY: c.issue('media', 'gateway'), NOTIFY_API_KEY: c.issue('notify', 'gateway') }),
     files: (c) => ({ 'routes.json': `${JSON.stringify(c.gatewayRoutes(), null, 2)}\n` }),
