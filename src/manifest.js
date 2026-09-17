@@ -17,8 +17,13 @@
  */
 
 /** @type {Service[]} */
-/** Every service forwards its write and security events to the audit service with its own write-role key. @param {import('./setup-context.js').SetupContext} c @param {string} id */
-const auditEnv = (c, id) => ({ AUDIT_URL: c.url('audit'), AUDIT_API_KEY: c.issue('audit', id, 'write') });
+/**
+ * Every service forwards its write and security events to the audit service with its own write-role key.
+ * @param {import('./setup-context.js').SetupContext} c
+ * @param {string} id
+ * @returns {{ AUDIT_URL: string, AUDIT_API_KEY: string }}
+ */
+const auditEnv = (c, id) => ({ AUDIT_URL: String(c.url('audit')), AUDIT_API_KEY: String(c.issue('audit', id, 'write')) });
 
 export const SERVICES = [
   {
