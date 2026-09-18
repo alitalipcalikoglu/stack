@@ -142,3 +142,24 @@ export class ServiceProcess {
 export async function stopAll(services) {
   await Promise.all(services.map((s) => s.stop().catch(() => {})));
 }
+
+/**
+ * Polls `check()` until it returns a truthy value or `timeoutMs` elapses. Bounded replacement for
+ * sleep-driven assertions: every asynchronous recovery in Stage 11 (retry, reclaim, exhaustion,
+ * flush) waits through this instead of a fixed `setTimeout`, so tests are only as slow as the real
+ * recovery takes and never hang forever.
+ * @template T
+ * @param {() => Promise<T> | T} check
+ * @param {{ timeoutMs?: number, intervalMs?: number, message?: string }} [o]
+ * @returns {Promise<T>} the first truthy result
+ */
+export async function waitUntil(check, { timeoutMs = 5_000, intervalMs = 100, message = 'condition' } = {}) {
+  const deadline = Date.now() + timeoutMs;
+  let last = /** @type {T} */ (undefined);
+  for (;;) {
+    last = await check();
+    if (last) return last;
+    if (Date.now() >= deadline) throw new Error(`waitUntil timed out after ${timeoutMs}ms waiting for: ${message}`);
+    await new Promise((r) => setTimeout(r, intervalMs));
+  }
+}
