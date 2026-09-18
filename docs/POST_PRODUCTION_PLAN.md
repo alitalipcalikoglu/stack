@@ -428,6 +428,22 @@ that doesn't cleanly fit either "fixed internal peer" or "arbitrary external tar
 checked auth, notify, scheduler, webhook-out specifically but not all 11 services' every outbound
 call exhaustively), stop and classify it explicitly with the user rather than guessing.
 
+### Closed in Phase 5
+
+Implemented per this plan, policy confirmed as sketched. `RequestContext` (not just `TraceContext`)
+was the shape actually needed — an `AsyncLocalStorage`-based per-request store carrying
+`requestId`/`traceId`/`spanId`/`parentSpanId` together, not a bare trace helper — since the logger
+integration point (`setChildLoggerFactory`, not `onRequest`; an `onRequest`-based approach was tried
+first and proven not to reach Fastify's own automatic request-log lines) needed the whole context at
+once. `X-Request-Id` was centralized for the 11 backend services in the same phase (confirmed
+byte-identical semantics first); console's different semantics were kept separate, as this plan
+anticipated leaving optional. Full outbound-call-site audit found two additional internal-by-classification
+sites beyond auth→notify/any-service→audit — gateway→ratelimit (wired) and gateway→geo (deliberately
+left unwired, cross-request IP cache has no single request to attribute to) — no call site was found
+that didn't fit the internal/external classification. All required test categories delivered,
+including the real cross-process console→backend and gateway→backend propagation tests. Full
+details and the final trust-model statement: `stack/docs/OBSERVABILITY.md`.
+
 ---
 
 ## Release blockers vs. can-ship-with-documented-limitations

@@ -324,6 +324,30 @@ today; the one real metrics module (`gateway/src/metrics.js`) already has an exp
 anti-high-cardinality design comment and uses only bounded dimensions (`route`, `upstream`,
 `status`). The plan should state this as a constraint to preserve, not a defect to fix.
 
+### Closed in Phase 5
+
+Implemented per the recommendation above, with the internal/external boundary decided as
+recommended (fixed, env-configured peer URL = internal; operator-configured target = external, never
+gets a trace header). `service-core/src/trace-context.js` (`TraceContext`, mirroring gateway's own
+field-for-field) and `service-core/src/request-context.js` (`RequestContext`, `AsyncLocalStorage`-based)
+are the new shared primitives; `service-core/src/fastify-helpers.js`'s `registerRequestContext`
+wires them into a service's Fastify app in one call (`setChildLoggerFactory`, not an `onRequest`
+hook — the latter does not reach Fastify's own built-in request-log lines, discovered and fixed
+during implementation). All 11 backend services and console now consume a trusted inbound
+`traceparent` (gated on each service's existing `TRUST_PROXY` flag — the same boundary already used
+for `X-Forwarded-*`, not a new trust primitive) and log `traceId`/`spanId` on every request line,
+including Fastify's automatic "incoming request"/"request completed" lines. `X-Request-Id` handling
+is now centralized for the 11 backend services via `requestOptions()` (byte-identical semantics
+confirmed before dedup); console's genuinely different semantics (`requestIdHeader: false`, always
+self-generated) were deliberately left unmerged. Internal propagation is explicit opt-in only
+(`RequestContext#propagationHeaders()`, called by name) at real internal call sites: auth → notify,
+gateway → ratelimit; two internal-by-classification sites (every service → audit, gateway → geo)
+were deliberately left unwired (batched multi-request flush / cross-request IP cache — neither maps
+to one request's trace). `HttpCaller` (scheduler job targets, webhook-out subscribers, audit's
+anchor webhook, notify's webhook channel) was not touched and injects nothing implicitly; each has a
+security-regression test proving no trace/request-id header reaches an external target. Full details:
+`stack/docs/OBSERVABILITY.md`.
+
 ---
 
 ## 6. Gateway breaker state limitation

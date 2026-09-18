@@ -101,6 +101,11 @@ before(async () => {
       APP_NAME: 'Harness', VERIFY_URL_TEMPLATE: 'https://example.test/verify?token={token}', RESET_URL_TEMPLATE: 'https://example.test/reset?token={token}',
       NOTIFY_URL: notify.baseUrl, NOTIFY_API_KEY: authToNotifySecret,
       AUDIT_URL: audit.baseUrl, AUDIT_API_KEY: authToAuditSecret,
+      // Post-production Phase 5: gateway is auth's own real trusted proxy in production — this
+      // is the exact same trust declaration auth already makes for X-Forwarded-For, now reused
+      // for traceparent too. Independent of gateway's OWN inbound trust of the client, tested
+      // separately above.
+      TRUST_PROXY: 'true',
     },
   });
   await auth.start();
@@ -231,6 +236,32 @@ test('gateway (TRUST_PROXY=true) honours a caller-supplied request id; the same,
   const authCompleted = auth.findLog((f) => f.msg === 'request completed' && f.reqId === suppliedId);
   assert.ok(authCompleted, `auth logged completion for the caller-supplied id ${suppliedId}. Recent lines: ${JSON.stringify(auth.lines.slice(-8).map((l) => l.raw))}`);
   assert.equal(/** @type {any} */ (authCompleted?.res)?.statusCode, 200);
+});
+
+test('Post-production Phase 5: a real traceparent gateway mints for a login crosses into auth (a real, separate process) with the SAME trace-id and a FRESH span-id, visible in auth\'s own structured log', { skip }, async (t) => {
+  const gateway = await startGateway({ trustProxy: true });
+  t.after(() => gateway.stop());
+  const { email, password } = await registerUser();
+
+  const loginRes = await fetch(`${gateway.baseUrl}/api/auth/v1/auth/login`, {
+    method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ email, password }),
+  });
+  assert.equal(loginRes.status, 200, await loginRes.text());
+  const gatewayTraceparent = loginRes.headers.get('traceparent');
+  assert.ok(gatewayTraceparent, 'gateway echoed its own traceparent on the response');
+  const TRACEPARENT = /^00-([0-9a-f]{32})-([0-9a-f]{16})-([0-9a-f]{2})$/;
+  const gw = TRACEPARENT.exec(/** @type {string} */ (gatewayTraceparent));
+  assert.ok(gw, `expected a well-formed traceparent, got ${gatewayTraceparent}`);
+  const gatewayTraceId = gw?.[1];
+  const gatewaySpanId = gw?.[2];
+
+  await new Promise((r) => setTimeout(r, 50));
+  const requestId = loginRes.headers.get('x-request-id');
+  const authCompleted = auth.findLog((f) => f.msg === 'request completed' && f.reqId === requestId);
+  assert.ok(authCompleted, `auth logged completion for reqId ${requestId}. Recent lines: ${JSON.stringify(auth.lines.slice(-8).map((l) => l.raw))}`);
+  assert.equal(/** @type {any} */ (authCompleted).traceId, gatewayTraceId, 'auth (a real, separate OS process) continued the SAME trace gateway started, received purely over HTTP');
+  assert.notEqual(/** @type {any} */ (authCompleted).spanId, gatewaySpanId, 'auth minted its own FRESH span-id for this hop, never reusing gateway\'s');
+  assert.match(String(/** @type {any} */ (authCompleted).spanId), /^[0-9a-f]{16}$/);
 });
 
 test('media-user route (Stage 1.1 regression): the real generated routes.json resolves through gateway to media’s actual upload route, not a stripped-too-short one', { skip }, async (t) => {

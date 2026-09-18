@@ -60,35 +60,72 @@ is fresh per hop:
 traceparent: 00-<32 hex trace-id>-<16 hex span-id>-<2 hex flags>
 ```
 
-**Implemented: gateway and console (Stage 10)**, both as trust boundaries, both the same way.
-`gateway/src/trace-context.js` (`TraceContext`) parses an inbound header, validates it (rejects a
-malformed value and the spec's reserved all-zero trace-id/parent-id), and — under the *same*
-`TRUST_PROXY` gate as the request id — either continues the caller's trace-id or starts a fresh
-one; a new span id is always minted for the gateway's own hop, never the caller's. The result is
-forwarded to the matched upstream in `proxy.js`, echoed on the response, and its `traceId` is added
-to the gateway's access log line. `console/src/trace-context.js` (also `TraceContext`, an
-independent copy, not a shared dependency) applies the identical policy console already has for
-`X-Request-Id`: since console has no `TRUST_PROXY`-equivalent gate (it is reached directly by
-browsers, exactly like the gateway with no trusted proxy in front of it), it never reads or trusts
-an inbound `traceparent` at all — it always mints a fresh trace for the request it's handling, and
-a fresh span id per *outbound hop* (`TraceContext#span()`, not reused across the several services
-one console request commonly fans out to), forwarded via the same `AsyncLocalStorage` mechanism
-`requestIdContext` already uses (`src/services/client.js`), and echoed on its own response.
-No backend service (audit, notify, auth, media, shortlink, flags, scheduler, webhook-out, search,
-ratelimit, geo) parses, forwards, or logs `traceparent` yet.
+**Implemented: gateway, console, and every backend service (Stage 10; centralized consumption
+closed in post-production Phase 5).** Two independent, behaviourally-identical implementations of
+the same convention:
 
-**What this means concretely today:** a call that goes browser → gateway → auth gets a `traceId`
-in the gateway's own log and on the wire to auth, but auth does not read or log it — the
-correlation across that specific hop today is by `X-Request-Id` (which auth does log), not by
-`traceId`. A call browser → console → any service is now correlated by both `X-Request-Id` and
-`traceparent` on the wire (console → service), but — same as the gateway → auth case — the
-receiving backend service does not yet read or log `traceId` itself; the correlation on that hop is
-still by `X-Request-Id` until a backend service adopts `traceparent` too. Adopting `traceparent` in
-a backend service means: parse it the same trust-unconditional way that service already treats
-`X-Request-Id` (these are internal services; there is no boundary to gate), log `traceId`/`spanId`,
-and forward a value with a fresh span id on any outbound call it makes. None of that requires a
-tracing SDK — see `gateway/src/trace-context.js` or `console/src/trace-context.js` for a
-dependency-free implementation to copy.
+- **gateway** (no `@atc-web/service-core` dependency — a deliberate, standing choice, unrelated to
+  this convention): `gateway/src/trace-context.js` (`TraceContext`) parses an inbound header,
+  validates it (rejects a malformed value and the spec's reserved all-zero trace-id/parent-id), and
+  — under the *same* `TRUST_PROXY` gate as the request id — either continues the caller's trace-id
+  or starts a fresh one; a new span id is always minted for the gateway's own hop, never the
+  caller's. Forwarded to the matched upstream in `proxy.js`, echoed on the response, its `traceId`
+  added to the gateway's access log line.
+- **console and every backend service** (audit, notify, auth, media, shortlink, flags, scheduler,
+  webhook-out, search, ratelimit, geo): `@atc-web/service-core/trace`'s `TraceContext` (source of
+  truth: gateway's own, reproduced field for field, not derived from it at build time) plus
+  `@atc-web/service-core/request-context`'s `RequestContext` (an `AsyncLocalStorage`-based
+  per-request correlation store), wired into each service's own `Fastify(...)` app by one call to
+  `@atc-web/service-core/fastify`'s `registerRequestContext(app, { trustProxy: config.trustProxy })`
+  — the identical trust gate every one of these services already declares for `X-Forwarded-*`,
+  reused, not a new boundary. **console previously kept its own independent copy of this
+  (`console/src/trace-context.js`, an `AsyncLocalStorage` in `services/client.js`) — that copy is
+  gone; console now uses the exact same shared primitive every backend does**, with its own
+  `trustProxy` (default `false`, since a browser reaches console directly — no proxy in front of it
+  by default) governing whether it ever adopts a browser-supplied trace-id, same policy as before,
+  now on the shared implementation instead of a duplicated one.
+
+**What this means concretely, end to end:** a call that goes browser → gateway → auth now gets a
+`traceId` in the gateway's own log AND in auth's own log — the SAME trace-id, with auth minting its
+own fresh `spanId` for that hop, `parentSpanId` set to the span gateway used — proven with two real,
+separate OS processes in `stack/test/integration/gateway-auth-audit.test.js`. The same is true for
+console → any backend (`stack/test/integration/console-audit-trace.test.js`), with console's own
+trust boundary (default: never trusts an inbound browser-supplied traceparent) applying exactly as
+it always did, now via the shared primitive. Every backend service's `request.log` — including
+Fastify's own automatic "incoming request"/"request completed" lines, not just explicit
+application-level log calls — now carries `traceId`/`spanId` with zero per-call-site changes,
+because `registerRequestContext` hooks Fastify's own per-request logger *creation*
+(`setChildLoggerFactory`), not a later reassignment.
+
+### Trust model — read this before wiring anything new to `traceparent`
+
+**Trace identifiers are correlation metadata, not authentication or authorization identities.**
+Nothing in this platform makes a security, rate-limit, or tenant decision based on a `traceparent`
+or `X-Request-Id` value, anywhere, and nothing should ever start. The `TRUST_PROXY` gate above
+decides only whether an inbound trace-id is *continued* for correlation purposes — it has no
+bearing on, and is never consulted by, any service's real authentication (API-key/session) or
+authorization logic, which remains completely separate and unaffected.
+
+**External/operator-configured HTTP targets do not receive platform trace context automatically.**
+`@atc-web/service-core/http`'s `HttpCaller` — the transport every genuinely external, operator-
+configured call goes through (scheduler's job targets, webhook-out's subscriber endpoints, audit's
+anchor webhook; notify's webhook channel has its own pre-existing, unrelated transport) — was not
+touched by this: it has no notion of trust and injects nothing implicitly, and none of those three
+wrapper classes build a trace header into what they send. Proven as a security regression, not just
+asserted: each has a test capturing the real outbound HTTP headers to a real local receiver and
+asserting `traceparent`/`x-request-id` are absent (`scheduler/test/worker.test.js`, `webhook-out/
+test/worker.test.js`, `notify/test/worker.test.js`, `audit/test/anchors.test.js`). Propagation is
+opt-in and explicit at exactly the internal, trusted-platform-dependency call sites that use it —
+`RequestContext#propagationHeaders()`, called by name, never automatic — currently: auth → notify
+(`auth/src/domain/mailer.js`) and gateway → ratelimit (`gateway/src/rate-limit-client.js`, gateway's
+own request/trace, no service-core dependency needed for this one call site). Two internal call
+sites were deliberately left unwired despite being "trusted internal" by classification — every
+service → audit (`@atc-web/service-core/audit`'s `AuditClient`) and gateway → geo
+(`gateway/src/geo-client.js`) — both because they don't have a single originating request to
+propagate from: `AuditClient` batches events from possibly-many different requests into one flush
+call, and `GeoClient` caches lookups by IP across many requests, so neither outbound HTTP call maps
+cleanly to "this one request's trace"; forcing propagation onto either would be attaching a
+plausible-looking but structurally meaningless trace-id, not real correlation.
 
 ## Structured log fields
 
@@ -98,8 +135,8 @@ that service's `docs/READINESS.md` ("Logging" section) rather than silently abse
 | Field | Meaning | Emits it today |
 |---|---|---|
 | `reqId` | The request id (see above). | Every service (Fastify's default request logging, or gateway's own `access` log line). |
-| `traceId` | The W3C trace id (see above). | gateway only (`access` log line). |
-| `spanId` | This hop's span id within the trace. | Nowhere yet (implicit in gateway's `traceparent`, not logged as a separate field). |
+| `traceId` | The W3C trace id (see above). | Every service (gateway's `access` line; every other service's Fastify request logger, including its automatic "incoming request"/"request completed" lines, via `registerRequestContext`). |
+| `spanId` | This hop's span id within the trace. | Every service, same mechanism as `traceId` above (post-production Phase 5 — previously implicit in gateway's own `traceparent` only, not logged as a separate field anywhere). |
 | `route` / `op` | Which route or operation handled the request (gateway logs `route`; most services log the Fastify path implicitly via `req.url`, not a normalised operation name). | gateway (`route`). |
 | `durationMs` | Wall-clock time to handle the request. | gateway's `access` line explicitly; Fastify's default logging reports `responseTime` (same idea, different field name) everywhere else. |
 | `upstream` | Which upstream origin a proxied request was sent to. | gateway only (it is the only proxy). |
@@ -108,13 +145,15 @@ that service's `docs/READINESS.md` ("Logging" section) rather than silently abse
 | `version` | This service's own package version. | Nowhere yet. |
 | `code` | A machine-readable error/outcome code, when the line represents one. | Domain error responses already carry a `code` in their HTTP body (`{ error: { code, message } }` everywhere); it is not yet echoed into the log line itself except where a handler does so ad hoc (e.g. gateway's `code` field on dependency-failure warnings). |
 
-`service`, `version`, `spanId`, `upstreamMs` and a normalised `op` are deliberately left for later:
-`service`/`version` are naturally produced once every service exposes `GET /v1/info` (a later
-stage), and the rest are naturally produced once the shared infrastructure extraction (`db.js`,
-`ApiKeyAuth`, the probes/error-handler boilerplate already duplicated across every service) has a
-home to live in, so they're added once instead of in eleven separate, slowly-diverging copies.
-Adding them piecemeal now, service by service, ahead of that extraction would mean redoing the
-same edit eleven times later.
+`service`, `version`, `upstreamMs` and a normalised `op` are deliberately left for later:
+`service`/`version` are naturally produced once every service exposes `GET /v1/info` (already true
+today, just not yet fed into the logger), and the rest are naturally produced once there's a
+natural home for them to live in, added once instead of in eleven separate, slowly-diverging
+copies. `traceId`/`spanId` are no longer on this deferred list — see above.
+
+Neither `traceId` nor `spanId` (nor `reqId`) is ever used as a metric/Prometheus label anywhere in
+this platform — every `/metrics` route's cardinality stays bounded by real dimensions (route,
+status, outcome), never by a per-request identifier.
 
 ## `/health` and `/ready`
 
