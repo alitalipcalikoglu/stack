@@ -148,6 +148,34 @@ environment — PM2 is not installed here. Everything PM2-free under those same 
 generation for both ecosystem modes, `Stack#backup()`, and — critically for the finding above —
 `Snapshot#restore()`'s actual data-restore correctness) was exercised for real.
 
+### R1 coverage-completeness closure (system-level upgrade + restore drills)
+
+Two coverage gaps left open by the initial R1 pass were closed with real drills, no production code
+change (`RELEASE_AUDIT.md` §21 has the full detail):
+
+- **Upgrade drill, the two representative services `migration-e2e.test.js` didn't cover**: `media`
+  and `scheduler`, each via a real old-schema (`openOldFixtureDb`) fixture with real pre-existing
+  domain data, a real production entrypoint, real migration to current schema, real API
+  verification (media: canonical bytes byte-for-byte plus `delete_token` backfill; scheduler: the
+  seeded job, `worker_heartbeat` table creation), and a real **second** start proving the migration
+  is idempotent with data still intact.
+- **Full restore drill, one coherent multi-service snapshot**: `media`, `audit`, `notify`,
+  `scheduler`, `webhook-out` running together, real pre-backup state via each service's own public
+  API, one real `stack.backup()` covering all five, real post-backup mutations on the same live
+  processes (real, un-forced WAL activity confirmed present on all five before stop — not
+  synthetic), real controlled stop, real `Snapshot#restore()` (PM2 wrapper still unexecuted, noted),
+  real restart, real verification: every pre-backup item present, every post-backup item gone,
+  audit chain still verifies, one shared `runId` proving all five restored from the same backup
+  generation together (not a distributed-transaction claim — just that `restore()` applied every
+  entry from the one manifest).
+
+A real, unrelated methodology bug was found and fixed *during* this closure, not left in: the first
+draft of the multi-service drill script pointed each service's working directory at the real
+checked-out repo instead of the disposable scratch root, writing real (gitignored, untracked)
+`data/` directories into five real repos. Caught before conclusions were drawn from it, the real
+repos' accidental `data/` directories were removed, and the script was fixed to use the scratch root
+before any evidence was accepted. `git status` confirmed no tracked file was ever affected.
+
 R2 has not started.
 
 ## Phase R2 — Versioning + release metadata

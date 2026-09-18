@@ -606,3 +606,57 @@ code and now behaves correctly: the pre-backup user logs in, the post-backup use
 signing key continuity holds. `Stack#restore()`'s own PM2 stop/start wrapper remains unexecuted in
 this environment (PM2 unavailable) — `Snapshot#restore()`'s data-restore correctness, the part this
 finding is about, was proven independently of it, per instruction.
+
+## 21. Upgrade/restore drill coverage completeness — closed in R1
+
+Two coverage gaps identified in R1's first pass, closed with real drills, no production code
+change.
+
+**Media upgrade drill (real, no shortcuts):** a real one-version-old fixture (`openOldFixtureDb`
+against `media`'s own real `Database` — v1 schema, no `delete_token` column) seeded with a real
+`blobs` row, a real `files` row, and real canonical bytes on disk at the real sharded path
+(`objects/<sha[0:2]>/<sha[2:4]>/<sha>`). Real `node src/index.js` start migrates to v2; `/v1/info`
+reports `schemaVersion: 2`; `GET /v1/files/:id` returns the correct `sha256`; the on-disk bytes at
+the canonical path are still byte-identical; `delete_token` backfilled `NULL` for the pre-existing
+row (direct SQLite check, matching the `notify` migration test's own verification style). A real
+**second** start of the same real entrypoint against the now-current-schema file: migration is a
+no-op, the file is still there via the real API. Trash/quarantine (Phase 4 territory) untouched —
+not seeded, not exercised.
+
+**Scheduler upgrade drill (real, no shortcuts):** a real one-version-old fixture (`runs` table
+without `owner_token`/`lease_until`, no `worker_heartbeat` table) seeded with a real `jobs` row (a
+one-off `schedule.at` one year in the future — never due during the drill, so no worker-execution
+concern even though the drill deliberately used the API-only `src/api-main.js` entrypoint, matching
+`notify`'s own established pattern for this exact reason). Real start migrates to v2; `/v1/info`
+reports `schemaVersion: 2`; the real `GET /v1/jobs/:name` API confirms the job survived with its
+name and `enabled` flag intact; direct SQLite check confirms `worker_heartbeat` was created by the
+migration. A real second start: no-op migration, job still there via the real API.
+
+**Full multi-service restore drill (real, one coherent snapshot):** `media`, `audit`, `notify`,
+`scheduler`, `webhook-out` — five real service processes, started together against one
+`stack.setup()`-wired scratch workspace (real generated secrets/cross-service keys, not hand-rolled).
+Pre-backup state created through each service's own real public API: a real media file upload (a
+genuine, distinct, valid 1×1 PNG — not a hand-edited byte stream, which was tried first and correctly
+rejected by media's own real image-decode validation), a real audit event, a real notify message, a
+real scheduler job, a real webhook-out subscription plus a real published event actually delivered
+to a real local HTTP receiver. One real `stack.backup()` call covers all five. Real post-backup
+mutations follow on the same still-running processes — real, ordinary, non-forced SQLite WAL
+activity (`-wal` files confirmed present for **all five** services immediately before stop, not
+manufactured). Real controlled `SIGTERM`+wait stop (no PM2 mimicry). Real `Snapshot#restore()`
+(the exact class/method `Stack#restore()` calls internally; its PM2 stop/start wrapper is the one
+part not executed here, per the standing PM2-unavailable note) against all five, sharing one
+`runId`. Real restart. Real verification via each service's own API: every pre-backup item present
+(media file, audit event — chain still verifies — notify message, scheduler job, webhook-out's
+pre-backup delivered event), every post-backup item gone (404/absent in every case), confirming all
+five were restored together from the one shared backup generation, not a mix of pre/post-backup
+states across services.
+
+**A real, unrelated methodology bug was caught and fixed during this drill, not glossed over:** the
+first draft of the multi-service script passed each service's *real checked-out repo* as its working
+directory instead of the disposable scratch root — an ordinary path-variable mistake (`workspaceRoot`
+used where `R`, the scratch root, was meant), not a product issue. This wrote real (but gitignored,
+untracked) `data/` directories into five real repos on disk. Caught by inspecting the filesystem
+directly before drawing any conclusion from the run, not assumed clean: `git status --ignored` in
+each of the five repos confirmed every affected path was already `.gitignore`d and never tracked;
+the accidentally-created `data/` directories were removed; the script was corrected to use the
+scratch root; the drill was re-run cleanly and its results (above) are from that corrected run only.
