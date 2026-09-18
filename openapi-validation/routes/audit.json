@@ -1,0 +1,21 @@
+{
+  "service": "audit",
+  "routes": [
+    { "method": "GET", "path": "/.well-known/audit-anchor-key" },
+    { "method": "GET", "path": "/health" },
+    { "method": "GET", "path": "/ready" },
+    { "method": "GET", "path": "/v1/info" },
+    { "method": "POST", "path": "/v1/events" },
+    { "method": "POST", "path": "/v1/events/batch" },
+    { "method": "GET", "path": "/v1/events" },
+    { "method": "GET", "path": "/v1/events/export" },
+    { "method": "GET", "path": "/v1/events/{id}" },
+    { "method": "GET", "path": "/v1/chain/head" },
+    { "method": "GET", "path": "/v1/chain/verify" },
+    { "method": "GET", "path": "/v1/chain/anchors" },
+    { "method": "GET", "path": "/v1/chain/anchors/latest" },
+    { "method": "GET", "path": "/v1/stats" },
+    { "method": "GET", "path": "/metrics" }
+  ],
+  "exclusions": []
+}

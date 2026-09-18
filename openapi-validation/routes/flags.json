@@ -1,0 +1,25 @@
+{
+  "service": "flags",
+  "routes": [
+    { "method": "GET", "path": "/health" },
+    { "method": "GET", "path": "/ready" },
+    { "method": "GET", "path": "/v1/info" },
+    { "method": "GET", "path": "/v1/environments" },
+    { "method": "POST", "path": "/v1/flags" },
+    { "method": "GET", "path": "/v1/flags" },
+    { "method": "GET", "path": "/v1/flags/{key}" },
+    { "method": "PATCH", "path": "/v1/flags/{key}" },
+    { "method": "DELETE", "path": "/v1/flags/{key}" },
+    { "method": "GET", "path": "/v1/flags/{key}/history" },
+    { "method": "GET", "path": "/v1/history" },
+    { "method": "GET", "path": "/v1/flags/{key}/envs/{env}" },
+    { "method": "PATCH", "path": "/v1/flags/{key}/envs/{env}" },
+    { "method": "POST", "path": "/v1/flags/{key}/envs/{env}/copy" },
+    { "method": "POST", "path": "/v1/evaluate" },
+    { "method": "GET", "path": "/v1/evaluate" },
+    { "method": "GET", "path": "/v1/snapshot/{env}" },
+    { "method": "GET", "path": "/v1/stats" },
+    { "method": "GET", "path": "/metrics" }
+  ],
+  "exclusions": []
+}

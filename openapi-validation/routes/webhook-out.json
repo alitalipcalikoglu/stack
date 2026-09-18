@@ -1,0 +1,28 @@
+{
+  "service": "webhook-out",
+  "routes": [
+    { "method": "GET", "path": "/health" },
+    { "method": "GET", "path": "/ready" },
+    { "method": "GET", "path": "/v1/info" },
+    { "method": "GET", "path": "/metrics" },
+    { "method": "POST", "path": "/v1/subscriptions" },
+    { "method": "GET", "path": "/v1/subscriptions" },
+    { "method": "GET", "path": "/v1/subscriptions/{id}" },
+    { "method": "PATCH", "path": "/v1/subscriptions/{id}" },
+    { "method": "DELETE", "path": "/v1/subscriptions/{id}" },
+    { "method": "POST", "path": "/v1/subscriptions/{id}/rotate" },
+    { "method": "POST", "path": "/v1/subscriptions/{id}/test" },
+    { "method": "POST", "path": "/v1/subscriptions/{id}/replay" },
+    { "method": "GET", "path": "/v1/subscriptions/{id}/deliveries" },
+    { "method": "POST", "path": "/v1/events" },
+    { "method": "GET", "path": "/v1/events" },
+    { "method": "GET", "path": "/v1/events/{id}" },
+    { "method": "GET", "path": "/v1/event-types" },
+    { "method": "GET", "path": "/v1/deliveries" },
+    { "method": "GET", "path": "/v1/deliveries/{id}" },
+    { "method": "POST", "path": "/v1/deliveries/{id}/redeliver" },
+    { "method": "POST", "path": "/v1/deliveries/{id}/cancel" },
+    { "method": "GET", "path": "/v1/stats" }
+  ],
+  "exclusions": []
+}

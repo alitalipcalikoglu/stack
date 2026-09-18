@@ -1,0 +1,39 @@
+{
+  "service": "geo",
+  "routes": [
+    { "method": "GET", "path": "/health" },
+    { "method": "GET", "path": "/ready" },
+    { "method": "GET", "path": "/v1/info" },
+    { "method": "GET", "path": "/v1/ip/self" },
+    { "method": "GET", "path": "/v1/ip/{ip}" },
+    { "method": "POST", "path": "/v1/ip/batch" },
+    { "method": "GET", "path": "/v1/database" },
+    { "method": "POST", "path": "/v1/database/reload" },
+    { "method": "GET", "path": "/v1/countries" },
+    { "method": "GET", "path": "/v1/countries/{code}" },
+    { "method": "GET", "path": "/v1/currencies" },
+    { "method": "GET", "path": "/v1/currencies/{code}" },
+    { "method": "GET", "path": "/v1/timezones" },
+    { "method": "GET", "path": "/v1/timezones/{tzPath}" },
+    { "method": "GET", "path": "/v1/phone" },
+    { "method": "POST", "path": "/v1/phone/batch" },
+    { "method": "GET", "path": "/v1/distance" },
+    { "method": "GET", "path": "/v1/collections" },
+    { "method": "POST", "path": "/v1/collections" },
+    { "method": "GET", "path": "/v1/collections/{name}" },
+    { "method": "PATCH", "path": "/v1/collections/{name}" },
+    { "method": "DELETE", "path": "/v1/collections/{name}" },
+    { "method": "POST", "path": "/v1/collections/{name}/clear" },
+    { "method": "PUT", "path": "/v1/collections/{name}/places" },
+    { "method": "GET", "path": "/v1/collections/{name}/places" },
+    { "method": "GET", "path": "/v1/collections/{name}/places/{id}" },
+    { "method": "DELETE", "path": "/v1/collections/{name}/places/{id}" },
+    { "method": "GET", "path": "/v1/collections/{name}/nearby" },
+    { "method": "GET", "path": "/v1/stats" },
+    { "method": "GET", "path": "/metrics" }
+  ],
+  "exclusions": [],
+  "notes": [
+    "Real Fastify route is GET /v1/timezones/* (a multi-segment wildcard capturing embedded '/', e.g. Europe/Istanbul). Standard OpenAPI {param} templating cannot represent an embedded slash. Manifest uses /v1/timezones/{tzPath} as the documented convention (per Phase 0 audit finding); the spec MUST include a description note on this path explaining the wildcard semantics."
+  ]
+}

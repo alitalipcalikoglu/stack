@@ -1,0 +1,16 @@
+{
+  "service": "gateway",
+  "routes": [
+    { "method": "GET", "path": "/health" },
+    { "method": "GET", "path": "/ready" },
+    { "method": "GET", "path": "/v1/info" },
+    { "method": "GET", "path": "/metrics" }
+  ],
+  "exclusions": [
+    {
+      "route": "ANY <routes.json-driven proxy dispatcher>",
+      "reason": "Deployment-config-driven reverse proxy, not a fixed source-level contract; the actual path/method set differs per environment's routes.json. Represented as prose/x-gateway-routes note in the spec, not as OpenAPI paths.",
+      "classification": "internal-routing, not part of gateway's own canonical contract"
+    }
+  ]
+}

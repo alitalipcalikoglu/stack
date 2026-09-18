@@ -1,0 +1,26 @@
+{
+  "service": "ratelimit",
+  "routes": [
+    { "method": "GET", "path": "/health" },
+    { "method": "GET", "path": "/ready" },
+    { "method": "GET", "path": "/v1/info" },
+    { "method": "GET", "path": "/metrics" },
+    { "method": "POST", "path": "/v1/check" },
+    { "method": "POST", "path": "/v1/check/batch" },
+    { "method": "POST", "path": "/v1/release" },
+    { "method": "POST", "path": "/v1/policies" },
+    { "method": "GET", "path": "/v1/policies" },
+    { "method": "GET", "path": "/v1/policies/{name}" },
+    { "method": "PATCH", "path": "/v1/policies/{name}" },
+    { "method": "DELETE", "path": "/v1/policies/{name}" },
+    { "method": "GET", "path": "/v1/policies/{name}/stats" },
+    { "method": "GET", "path": "/v1/policies/{name}/top" },
+    { "method": "GET", "path": "/v1/policies/{name}/overrides" },
+    { "method": "PUT", "path": "/v1/policies/{name}/overrides/{subject}" },
+    { "method": "DELETE", "path": "/v1/policies/{name}/overrides/{subject}" },
+    { "method": "GET", "path": "/v1/policies/{name}/subjects/{subject}" },
+    { "method": "DELETE", "path": "/v1/policies/{name}/subjects/{subject}/usage" },
+    { "method": "GET", "path": "/v1/stats" }
+  ],
+  "exclusions": []
+}

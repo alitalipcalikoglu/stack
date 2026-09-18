@@ -1,0 +1,24 @@
+{
+  "service": "scheduler",
+  "routes": [
+    { "method": "GET", "path": "/health" },
+    { "method": "GET", "path": "/ready" },
+    { "method": "GET", "path": "/v1/info" },
+    { "method": "GET", "path": "/metrics" },
+    { "method": "POST", "path": "/v1/jobs" },
+    { "method": "GET", "path": "/v1/jobs" },
+    { "method": "GET", "path": "/v1/jobs/{name}" },
+    { "method": "PATCH", "path": "/v1/jobs/{name}" },
+    { "method": "DELETE", "path": "/v1/jobs/{name}" },
+    { "method": "POST", "path": "/v1/jobs/{name}/run" },
+    { "method": "GET", "path": "/v1/jobs/{name}/runs" },
+    { "method": "GET", "path": "/v1/runs" },
+    { "method": "GET", "path": "/v1/runs/{id}" },
+    { "method": "POST", "path": "/v1/runs/{id}/cancel" },
+    { "method": "GET", "path": "/v1/schedule/preview" },
+    { "method": "GET", "path": "/v1/target-keys" },
+    { "method": "GET", "path": "/v1/timezones" },
+    { "method": "GET", "path": "/v1/stats" }
+  ],
+  "exclusions": []
+}

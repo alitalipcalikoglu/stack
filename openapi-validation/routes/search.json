@@ -1,0 +1,24 @@
+{
+  "service": "search",
+  "routes": [
+    { "method": "GET", "path": "/health" },
+    { "method": "GET", "path": "/ready" },
+    { "method": "GET", "path": "/v1/info" },
+    { "method": "GET", "path": "/metrics" },
+    { "method": "POST", "path": "/v1/indexes" },
+    { "method": "GET", "path": "/v1/indexes" },
+    { "method": "GET", "path": "/v1/indexes/{name}" },
+    { "method": "PATCH", "path": "/v1/indexes/{name}" },
+    { "method": "DELETE", "path": "/v1/indexes/{name}" },
+    { "method": "POST", "path": "/v1/indexes/{name}/clear" },
+    { "method": "PUT", "path": "/v1/indexes/{name}/documents" },
+    { "method": "GET", "path": "/v1/indexes/{name}/documents" },
+    { "method": "GET", "path": "/v1/indexes/{name}/documents/{id}" },
+    { "method": "DELETE", "path": "/v1/indexes/{name}/documents/{id}" },
+    { "method": "GET", "path": "/v1/indexes/{name}/search" },
+    { "method": "POST", "path": "/v1/indexes/{name}/search" },
+    { "method": "GET", "path": "/v1/indexes/{name}/suggest" },
+    { "method": "GET", "path": "/v1/stats" }
+  ],
+  "exclusions": []
+}

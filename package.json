@@ -9,8 +9,12 @@
     "url": "git+https://github.com/alitalipcalikoglu/stack.git"
   },
   "type": "module",
-  "bin": { "atc-stack": "bin/stack.js" },
-  "engines": { "node": ">=22.13" },
+  "bin": {
+    "atc-stack": "bin/stack.js"
+  },
+  "engines": {
+    "node": ">=22.13"
+  },
   "scripts": {
     "setup": "node bin/stack.js setup",
     "up": "node bin/stack.js up",
@@ -24,6 +28,7 @@
   },
   "devDependencies": {
     "@types/node": "22.20.3",
-    "typescript": "7.0.2"
+    "typescript": "7.0.2",
+    "yaml": "^2.9.1"
   }
 }

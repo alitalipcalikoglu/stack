@@ -1,0 +1,31 @@
+{
+  "service": "shortlink",
+  "routes": [
+    { "method": "GET", "path": "/health" },
+    { "method": "GET", "path": "/ready" },
+    { "method": "GET", "path": "/v1/info" },
+    { "method": "GET", "path": "/robots.txt" },
+    { "method": "GET", "path": "/metrics" },
+    { "method": "POST", "path": "/v1/links" },
+    { "method": "GET", "path": "/v1/links" },
+    { "method": "GET", "path": "/v1/links/{code}" },
+    { "method": "PATCH", "path": "/v1/links/{code}" },
+    { "method": "DELETE", "path": "/v1/links/{code}" },
+    { "method": "GET", "path": "/v1/links/{code}/stats" },
+    { "method": "GET", "path": "/v1/links/{code}/qr" },
+    { "method": "GET", "path": "/v1/qr" },
+    { "method": "GET", "path": "/v1/stats" },
+    { "method": "GET", "path": "/{code}/qr" },
+    { "method": "GET", "path": "/{code}" }
+  ],
+  "exclusions": [
+    {
+      "route": "HEAD /{code}",
+      "reason": "Fastify auto-generated HEAD variant of the GET redirect route, same handler, no separate registration.",
+      "classification": "framework-generated, not a distinct application route"
+    }
+  ],
+  "notes": [
+    "GET /{code} covers both the redirect and the '+'-suffixed preview page — same route registration, branch on whether the path segment ends in '+'. One OpenAPI path, document both behaviors in the description."
+  ]
+}

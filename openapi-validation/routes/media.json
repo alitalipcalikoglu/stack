@@ -1,0 +1,20 @@
+{
+  "service": "media",
+  "routes": [
+    { "method": "GET", "path": "/health" },
+    { "method": "GET", "path": "/ready" },
+    { "method": "GET", "path": "/v1/info" },
+    { "method": "PUT", "path": "/v1/files" },
+    { "method": "PUT", "path": "/v1/uploads/{token}" },
+    { "method": "GET", "path": "/files/{id}/{variant}" },
+    { "method": "GET", "path": "/v1/files" },
+    { "method": "GET", "path": "/v1/files/{id}" },
+    { "method": "PATCH", "path": "/v1/files/{id}" },
+    { "method": "DELETE", "path": "/v1/files/{id}" },
+    { "method": "POST", "path": "/v1/files/{id}/restore" },
+    { "method": "POST", "path": "/v1/files/{id}/urls" },
+    { "method": "POST", "path": "/v1/uploads" },
+    { "method": "GET", "path": "/metrics" }
+  ],
+  "exclusions": []
+}

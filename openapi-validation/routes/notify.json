@@ -1,0 +1,15 @@
+{
+  "service": "notify",
+  "routes": [
+    { "method": "GET", "path": "/health" },
+    { "method": "GET", "path": "/ready" },
+    { "method": "GET", "path": "/v1/info" },
+    { "method": "POST", "path": "/v1/messages" },
+    { "method": "GET", "path": "/v1/messages" },
+    { "method": "GET", "path": "/v1/messages/{id}" },
+    { "method": "POST", "path": "/v1/messages/{id}/retry" },
+    { "method": "GET", "path": "/v1/templates" },
+    { "method": "GET", "path": "/metrics" }
+  ],
+  "exclusions": []
+}
