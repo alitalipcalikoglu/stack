@@ -112,62 +112,53 @@ procedure and its outcome states.
 These three services are the ones with `splitWorkers: true` in `stack/src/manifest.js` and their own
 `src/api-main.js`/`src/worker-main.js` entry points (Stage 6), started as `<id>-api` + `<id>-worker`
 under `atc-stack up --split-workers` instead of one combined process
-(`Stack#generateSplitEcosystem`, `stack/src/stack.js:102-127`).
+(`Stack#generateSplitEcosystem`, `stack/src/stack.js:102-127`). Both processes independently
+construct their own `Application`, and every `Application` constructor — regardless of `role` — opens
+its own `Database(config.dbPath, ...)` against the same file.
 
-**Both the api and the worker process independently construct their own `Application`, and every
-`Application` constructor — regardless of `role` — opens its own `Database(config.dbPath, ...)`
-against the same file** (confirmed in the real code: `notify/src/application.js:34-39`,
-`scheduler/src/application.js:34-44`, `webhook-out/src/application.js:34-39` all show identical
-`this.db = new Database(config.dbPath, { backupDir: config.dbBackupDir })` regardless of `role`).
-There is no leader-election or single-migration-owner mechanism between the two split processes —
-migration ownership is "whichever process's `Database` constructor runs first (or wins the SQLite
-write lock) for a given pending version."
+**Concurrent startup against the same local SQLite database is migration-safe** (post-production
+Phase 1, `@atc-web/service-core` v1.10.1 — pinned by all three of these services): migration
+ownership is serialized by SQLite's own `BEGIN IMMEDIATE` write lock, and `PRAGMA user_version` is
+re-read fresh after that lock is acquired, not from a value cached before any lock existed. A process
+that loses the race for a given migration version's lock blocks until the winner's transaction
+commits, then discovers on its own fresh read that the version it was about to apply is already
+there, and starts normally without re-running that migration's SQL. `atc-stack up --split-workers`
+starting `<id>-api` and `<id>-worker` back-to-back with no readiness gate between them — exactly what
+it already does (`Stack#up`, `stack/src/stack.js:65-75`) — is the normal, supported path for a
+pending migration too, not something to work around.
 
-**This is not proven safe for a true simultaneous first start, and nothing in the code or test
-suite claims it is.** `service-core`'s own migration tests
-(`service-core/test/db.test.js`) cover reopening after a completed migration (no re-invocation, the
-`schema_migrations` version `PRIMARY KEY` catching a *corrupted* `user_version` that fools the
-version-gate into re-attempting an already-applied, idempotent migration) but there is no test for
-two `Database` instances racing to migrate the *same* database file from a genuinely pending version
-at the same time. Reasoning from the actual transaction shape (`#migrate`, `service-core/src/db.js:
-84-107`): each migration runs inside its own `BEGIN`/`COMMIT` with `busy_timeout = 5000`, so SQLite
-serializes the two processes' writes rather than corrupting the file — but the *loser* of that race,
-having already read `user_version` as pending before the winner committed, will attempt to
-re-apply the same migration SQL once it gets the write lock. If that migration is not itself
-idempotent (most `CREATE TABLE`/`ALTER TABLE` migrations in this codebase are not — see the "canary"
-test in `service-core/test/db.test.js`, "reopening at the latest version never re-invokes an
-already-applied migration callback"), the loser's own migration statement throws, its transaction
-rolls back, and that process's `Database` constructor — and so its whole startup — throws. **Treat a
-simultaneous first start of both split processes against a database with a pending migration as
-unsupported**, not as a race that has been made safe by design.
+This is proven, not assumed: `service-core/test/migration-race.test.js` reproduces the race
+deterministically (barrier-synchronized real, separate OS processes, not timing luck), and
+`stack/test/integration/split-worker-migration-race.test.js` proves it end to end for notify,
+scheduler and webhook-out specifically, spawning their real, unmodified `api-main.js`/
+`worker-main.js` against a real one-version-behind fixture built from each service's own real
+migration SQL. A 100-run empirical stress comparison (`service-core/scripts/
+migration-race-stress.mjs`) found the unfixed code failed (one process crashing, cleanly, with zero
+data corruption in every case) 87–92% of the time under a genuine simultaneous start; the fixed code
+succeeded 100/100 times with zero corruption and zero duplicate migration effects.
 
-**Rollout ordering for `--split-workers` across an upgrade that includes a pending migration:**
-start the two processes staggered, not simultaneously, so exactly one of them performs the
-migration and the second one only ever opens an already-current database:
+**What this guarantee does and does not cover** — read this narrowly:
 
-1. Stop both `<id>-api` and `<id>-worker` (or use `atc-stack down --split-workers` for the whole
-   affected service).
-2. `npm ci` the new code.
-3. Start **one** of the two processes first (either one — `role` doesn't change what
-   `Database` does) and wait for it to report ready before starting the second. In practice this
-   means: `pm2 start <id>-worker` (or `<id>-api`), wait for its readiness signal (`/ready` for the
-   api process; for the worker process, which has no HTTP listener at all — "PM2's own process
-   state is the liveness signal for this role", `notify/src/worker-main.js` — wait for PM2 to report
-   it online and check its log for the migration having completed, or simply pause a few seconds
-   given migrations in this codebase run synchronously at startup before either role does anything
-   else), then start the second process.
-4. `atc-stack up --split-workers` itself starts every service's two apps back-to-back within the
-   same loop with no readiness gate between `<id>-api` and `<id>-worker` (`Stack#up`,
-   `stack/src/stack.js:65-75` — `pm2 startOrRestart` is called for one app, then immediately the
-   next) — **this is fine when there is no pending migration for that service** (both processes just
-   open an already-current database, which is the common case), but is exactly the scenario above to
-   avoid for a service that does have a new migration in this upgrade. For a split-workers upgrade
-   that includes a migration, restart that one service's two processes by hand with the pause in
-   step 3, rather than relying on `atc-stack up --split-workers` for that service.
+- It covers *this database file's own local startup migration*, opened by processes on the *same
+  host* through `node:sqlite`. It does not extend to and makes no claim about: a network filesystem
+  (NFS, a shared volume across hosts — SQLite's own locking assumptions do not hold there), a
+  distributed database, an unlimited number of concurrently-migrating instances (proven for the
+  real two-process split-worker case; the underlying mechanism generalizes, but only two processes
+  were actually tested), or normal *runtime* (post-startup) multi-process access beyond what each
+  service's own lease/heartbeat model already provided before this fix — this phase changed nothing
+  about that.
+- It is not "normal runtime multi-process is now officially supported" — it specifically closes the
+  *startup migration* race for the split-worker topology this project already ships. Runtime
+  concurrency guarantees are unchanged and documented per-service (`docs/READINESS.md`'s "Scaling
+  model"/lease sections).
 
 Every other service in the manifest has no `splitWorkers` flag and only ever runs one process per
-service, so this ordering concern does not apply to it — one process, one `Database` instance, no
-race is possible.
+service, so this scenario does not apply to it — one process, one `Database` instance, nothing to
+race. Services that have not adopted `@atc-web/service-core` v1.10.1 or later (every service besides
+these three still pins v1.10.0, since only the split-capable services actually need this fix urgently
+— see `service-core/VERSIONING.md` on why a pin bump is each service's own deliberate act) do not yet
+have this guarantee for their own startup, though none of them run split; a future adoption commit
+in any of those services would need to bump its own pin the same way, on its own schedule.
 
 ## Service rollout
 
