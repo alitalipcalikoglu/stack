@@ -116,11 +116,14 @@ stop/start and a readiness wait; the validation and apply/rollback logic below i
 `Snapshot` class docstring (`snapshot.js:135-148`) and the `#abortPrepare`/`#rollbackApplied` methods:
 
 1. **Prepare** — every live target that currently exists is moved aside (never deleted, `renameSync`)
-   to `<path>.before-restore-<runId>`, one item at a time (`#moveAside`, `snapshot.js:383-390`). A
-   target that doesn't exist yet has no aside copy (`aside: null`) — its correct "reverted" state is
-   simply absent.
+   to `<path>.before-restore-<runId>`, one item at a time (`#moveAside`). A target that doesn't exist
+   yet has no aside copy (`aside: null`) — its correct "reverted" state is simply absent. For a
+   database entry specifically, a live `-wal`/`-shm` sidecar next to the main file — if either
+   exists — is moved aside together with it, as the same atomic unit (see "WAL/SHM sidecar handling"
+   below); they are never part of the snapshot's own content, only of what a restore's *prepare* step
+   clears at the live target.
 2. **Apply** — the validated snapshot content is written into each now-cleared target in turn
-   (`#applyContent`, `snapshot.js:397-402`), byte-for-byte plus its original POSIX permission bits
+   (`#applyContent`), byte-for-byte plus its original POSIX permission bits
    (`#copyFile`, `snapshot.js:479-489` — see "Permissions" under "Anchor key backup semantics" below).
 
 This is per-`runId` **across every requested item together, not per service** — when audit's database
@@ -149,6 +152,27 @@ what `restore()` already did for every other multi-entry service (media's db + o
   whose state is unknown. The result's `rolledBack` array lists items confirmed back at their
   original state; `rollbackFailed` lists `{ service, path, error }` for every item whose state is
   now unknown, each pointing at its `.before-restore-<runId>` copy to inspect by hand.
+
+### WAL/SHM sidecar handling
+
+**Restore assumes the affected services are stopped** (`Stack#restore` stops them under PM2 before
+calling into `Snapshot#restore`) — but a service that was not shut down cleanly before that point
+(a crash, `kill -9`, or a forced exit past its own documented shutdown-timeout ceiling — all real,
+ordinary cases, not exotic ones) can leave a live, un-checkpointed `-wal`/`-shm` sidecar next to its
+database file. SQLite replays a stale WAL into whatever main file it finds the next time anything
+opens it. A restore that replaced only the main file and left that stale WAL sitting at the live
+path would have its post-backup writes silently reappear the moment the service starts again —
+found and closed post-production, R1.
+
+The database snapshot itself is unaffected by any of this: `#backupDb`'s `VACUUM INTO` already reads
+the live database through SQLite's own connection and writes a single, flattened, consistent file —
+a WAL/SHM sidecar is never part of the manifest and never was. The fix is entirely on the *restore*
+side: for a database entry, `-wal`/`-shm` — when either exists — are moved aside together with the
+main file in prepare, and restored together with it on rollback, as one atomic unit. A successful
+restore therefore leaves no stale sidecar at the canonical path for a later SQLite open to replay;
+a rolled-back restore brings back the exact pre-restore-attempt logical state, WAL-resident writes
+included, not just whatever happened to be in the main file. Neither sidecar is required to exist —
+both, one, or neither is a normal, safe case.
 
 ### Crash / power-loss during restore itself
 

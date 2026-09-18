@@ -542,3 +542,67 @@ fake/reimplemented validation logic was written, no new sibling-checkout mechani
 `gateway`'s source was not copied into `stack`, and no new package dependency was introduced.
 Local release validation (§6) always runs from inside the full `atc-web/` workspace — the exact
 context `stack`'s plain suite has always assumed — so there is nothing left to fix.
+
+## 19. `geo/ecosystem.config.cjs` syntax error — found in R1, closed in R1
+
+**Finding: a real, confirmed deployment blocker.** `max_memory_restart: '600M'` was missing its
+trailing comma before the next field (`wait_ready: true,`) — `require()`ing the file threw
+`SyntaxError: Unexpected identifier 'wait_ready'`. This is `geo`'s own real, committed, production
+PM2 process file; `pm2 start ecosystem.config.cjs` would have crashed immediately on `geo`, right
+now, on the pre-fix HEAD. Found by direct `require()` of all 13 real `ecosystem.config.cjs` files
+during R1's `stack up` config-generation validation — `geo` was the only one that failed; the other
+12 were already syntactically valid.
+
+**Closed**: added the missing comma — the only change, no other formatting touched. Verified: the
+file now `require()`s cleanly; `geo`'s full suite (44/44) and typecheck pass unchanged; a real
+production-entrypoint smoke (`node --env-file=... src/index.js`, the file's own real `node_args`
+shape) starts, listens, and exits gracefully on `SIGTERM`; re-verified in a real `node:22-alpine`
+container (`--platform linux/amd64`) alongside the rest of `geo`'s already-fixed lockfile. A new
+regression test, `stack/test/ecosystem-config.test.js`, `require()`s all 13 real sibling
+`ecosystem.config.cjs` files and asserts their minimal shape (one app, matching name, `src/index.js`
+entrypoint, numeric `kill_timeout`) — confirmed, by temporarily reverting the fix and re-running,
+that this test would have caught the original bug.
+
+## 20. `Snapshot#restore()` stale WAL/SHM correctness bug — found in R1, closed in R1
+
+**Finding: a real, confirmed, severe restore-correctness bug**, found via a real backup→mutate→
+restore drill against a real, running `auth` process (not a synthetic fixture): a user registered
+after a `stack.backup()` call could still log in *after* a restore to that same backup — the restore
+had not actually discarded it.
+
+**Root cause, fully traced, confirmed empirically before writing any fix (not assumed):**
+`#backupDb()`'s `VACUUM INTO` correctly produces a clean, WAL-flattened snapshot file — the backup
+side was never the problem. `Snapshot#restore()`'s `#moveAside`/`#applyContent`, though, only ever
+touched a DB entry's main `<service>.db` file — never its `-wal`/`-shm` sidecars. A live SQLite
+connection in WAL mode (every service here uses it) that is not cleanly closed — confirmed directly:
+a clean `db.close()`, or a script simply reaching its natural end, checkpoints WAL away every time;
+an explicit `process.exit()` does not, and a real service hits exactly that path via its own
+documented `forceExitMs` shutdown ceiling, not as an edge case — leaves a real, substantial `-wal`
+file on disk. SQLite replays a stale WAL into whatever main file it finds the next time anything
+opens it, so a restore that replaced only the main file left that stale WAL sitting at the live
+path, silently reintroducing exactly the writes the restore was meant to discard the moment the
+service started again. Existing `snapshot.test.js` coverage never exercised this because every
+existing test's post-backup mutation used a clean `.close()` — a real, actively-written, not-cleanly-
+closed connection is the real production condition, and this drill was the first to reproduce it.
+
+**Closed**: `#moveAside`/`#revert` now treat a `kind: 'db'` entry's `-wal`/`-shm` sidecars — when
+either exists; both are optional — as part of the same atomic move-aside/revert unit as the main
+file, not separate content. The backup manifest is unchanged — sidecars are never listed in it, only
+handled as live-target state during restore's own prepare/rollback. Fault injection (`_fault`) still
+keys on the main target path only, firing exactly once per entry per phase, unchanged for every other
+entry kind. Two new regression tests in `stack/test/snapshot.test.js` reproduce a **real** WAL (a
+live, unclosed connection's genuine post-backup write — never a hand-created stand-in file):
+"successful restore discards a stale, un-checkpointed WAL" (confirmed, by temporarily reverting the
+fix, that this test fails against the old code — a true differential regression test) and
+"failed-restore rollback restores the WAL/SHM sidecars together with the main file" (passes against
+both old and new code — the old code's negligence toward sidecars happens to be a no-op for
+rollback specifically, since it never touched them either way; this test is a genuine correctness
+proof of the new mechanism, not a differential one against the original bug — noted honestly, not
+overstated). All 18 `snapshot.test.js` tests pass (16 existing, unchanged, plus these 2), all 70
+`STACK_INTEGRATION=1` tests pass including `audit-anchor-continuity` (cryptographic continuity
+across a real restore, unaffected). The original real-world reproduction — real `auth` process,
+real register → backup → register → stop → restore → restart → login — was re-run against the fixed
+code and now behaves correctly: the pre-backup user logs in, the post-backup user does not, JWKS
+signing key continuity holds. `Stack#restore()`'s own PM2 stop/start wrapper remains unexecuted in
+this environment (PM2 unavailable) — `Snapshot#restore()`'s data-restore correctness, the part this
+finding is about, was proven independently of it, per instruction.

@@ -123,6 +123,33 @@ static read in `RELEASE_AUDIT.md` §15 — this is the live confirmation).
 
 **Blocking**: yes — R2 does not start until every drill in this phase is green.
 
+### R1 status: implemented / completed
+
+Executed for real: full 15-repo local matrix (fresh `npm ci` each), Linux install validation for the
+7 R0-fixed repos in real `node:22-alpine`, a real 13-service concurrent production-entrypoint
+startup smoke (real `stack.setup()`-generated wiring, real `/ready`+`/v1/info`, graceful shutdown,
+zero source-tree mutation), a real live `stack status --matrix` run against all 13, real split-mode
+job flows for `notify`/`scheduler`/`webhook-out`, and `STACK_INTEGRATION=1`'s full 70/70 (migration
+race, migration E2E, audit anchor continuity, and more — reused, not duplicated).
+
+This surfaced two real, confirmed release blockers, both closed within R1 (`RELEASE_AUDIT.md` §19,
+§20): `geo/ecosystem.config.cjs`'s missing-comma syntax error (a real deployment-blocking bug — one
+character fixed, a new `stack/test/ecosystem-config.test.js` regression added, confirmed it would
+have caught the original bug) and `Snapshot#restore()`'s failure to clear stale `-wal`/`-shm`
+sidecar files on a database entry — the more serious finding, a genuine data-resurrection bug for
+any service that was not cleanly closed before a restore (confirmed via a real, unclosed SQLite
+connection — the real condition a crash or a forced shutdown-timeout exit leaves behind, not a
+synthetic stand-in). Fixed by treating a db entry's sidecars as part of the same atomic move-aside/
+revert unit as its main file; two new regression tests added to `stack/test/snapshot.test.js`; the
+original real `auth` reproduction re-run against the fix and confirmed correct.
+
+`Stack#up()`/`Stack#down()`/`Stack#restore()`'s own PM2 stop/start wrapper remain unexecuted in this
+environment — PM2 is not installed here. Everything PM2-free under those same code paths (config
+generation for both ecosystem modes, `Stack#backup()`, and — critically for the finding above —
+`Snapshot#restore()`'s actual data-restore correctness) was exercised for real.
+
+R2 has not started.
+
 ## Phase R2 — Versioning + release metadata
 
 1. Apply the version/tag policy from `RELEASE_AUDIT.md` §11–§12: `service-core` unchanged (already
