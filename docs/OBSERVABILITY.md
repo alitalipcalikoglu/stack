@@ -60,25 +60,35 @@ is fresh per hop:
 traceparent: 00-<32 hex trace-id>-<16 hex span-id>-<2 hex flags>
 ```
 
-**Implemented today: gateway only.** `gateway/src/trace-context.js` (`TraceContext`) parses an
-inbound header, validates it (rejects a malformed value and the spec's reserved all-zero
-trace-id/parent-id), and — under the *same* `TRUST_PROXY` gate as the request id — either
-continues the caller's trace-id or starts a fresh one; a new span id is always minted for the
-gateway's own hop, never the caller's. The result is forwarded to the matched upstream in
-`proxy.js`, echoed on the response, and its `traceId` is added to the gateway's access log line.
-No other service parses, forwards, or logs `traceparent` yet. Console does not forward it either
-(only `X-Request-Id`, per its scope in this stage) — reachable through the console's own
-`AsyncLocalStorage` context in the future the same way the request id is, when a service wants it.
+**Implemented: gateway and console (Stage 10)**, both as trust boundaries, both the same way.
+`gateway/src/trace-context.js` (`TraceContext`) parses an inbound header, validates it (rejects a
+malformed value and the spec's reserved all-zero trace-id/parent-id), and — under the *same*
+`TRUST_PROXY` gate as the request id — either continues the caller's trace-id or starts a fresh
+one; a new span id is always minted for the gateway's own hop, never the caller's. The result is
+forwarded to the matched upstream in `proxy.js`, echoed on the response, and its `traceId` is added
+to the gateway's access log line. `console/src/trace-context.js` (also `TraceContext`, an
+independent copy, not a shared dependency) applies the identical policy console already has for
+`X-Request-Id`: since console has no `TRUST_PROXY`-equivalent gate (it is reached directly by
+browsers, exactly like the gateway with no trusted proxy in front of it), it never reads or trusts
+an inbound `traceparent` at all — it always mints a fresh trace for the request it's handling, and
+a fresh span id per *outbound hop* (`TraceContext#span()`, not reused across the several services
+one console request commonly fans out to), forwarded via the same `AsyncLocalStorage` mechanism
+`requestIdContext` already uses (`src/services/client.js`), and echoed on its own response.
+No backend service (audit, notify, auth, media, shortlink, flags, scheduler, webhook-out, search,
+ratelimit, geo) parses, forwards, or logs `traceparent` yet.
 
 **What this means concretely today:** a call that goes browser → gateway → auth gets a `traceId`
 in the gateway's own log and on the wire to auth, but auth does not read or log it — the
 correlation across that specific hop today is by `X-Request-Id` (which auth does log), not by
-`traceId`. A call browser → console → any service is correlated by `X-Request-Id` only; there is
-no `traceparent` on that path at all yet. Adopting `traceparent` in a backend service means: parse
-it the same trust-unconditional way that service already treats `X-Request-Id` (these are internal
-services; there is no boundary to gate), log `traceId`/`spanId`, and forward a value with a fresh
-span id on any outbound call it makes. None of that requires a tracing SDK — see
-`gateway/src/trace-context.js` for a dependency-free implementation to copy.
+`traceId`. A call browser → console → any service is now correlated by both `X-Request-Id` and
+`traceparent` on the wire (console → service), but — same as the gateway → auth case — the
+receiving backend service does not yet read or log `traceId` itself; the correlation on that hop is
+still by `X-Request-Id` until a backend service adopts `traceparent` too. Adopting `traceparent` in
+a backend service means: parse it the same trust-unconditional way that service already treats
+`X-Request-Id` (these are internal services; there is no boundary to gate), log `traceId`/`spanId`,
+and forward a value with a fresh span id on any outbound call it makes. None of that requires a
+tracing SDK — see `gateway/src/trace-context.js` or `console/src/trace-context.js` for a
+dependency-free implementation to copy.
 
 ## Structured log fields
 
