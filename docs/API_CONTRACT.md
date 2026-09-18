@@ -14,7 +14,7 @@ running instance without guessing from a version number.
   "apiVersion": "v1",
   "capabilities": ["email", "webhook", "templates", "idempotency"],
   "schemaVersion": 3,
-  "serviceCore": "1.10.0"
+  "serviceCore": "1.11.1"
 }
 ```
 
@@ -54,7 +54,7 @@ shape by hand, with `schemaVersion: null` and `serviceCore: null`.
 
 ```
 SERVICE      STATUS VERSION  API  SCHEMA SERVICE-CORE  CAPABILITIES
-notify       ok     1.0.0    v1   3      1.10.0        email,webhook,templates,idempotency
+notify       ok     1.0.0    v1   3      1.11.1        email,webhook,templates,idempotency
 gateway      ok     1.0.0    v1   -      -             jwt-auth,rate-limit-policy,...
 shortlink    DOWN   ?        ?    ?      ?              (unreachable: connect ECONNREFUSED)
 ```
