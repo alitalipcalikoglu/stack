@@ -3,10 +3,10 @@ import { spawn } from 'node:child_process';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { fileURLToPath } from 'node:url';
 import { DatabaseSync } from 'node:sqlite';
 import { after, before, test } from 'node:test';
-import { freePort, randomSecret, waitUntil } from './harness.js';
+import { freePort, openOldFixtureDb, randomSecret, waitUntil } from './harness.js';
 
 /**
  * Post-production Phase 1, item 10: the real split-worker deployment (`stack up --split-workers`)
@@ -36,23 +36,13 @@ before(() => { if (shouldRun) scratch = mkdtempSync(join(tmpdir(), 'split-migrat
 after(() => { if (shouldRun) rmSync(scratch, { recursive: true, force: true }); });
 
 /**
- * Builds an "N-1" fixture DB using the real service's own `Database` subclass with its last
- * migration held back — real migration SQL, real schema, just one version short of current.
  * @param {string} serviceId @param {string} dbPath
  * @returns {Promise<number>} the full (current) migration count, for later assertions
  */
 async function seedOldFixture(serviceId, dbPath) {
-  const mod = await import(pathToFileURL(join(workspaceRoot, serviceId, 'src', 'db.js')).href);
-  /** @type {{ new (path: string): { close(): void }, MIGRATIONS: readonly string[] }} */
-  const RealDb = mod.Database;
-  const full = RealDb.MIGRATIONS;
-  assert.ok(full.length >= 2, `${serviceId}: needs at least 2 real migrations for a meaningful "one behind" fixture, has ${full.length}`);
-  /** @type {any} */
-  const OldDb = class extends /** @type {any} */ (RealDb) {
-    static MIGRATIONS = full.slice(0, -1);
-  };
-  new OldDb(dbPath).close();
-  return full.length;
+  const { db, fullMigrationCount } = await openOldFixtureDb(workspaceRoot, serviceId, dbPath);
+  db.close();
+  return fullMigrationCount;
 }
 
 /**

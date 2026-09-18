@@ -150,6 +150,13 @@ services turns out to require touching that service's own production code (it sh
 `Database` subclass's `MIGRATIONS` array is already a static field a test can subclass or slice
 against), stop and reconsider before doing so; this phase must stay test-only.
 
+**Implemented**: `stack/test/integration/migration-e2e.test.js`. Covers all four planned services
+plus audit (v1→v2, anchors — a fifth representative kept since its hash-chain migration is a
+meaningfully different shape from the others' plain `ALTER TABLE`s) for case 1, and both notify
+(split-capable) and auth (normal) for case 2, per the plan's "at least one" minimum. No production
+code changed in any of the five services; `stack/test/integration/harness.js` gained one shared
+`openOldFixtureDb` helper (extracted from Phase 1's own fixture-building code, not new surface).
+
 ---
 
 ## Phase 3 — Audit anchor key backup

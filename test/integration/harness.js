@@ -1,6 +1,8 @@
 import { randomBytes } from 'node:crypto';
 import { spawn } from 'node:child_process';
 import { createServer } from 'node:net';
+import { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
 
 /**
  * Spawns real service processes from the workspace (not mocks, not in-process fakes) for
@@ -162,4 +164,32 @@ export async function waitUntil(check, { timeoutMs = 5_000, intervalMs = 100, me
     if (Date.now() >= deadline) throw new Error(`waitUntil timed out after ${timeoutMs}ms waiting for: ${message}`);
     await new Promise((r) => setTimeout(r, intervalMs));
   }
+}
+
+/**
+ * Builds an "N-1" fixture database using the real service's own `Database` subclass with its last
+ * migration held back — real migration SQL, real schema, just one version short of current. This
+ * is the one shared way every migration-lifecycle integration test (concurrent-startup race,
+ * single-process HTTP E2E) produces an "old schema" fixture, so none of them re-implement a
+ * service's migration SQL as a second, parallel definition.
+ *
+ * Returns the fixture database OPEN so the caller can seed real pre-migration domain data into it
+ * (via direct SQL matching that old schema's actual columns — a service's current domain Store
+ * classes are written against the CURRENT schema and will fail to prepare against a deliberately
+ * held-back one) before closing it and handing the file to a real service process.
+ * @param {string} workspaceRoot @param {string} serviceId @param {string} dbPath
+ * @returns {Promise<{ db: any, fullMigrationCount: number }>}
+ */
+export async function openOldFixtureDb(workspaceRoot, serviceId, dbPath) {
+  const mod = await import(pathToFileURL(join(workspaceRoot, serviceId, 'src', 'db.js')).href);
+  /** @type {{ new (path: string): any, MIGRATIONS: readonly string[] }} */
+  const RealDb = mod.Database;
+  const full = RealDb.MIGRATIONS;
+  if (full.length < 2) throw new Error(`${serviceId}: needs at least 2 real migrations for a meaningful "one behind" fixture, has ${full.length}`);
+  /** @type {any} */
+  const OldDb = class extends /** @type {any} */ (RealDb) {
+    static MIGRATIONS = full.slice(0, -1);
+  };
+  const db = new OldDb(dbPath);
+  return { db, fullMigrationCount: full.length };
 }

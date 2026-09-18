@@ -137,6 +137,14 @@ Build on `stack/test/integration/harness.js`'s existing `ServiceProcess`:
 - Representative services (per the task's own list, confirmed reasonable given real schema
   histories): notify (schemaVersion 3), console (2), webhook-out (3), auth (2).
 
+**Closed in Phase 2** (`stack/test/integration/migration-e2e.test.js`): the finding above and its
+recommended design stand as originally written — this note only records that the plan's Phase 2
+implemented it, plus audit (v1→v2) as a fifth representative service. Both directions from the
+recommended fix are covered: old-schema fixture with pre-existing domain data → real spawned process
+→ `/ready` → `/v1/info.schemaVersion` → data still readable through the real API, for all five
+services; and future-schema fixture → real spawned process never reaches ready and the file is
+provably untouched, for notify (split-capable) and auth (normal).
+
 ---
 
 ## 3. Media manual maintenance/purge control
