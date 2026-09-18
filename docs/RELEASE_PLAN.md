@@ -16,21 +16,43 @@ Nothing in this plan has been executed yet — this is the plan only, pending ap
 2. Decide whether to add the minimal per-repo CI workflow recommended in `RELEASE_AUDIT.md` §16
    (`npm ci && npm test && npm run typecheck`, one `.github/workflows/ci.yml` per repo) as part of
    this release or explicitly deferred. Not assumed — needs an explicit yes/no before R0 closes,
-   since it touches all 15 repos.
+   since it touches all 15 repos. *(Decided, then reversed, within R0 itself — see status below:
+   GitHub Actions/CI is not part of this project's release process. Release validation is
+   performed locally; the commands in `RELEASE_AUDIT.md` §6 are the accepted validation model.)*
 
 **Blocking**: yes — R1's validation matrix is only meaningful once notify's suite is deterministic.
 
 ### R0 status: implemented / completed
 
 Notify's fix used `freePort()` (not literal `PORT: '0'` — notify's own `PORT` validator requires
-`min: 1`, unlike scheduler/webhook-out's `min: 0`; see `RELEASE_AUDIT.md`'s "Closed in R0" note) —
-10/10 consecutive runs, 60/60 each, port 3001 deliberately held throughout. A second, unrelated
+`min: 1`, unlike scheduler/webhook-out's `min: 0`; see `RELEASE_AUDIT.md` §3's "Closed in R0" note)
+— 10/10 consecutive runs, 60/60 each, port 3001 deliberately held throughout. A second, unrelated
 blocker was found while establishing R0's baseline (scheduler/webhook-out's `#stats()` reading real
 `Date.now()` against a fixed-date test fixture) and fixed with the same injectable-`now` pattern
 already used elsewhere in both services — 10/10 runs each, scheduler 46/46, webhook-out 44/44 (both
-counts up by one real new boundary regression test). CI: decided in-scope, added — minimal per-repo
-`.github/workflows/ci.yml`, `RELEASE_AUDIT.md` §16 "Closed in R0" has the exact shape. R1 has not
-started.
+counts up by one real new boundary regression test).
+
+CI was tried, then removed: a minimal per-repo `.github/workflows/ci.yml` was built, pushed, and run
+for real against all 15 repos — it surfaced two genuine pre-existing findings (below) but the
+project's actual decision, made explicitly during R0, is that GitHub Actions is not part of this
+project's release process at all. Every workflow file was removed again before R0 closed (plain
+`git rm` + commit per repo). This is not an unresolved gap — it's the accepted policy going forward,
+documented in `RELEASE_AUDIT.md` §16.
+
+The CI attempt's two real findings were kept and closed on their own merits, independent of CI:
+- **Linux production runtime portability** (`RELEASE_AUDIT.md` §17): 7 repos'
+  (`media`/`shortlink`/`flags`/`scheduler`/`webhook-out`/`ratelimit`/`geo`) lockfiles only recorded
+  one platform's optional native-binary packages (`typescript`, and `sharp` for `media`) — a real
+  `npm ci` inside `node:22-alpine` (the actual production runtime family) failed. Regenerated all 7
+  lockfiles via a fresh, from-scratch resolution inside `node:22-alpine`; no dependency version
+  changed, every regeneration is deterministic (verified twice), all 7 pass on both Linux and macOS.
+- **`stack`'s plain suite / local workspace dependency** (`RELEASE_AUDIT.md` §18): investigated,
+  proven via an isolated `git clone` (stack + gateway only) that the dependency is real, deliberate,
+  and broader than just `gateway` (`snapshot.test.js` needs several services' real sources too).
+  Reclassified as an accepted, pre-existing part of `stack`'s own documented local-workspace
+  contract — not a defect, no code change made, no sibling-checkout mechanism built.
+
+R1 has not started.
 
 ## Phase R1 — Release validation + drills
 

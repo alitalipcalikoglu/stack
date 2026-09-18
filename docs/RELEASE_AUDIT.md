@@ -424,20 +424,121 @@ small enough to not be "a new CI platform," closes the actual gap named by the t
 reasonable Phase R0/R1 item if the user wants it in scope; not assumed included by default since it
 touches all 15 repos and wasn't explicitly requested — flagged here for an explicit decision.
 
-### Closed in R0
+### Decided in R0 (superseding the minimal-CI attempt below)
 
-Minimal per-repo CI added exactly as recommended above, decided as in-scope for R0 (not a general
-CI platform): one `.github/workflows/ci.yml` per repo, `actions/checkout@v7` + `actions/setup-node@v7`
-(current supported majors, checked live against GitHub's own releases, not guessed) pinned to Node
-`22` (matches every repo's `engines.node: >=22.13` and every Dockerfile's `FROM node:22-alpine`, no
-version matrix), `permissions: contents: read`, triggers `push`/`pull_request` on `main` only,
-`concurrency` with `cancel-in-progress`. Each workflow runs exactly the commands that repo's own
-`package.json` defines — `npm ci && npm test && npm run typecheck` for the 14 non-UI repos, plus
-`npm run build` for `console` (real `vite build`, confirmed it leaves `git status` clean —
-`public/` is gitignored). `stack`'s workflow runs its plain suite only; `STACK_INTEGRATION=1`
-deliberately stays out of push-gated CI per this task's own scope (an R1 concern). No credential of
-any kind was added: `npm ci`'s resolution of `github:alitalipcalikoglu/service-core#v1.11.1` was
-verified empirically, under an environment with no SSH key, no SSH agent, and no `HOME`-based git
-config at all, to still succeed — Node's git-dependency fetcher falls back to anonymous HTTPS for
-this public repo without any help, so no `GITHUB_TOKEN`, no PAT, no `git config` rewrite was needed
-or added.
+A minimal per-repo `.github/workflows/ci.yml` (checkout + setup-node + `npm ci`/`test`/`typecheck`,
+`console` also `build`) was built and pushed to all 15 repos, then run for real. It surfaced two
+genuine, pre-existing findings (§10's Linux-lockfile-portability note and §"stack sibling
+dependency" below) that were worth finding — but the project's own decision, made explicitly during
+R0, is that **GitHub Actions/CI is not part of this project's release process at all**. Every
+workflow file added during this R0 attempt was removed again (a plain `git rm` + commit per repo,
+no history rewrite, no force-push) before R0 closed. **Release validation is local-only**: the exact
+commands in §6 (`npm ci && npm test && npm run typecheck`, plus `npm run build` for `console`), run
+by hand (or by an agent) against each repo's real `package.json` scripts, is the accepted, sufficient
+validation model — not a stand-in for CI, not an interim state pending a future CI rollout. The two
+real findings the brief CI attempt surfaced were **not discarded along with the workflow files**:
+the Linux-lockfile-portability issue is closed in §17 below (it was real independent of CI,
+reproduced directly in `node:22-alpine`, the actual production runtime family), and the `stack`
+sibling-repo question was investigated and resolved on its own merits in §18 — CI was the messenger
+for both, not the reason either mattered. `GITHUB_TOKEN`/PAT/`git config` credential questions from
+the abandoned CI attempt are moot now.
+
+## 17. Linux production runtime portability — closed in R0
+
+**Finding (real, pre-existing, independent of CI):** `media`, `shortlink`, `flags`, `scheduler`,
+`webhook-out`, `ratelimit` and `geo`'s `package-lock.json` files only recorded the optional
+platform-specific native-binary package for the machine they were last generated on
+(`darwin-arm64`) — `typescript@7.0.2` ships one such package per OS/arch (it replaced its old
+pure-JS `tsc` with a native binary), and `media` additionally has `sharp`'s own long-standing
+per-platform native packages. A clean `npm ci` against these lockfiles inside `node:22-alpine`
+(the actual family every one of these services' own `Dockerfile` deploys with — verified with
+`--platform linux/amd64`, matching a typical x86_64 production host, and confirmed the arm64 variant
+of the same image fails identically) cannot resolve the Linux binary at all: `npm run typecheck`
+throws `Unable to resolve @typescript/typescript-linux-x64` before running a single check, and
+`media`'s test suite throws `Could not load the "sharp" module using the linux-x64 runtime`. This
+is a real production-deployment-reproducibility gap, not merely a CI artifact — any operator running
+`npm ci` on a fresh Linux host from these lockfiles as committed would hit the same failure.
+
+**Root cause, confirmed empirically, not guessed:** plain `npm install`/`npm ci` on a machine that
+already has *a* valid (if wrong-platform) entry for an optional dependency does not add the current
+platform's entry to `package-lock.json` — neither on macOS nor inside the Linux container itself
+(tested directly: running `npm install` *inside* `node:22-alpine` against the existing lockfile left
+it at 1 recorded platform variant). The only way to get npm to enumerate every platform npm's
+registry metadata lists for an optional dependency is a **fully fresh resolution with no existing
+lockfile at all** — confirmed by deleting `package-lock.json` and running `npm install` from
+scratch inside `node:22-alpine` (`--platform linux/amd64`), which produced a lockfile with all 20
+`@typescript/typescript-*` platform packages (matching `auth`'s/`notify`'s/`gateway`'s/etc.'s own
+already-correct lockfiles exactly in shape), and for `media`, all of `sharp`'s platform variants
+including the Alpine-specific `musl` ones (`@img/sharp-linuxmusl-x64`, matching the real Dockerfile
+target — not just glibc `linux-x64`, which would be wrong for `alpine`). A fresh resolution needs
+`git` on `PATH` (`apk add --no-cache git`) purely to resolve the `@atc-web/service-core` git-tag
+dependency — `npm ci` against an *existing* lockfile never needed it (the resolved commit SHA is
+already recorded), but a from-scratch `npm install` does one `git ls-remote`-equivalent lookup for
+it. No dependency version changed: `typescript` stayed `7.0.2`, `sharp` stayed `0.35.4`,
+`@atc-web/service-core` still resolves to the exact same commit
+(`934af4f5a45f4be6fab9c77ba5f24f6c44c37c83`, tag `v1.11.1`) in every regenerated lockfile, `fastify`
+stayed `5.12.4`, and every repo's `package.json` is byte-identical before and after (diffed
+directly). Every regenerated lockfile is **deterministic**: deleting it and regenerating a second
+time, independently, produced a byte-identical file in all 7 cases (`diff` empty).
+
+**Verification, both platforms, real command sequence:** for each of the 7 repos, in a disposable
+copy (never the host's own `node_modules`, per instruction): delete `package-lock.json` → fresh
+`npm install` inside `node:22-alpine --platform linux/amd64` with `git`+`openssl` installed (`git`
+for the fresh resolution above; `openssl` only because the bare base image lacks it and one test —
+`tls.test.js`, present in several of these services — shells out to the real `openssl` CLI to build
+a self-signed cert, exactly as the real `Dockerfile`-built image would already have it available)
+→ copy the regenerated `package-lock.json` back over the repo's real one → confirm `rm -rf
+node_modules && npm ci && npm test && npm run typecheck` succeeds *both* inside a second, independent
+`node:22-alpine` container *and* on the host (macOS). All 7 passed on both: `geo` 44/44, `shortlink`
+23/23, `flags` 20/20, `scheduler` 46/46, `webhook-out` 44/44, `ratelimit` 33/33, `media` 78/78 —
+`media`'s own existing suite already exercises `sharp` directly (`test/image-processor.test.js`), so
+78/78 passing on real Linux is itself the sharp-load proof; no new test or production helper was
+added for it. `npm audit --production` stayed at 0 advisories and `npm ls --all` stayed clean in
+all 7 after regeneration.
+
+## 18. `stack`'s plain suite and the local workspace contract — investigated in R0, not a defect
+
+**Finding, reclassified during R0:** `stack/test/stack.test.js` imports
+`../../gateway/src/route-table.js` directly (a real runtime ESM import, not a type-only reference)
+to assert that the `routes.json` `stack` generates for `gateway` actually parses under `gateway`'s
+own real validation — a comment already on that import (present before this session touched the
+file) explains this was a deliberate Stage 9 decision: reuse gateway's real parser rather than
+reimplement or fake its rules inside `stack`, "the same pattern `snapshot.test.js` [already] uses."
+Grepping `stack/src/` (production code, not tests) for any cross-repo import found only two
+JSDoc-only `@returns {Promise<import('../../media/src/maintenance.js').MaintenanceResult>}` type
+annotations — resolved by the TypeScript checker for type-checking purposes only, never a runtime
+`import`, so `stack`'s actual production runtime has no cross-repo dependency at all. The dependency
+is entirely test-time, as instructed to verify first.
+
+Grepping the rest of `stack/test/` (excluding the already-known-and-intentional
+`test/integration/*`, which is `STACK_INTEGRATION=1`-gated and already, by design, spawns other
+services' real processes) found the same class of dependency is not unique to `gateway`:
+`test/snapshot.test.js` dynamically imports `<service>/src/db.js` for several real backend services
+and `audit/scripts/anchor-keygen.js`, via a `workspaceRoot = resolve('../..')` pattern, to prove
+`stack`'s own backup/restore logic round-trips each service's *real* `Database` class — the exact
+same "exercise the real consumer's code, don't reimplement its rules" reasoning as the `RouteTable`
+case, just for more services. This is not a one-off; it is `stack`'s established, several-services-
+wide plain-suite pattern, present well before this session.
+
+**Isolated-clone proof, run for real (not assumed):** a fresh `git clone` of `stack` plus `gateway`
+alone (the other 13 sibling repos deliberately absent) into an empty directory, then `npm ci && npm
+test`: 21 pass, 16 fail, 30 skip. Every one of the 16 failures is in `snapshot.test.js`'s backup/
+restore tests, needing `ratelimit`, `media`, `audit` and `auth`'s real sources (confirmed by name in
+the failing tests' own titles) — none in `stack.test.js`, which passed cleanly with only `gateway`
+present, confirming that specific dependency really is just on `gateway`. This is the "hidden
+sibling dependency scan" the task asked for: `gateway` is not the only one — `stack`'s plain suite,
+as it already existed, depends on the *full* local workspace, not a special-cased single sibling.
+
+**Resolution: accepted, no code change.** Per the task's own decision tree, this is squarely
+category A — "the natural part of `stack`'s already-documented local workspace contract," not
+category B. `stack`'s entire reason to exist (`stack/README.md`, the root `CLAUDE.md`'s own "`stack/`
+... sets up and runs the whole workspace") is to orchestrate the other 14 repos from within
+`atc-web/`, the local multi-repo workspace — its plain test suite proving its own generated
+artifacts are valid against the *real* services it orchestrates is consistent with that job, not a
+defect in it. Extracting just the `RouteTable` assertion into a separately-gated tier, while leaving
+`snapshot.test.js`'s much broader multi-service dependency untouched, would be an inconsistent,
+partial fix for a pattern that is not actually broken — explicitly not done, per instruction, no
+fake/reimplemented validation logic was written, no new sibling-checkout mechanism was built,
+`gateway`'s source was not copied into `stack`, and no new package dependency was introduced.
+Local release validation (§6) always runs from inside the full `atc-web/` workspace — the exact
+context `stack`'s plain suite has always assumed — so there is nothing left to fix.
