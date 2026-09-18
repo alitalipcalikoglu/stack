@@ -1,0 +1,19 @@
+{
+  "name": "@stack/mcp",
+  "version": "0.1.0",
+  "private": true,
+  "description": "stack-mcp: a single MCP server foundation over the platform's 13 generated typed clients. Isolated from stack's own root package.json/toolchain on purpose (see README.md).",
+  "type": "module",
+  "bin": {
+    "stack-mcp": "./bin/stack-mcp.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.30.0",
+    "zod": "3.25.76"
+  },
+  "devDependencies": {
+    "@types/node": "22.20.3",
+    "typescript": "5.9.3",
+    "yaml": "2.9.1"
+  }
+}

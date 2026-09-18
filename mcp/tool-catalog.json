@@ -1,0 +1,4030 @@
+{
+  "generatedAt": "2026-09-18",
+  "totalOperations": 361,
+  "note": "Candidate universe for MCP tool exposure -- NOT the exposed tool list. See mcp/src/tools/index.mjs for the actual, explicit allowlist (mcp/src/tools/index.mjs is the only place a tool is really registered). exposedInPhase3 here is reconciled against that allowlist by mcp/tool-catalog.reconcile.mjs, not hand-edited.",
+  "entries": [
+    {
+      "service": "audit",
+      "operationId": "audit.anchorKey.get",
+      "method": "GET",
+      "path": "/.well-known/audit-anchor-key",
+      "flags": [
+        "READ_SAFE"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "audit",
+      "operationId": "audit.anchors.getLatest",
+      "method": "GET",
+      "path": "/v1/chain/anchors/latest",
+      "flags": [
+        "READ_SAFE"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "audit",
+      "operationId": "audit.anchors.list",
+      "method": "GET",
+      "path": "/v1/chain/anchors",
+      "flags": [
+        "READ_SAFE"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "audit",
+      "operationId": "audit.chain.getHead",
+      "method": "GET",
+      "path": "/v1/chain/head",
+      "flags": [
+        "READ_SAFE"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "audit",
+      "operationId": "audit.chain.verify",
+      "method": "GET",
+      "path": "/v1/chain/verify",
+      "flags": [
+        "READ_SAFE"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "audit",
+      "operationId": "audit.events.create",
+      "method": "POST",
+      "path": "/v1/events",
+      "flags": [
+        "MUTATION"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "audit",
+      "operationId": "audit.events.createBatch",
+      "method": "POST",
+      "path": "/v1/events/batch",
+      "flags": [
+        "MUTATION"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "audit",
+      "operationId": "audit.events.export",
+      "method": "GET",
+      "path": "/v1/events/export",
+      "flags": [
+        "READ_SAFE",
+        "BINARY"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "audit",
+      "operationId": "audit.events.get",
+      "method": "GET",
+      "path": "/v1/events/{id}",
+      "flags": [
+        "READ_SAFE"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "audit",
+      "operationId": "audit.events.list",
+      "method": "GET",
+      "path": "/v1/events",
+      "flags": [
+        "READ_SAFE"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "audit",
+      "operationId": "audit.health.get",
+      "method": "GET",
+      "path": "/health",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR"
+      ],
+      "exposedInPhase3": true
+    },
+    {
+      "service": "audit",
+      "operationId": "audit.info.get",
+      "method": "GET",
+      "path": "/v1/info",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR"
+      ],
+      "exposedInPhase3": true
+    },
+    {
+      "service": "audit",
+      "operationId": "audit.metrics.get",
+      "method": "GET",
+      "path": "/metrics",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "audit",
+      "operationId": "audit.ready.get",
+      "method": "GET",
+      "path": "/ready",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR"
+      ],
+      "exposedInPhase3": true
+    },
+    {
+      "service": "audit",
+      "operationId": "audit.stats.get",
+      "method": "GET",
+      "path": "/v1/stats",
+      "flags": [
+        "READ_SAFE"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "auth",
+      "operationId": "auth.emailVerification.resend",
+      "method": "POST",
+      "path": "/v1/auth/verify-email/resend",
+      "flags": [
+        "MUTATION",
+        "HIGH_RISK"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "auth",
+      "operationId": "auth.emailVerification.verify",
+      "method": "POST",
+      "path": "/v1/auth/verify-email",
+      "flags": [
+        "MUTATION",
+        "HIGH_RISK"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "auth",
+      "operationId": "auth.events.list",
+      "method": "GET",
+      "path": "/v1/users/{id}/events",
+      "flags": [
+        "READ_SAFE",
+        "HIGH_RISK"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "auth",
+      "operationId": "auth.health.get",
+      "method": "GET",
+      "path": "/health",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR"
+      ],
+      "exposedInPhase3": true
+    },
+    {
+      "service": "auth",
+      "operationId": "auth.info.get",
+      "method": "GET",
+      "path": "/v1/info",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR"
+      ],
+      "exposedInPhase3": true
+    },
+    {
+      "service": "auth",
+      "operationId": "auth.introspect",
+      "method": "POST",
+      "path": "/v1/auth/introspect",
+      "flags": [
+        "MUTATION",
+        "HIGH_RISK"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "auth",
+      "operationId": "auth.jwks.get",
+      "method": "GET",
+      "path": "/.well-known/jwks.json",
+      "flags": [
+        "READ_SAFE",
+        "HIGH_RISK"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "auth",
+      "operationId": "auth.login",
+      "method": "POST",
+      "path": "/v1/auth/login",
+      "flags": [
+        "MUTATION",
+        "HIGH_RISK"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "auth",
+      "operationId": "auth.logout",
+      "method": "POST",
+      "path": "/v1/auth/logout",
+      "flags": [
+        "MUTATION",
+        "HIGH_RISK"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "auth",
+      "operationId": "auth.metrics.get",
+      "method": "GET",
+      "path": "/metrics",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "auth",
+      "operationId": "auth.password.change",
+      "method": "POST",
+      "path": "/v1/auth/password/change",
+      "flags": [
+        "MUTATION",
+        "HIGH_RISK"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "auth",
+      "operationId": "auth.password.forgot",
+      "method": "POST",
+      "path": "/v1/auth/password/forgot",
+      "flags": [
+        "MUTATION",
+        "HIGH_RISK"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "auth",
+      "operationId": "auth.password.reset",
+      "method": "POST",
+      "path": "/v1/auth/password/reset",
+      "flags": [
+        "MUTATION",
+        "HIGH_RISK"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "auth",
+      "operationId": "auth.ready.get",
+      "method": "GET",
+      "path": "/ready",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR"
+      ],
+      "exposedInPhase3": true
+    },
+    {
+      "service": "auth",
+      "operationId": "auth.refresh",
+      "method": "POST",
+      "path": "/v1/auth/refresh",
+      "flags": [
+        "MUTATION",
+        "HIGH_RISK"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "auth",
+      "operationId": "auth.sessions.list",
+      "method": "GET",
+      "path": "/v1/users/{id}/sessions",
+      "flags": [
+        "READ_SAFE",
+        "HIGH_RISK"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "auth",
+      "operationId": "auth.sessions.revokeAll",
+      "method": "DELETE",
+      "path": "/v1/users/{id}/sessions",
+      "flags": [
+        "DESTRUCTIVE",
+        "HIGH_RISK"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "auth",
+      "operationId": "auth.sessions.revokeOne",
+      "method": "DELETE",
+      "path": "/v1/users/{id}/sessions/{sid}",
+      "flags": [
+        "DESTRUCTIVE",
+        "HIGH_RISK"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "auth",
+      "operationId": "auth.users.create",
+      "method": "POST",
+      "path": "/v1/users",
+      "flags": [
+        "MUTATION",
+        "HIGH_RISK"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "auth",
+      "operationId": "auth.users.delete",
+      "method": "DELETE",
+      "path": "/v1/users/{id}",
+      "flags": [
+        "DESTRUCTIVE",
+        "HIGH_RISK"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "auth",
+      "operationId": "auth.users.get",
+      "method": "GET",
+      "path": "/v1/users/{id}",
+      "flags": [
+        "READ_SAFE",
+        "HIGH_RISK"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "auth",
+      "operationId": "auth.users.list",
+      "method": "GET",
+      "path": "/v1/users",
+      "flags": [
+        "READ_SAFE",
+        "HIGH_RISK"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "auth",
+      "operationId": "auth.users.patch",
+      "method": "PATCH",
+      "path": "/v1/users/{id}",
+      "flags": [
+        "MUTATION",
+        "HIGH_RISK"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.activity.list",
+      "method": "GET",
+      "path": "/api/audit",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.admins.create",
+      "method": "POST",
+      "path": "/api/admins",
+      "flags": [
+        "MUTATION",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.admins.delete",
+      "method": "DELETE",
+      "path": "/api/admins/{id}",
+      "flags": [
+        "DESTRUCTIVE",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.admins.list",
+      "method": "GET",
+      "path": "/api/admins",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.admins.resetPassword",
+      "method": "POST",
+      "path": "/api/admins/{id}/password",
+      "flags": [
+        "MUTATION",
+        "OPERATOR",
+        "POOR_MCP_FIT",
+        "HIGH_RISK"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.admins.unlock",
+      "method": "POST",
+      "path": "/api/admins/{id}/unlock",
+      "flags": [
+        "MUTATION",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.admins.update",
+      "method": "PATCH",
+      "path": "/api/admins/{id}",
+      "flags": [
+        "MUTATION",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.audit.chain.head",
+      "method": "GET",
+      "path": "/api/services/{sid}/audit/chain/head",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.audit.chain.verify",
+      "method": "GET",
+      "path": "/api/services/{sid}/audit/chain/verify",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.audit.events.export",
+      "method": "GET",
+      "path": "/api/services/{sid}/audit/events/export",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.audit.events.get",
+      "method": "GET",
+      "path": "/api/services/{sid}/audit/events/{id}",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.audit.events.list",
+      "method": "GET",
+      "path": "/api/services/{sid}/audit/events",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.audit.stats.get",
+      "method": "GET",
+      "path": "/api/services/{sid}/audit/stats",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.auth.jwks.get",
+      "method": "GET",
+      "path": "/api/services/{sid}/auth/jwks",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.auth.users.create",
+      "method": "POST",
+      "path": "/api/services/{sid}/auth/users",
+      "flags": [
+        "MUTATION",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.auth.users.delete",
+      "method": "DELETE",
+      "path": "/api/services/{sid}/auth/users/{id}",
+      "flags": [
+        "DESTRUCTIVE",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.auth.users.events",
+      "method": "GET",
+      "path": "/api/services/{sid}/auth/users/{id}/events",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.auth.users.get",
+      "method": "GET",
+      "path": "/api/services/{sid}/auth/users/{id}",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.auth.users.list",
+      "method": "GET",
+      "path": "/api/services/{sid}/auth/users",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.auth.users.passwordResetEmail",
+      "method": "POST",
+      "path": "/api/services/{sid}/auth/users/{id}/password-reset-email",
+      "flags": [
+        "MUTATION",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.auth.users.resendVerification",
+      "method": "POST",
+      "path": "/api/services/{sid}/auth/users/{id}/resend-verification",
+      "flags": [
+        "MUTATION",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.auth.users.revokeAllSessions",
+      "method": "DELETE",
+      "path": "/api/services/{sid}/auth/users/{id}/sessions",
+      "flags": [
+        "DESTRUCTIVE",
+        "OPERATOR",
+        "POOR_MCP_FIT",
+        "HIGH_RISK"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.auth.users.revokeSession",
+      "method": "DELETE",
+      "path": "/api/services/{sid}/auth/users/{id}/sessions/{sub}",
+      "flags": [
+        "DESTRUCTIVE",
+        "OPERATOR",
+        "POOR_MCP_FIT",
+        "HIGH_RISK"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.auth.users.update",
+      "method": "PATCH",
+      "path": "/api/services/{sid}/auth/users/{id}",
+      "flags": [
+        "MUTATION",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.flags.environments.list",
+      "method": "GET",
+      "path": "/api/services/{sid}/flags/environments",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.flags.envs.copy",
+      "method": "POST",
+      "path": "/api/services/{sid}/flags/flags/{id}/envs/{sub}/copy",
+      "flags": [
+        "MUTATION",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.flags.envs.update",
+      "method": "PATCH",
+      "path": "/api/services/{sid}/flags/flags/{id}/envs/{sub}",
+      "flags": [
+        "MUTATION",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.flags.evaluate.post",
+      "method": "POST",
+      "path": "/api/services/{sid}/flags/evaluate",
+      "flags": [
+        "MUTATION",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.flags.flags.create",
+      "method": "POST",
+      "path": "/api/services/{sid}/flags/flags",
+      "flags": [
+        "MUTATION",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.flags.flags.delete",
+      "method": "DELETE",
+      "path": "/api/services/{sid}/flags/flags/{id}",
+      "flags": [
+        "DESTRUCTIVE",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.flags.flags.get",
+      "method": "GET",
+      "path": "/api/services/{sid}/flags/flags/{id}",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.flags.flags.history",
+      "method": "GET",
+      "path": "/api/services/{sid}/flags/flags/{id}/history",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.flags.flags.list",
+      "method": "GET",
+      "path": "/api/services/{sid}/flags/flags",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.flags.flags.update",
+      "method": "PATCH",
+      "path": "/api/services/{sid}/flags/flags/{id}",
+      "flags": [
+        "MUTATION",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.flags.history.list",
+      "method": "GET",
+      "path": "/api/services/{sid}/flags/history",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.flags.stats.get",
+      "method": "GET",
+      "path": "/api/services/{sid}/flags/stats",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.geo.collections.clear",
+      "method": "POST",
+      "path": "/api/services/{sid}/geo/collections/{id}/clear",
+      "flags": [
+        "MUTATION",
+        "OPERATOR",
+        "POOR_MCP_FIT",
+        "HIGH_RISK"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.geo.collections.create",
+      "method": "POST",
+      "path": "/api/services/{sid}/geo/collections",
+      "flags": [
+        "MUTATION",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.geo.collections.delete",
+      "method": "DELETE",
+      "path": "/api/services/{sid}/geo/collections/{id}",
+      "flags": [
+        "DESTRUCTIVE",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.geo.collections.get",
+      "method": "GET",
+      "path": "/api/services/{sid}/geo/collections/{id}",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.geo.collections.list",
+      "method": "GET",
+      "path": "/api/services/{sid}/geo/collections",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.geo.collections.nearby",
+      "method": "GET",
+      "path": "/api/services/{sid}/geo/collections/{id}/nearby",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.geo.collections.update",
+      "method": "PATCH",
+      "path": "/api/services/{sid}/geo/collections/{id}",
+      "flags": [
+        "MUTATION",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.geo.countries.get",
+      "method": "GET",
+      "path": "/api/services/{sid}/geo/countries/{id}",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.geo.countries.list",
+      "method": "GET",
+      "path": "/api/services/{sid}/geo/countries",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.geo.currencies.list",
+      "method": "GET",
+      "path": "/api/services/{sid}/geo/currencies",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.geo.database.get",
+      "method": "GET",
+      "path": "/api/services/{sid}/geo/database",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.geo.database.reload",
+      "method": "POST",
+      "path": "/api/services/{sid}/geo/database/reload",
+      "flags": [
+        "MUTATION",
+        "OPERATOR",
+        "POOR_MCP_FIT",
+        "HIGH_RISK"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.geo.distance.get",
+      "method": "GET",
+      "path": "/api/services/{sid}/geo/distance",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.geo.ip.batch",
+      "method": "POST",
+      "path": "/api/services/{sid}/geo/ip/batch",
+      "flags": [
+        "MUTATION",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.geo.ip.lookup",
+      "method": "GET",
+      "path": "/api/services/{sid}/geo/ip",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.geo.phone.lookup",
+      "method": "GET",
+      "path": "/api/services/{sid}/geo/phone",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.geo.places.delete",
+      "method": "DELETE",
+      "path": "/api/services/{sid}/geo/collections/{id}/places/{sub}",
+      "flags": [
+        "DESTRUCTIVE",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.geo.places.list",
+      "method": "GET",
+      "path": "/api/services/{sid}/geo/collections/{id}/places",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.geo.places.upsert",
+      "method": "PUT",
+      "path": "/api/services/{sid}/geo/collections/{id}/places",
+      "flags": [
+        "MUTATION",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.geo.stats.get",
+      "method": "GET",
+      "path": "/api/services/{sid}/geo/stats",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.geo.timezones.list",
+      "method": "GET",
+      "path": "/api/services/{sid}/geo/timezones",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.health.get",
+      "method": "GET",
+      "path": "/health",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR"
+      ],
+      "exposedInPhase3": true
+    },
+    {
+      "service": "console",
+      "operationId": "console.info.get",
+      "method": "GET",
+      "path": "/v1/info",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR"
+      ],
+      "exposedInPhase3": true
+    },
+    {
+      "service": "console",
+      "operationId": "console.me.password.change",
+      "method": "POST",
+      "path": "/api/me/password",
+      "flags": [
+        "MUTATION",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.me.sessions.list",
+      "method": "GET",
+      "path": "/api/me/sessions",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.me.sessions.logoutOthers",
+      "method": "POST",
+      "path": "/api/me/sessions/logout-others",
+      "flags": [
+        "MUTATION",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.me.totp.confirm",
+      "method": "POST",
+      "path": "/api/me/totp/confirm",
+      "flags": [
+        "MUTATION",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.me.totp.disable",
+      "method": "POST",
+      "path": "/api/me/totp/disable",
+      "flags": [
+        "MUTATION",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.me.totp.start",
+      "method": "POST",
+      "path": "/api/me/totp/start",
+      "flags": [
+        "MUTATION",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.media.files.bytes",
+      "method": "GET",
+      "path": "/api/services/{sid}/media/files/{id}/bytes/{sub}",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.media.files.delete",
+      "method": "DELETE",
+      "path": "/api/services/{sid}/media/files/{id}",
+      "flags": [
+        "DESTRUCTIVE",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.media.files.get",
+      "method": "GET",
+      "path": "/api/services/{sid}/media/files/{id}",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.media.files.list",
+      "method": "GET",
+      "path": "/api/services/{sid}/media/files",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.media.files.restore",
+      "method": "POST",
+      "path": "/api/services/{sid}/media/files/{id}/restore",
+      "flags": [
+        "MUTATION",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.media.files.update",
+      "method": "PATCH",
+      "path": "/api/services/{sid}/media/files/{id}",
+      "flags": [
+        "MUTATION",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.media.files.uploadTicketed",
+      "method": "PUT",
+      "path": "/api/services/{sid}/media/files",
+      "flags": [
+        "MUTATION",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.media.files.urls",
+      "method": "POST",
+      "path": "/api/services/{sid}/media/files/{id}/urls",
+      "flags": [
+        "MUTATION",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.media.tickets.create",
+      "method": "POST",
+      "path": "/api/services/{sid}/media/tickets",
+      "flags": [
+        "MUTATION",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.notify.messages.get",
+      "method": "GET",
+      "path": "/api/services/{sid}/notify/messages/{id}",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.notify.messages.list",
+      "method": "GET",
+      "path": "/api/services/{sid}/notify/messages",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.notify.messages.retry",
+      "method": "POST",
+      "path": "/api/services/{sid}/notify/messages/{id}/retry",
+      "flags": [
+        "MUTATION",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.notify.messages.send",
+      "method": "POST",
+      "path": "/api/services/{sid}/notify/messages",
+      "flags": [
+        "MUTATION",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.notify.templates.list",
+      "method": "GET",
+      "path": "/api/services/{sid}/notify/templates",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.ratelimit.check.post",
+      "method": "POST",
+      "path": "/api/services/{sid}/ratelimit/check",
+      "flags": [
+        "MUTATION",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.ratelimit.overrides.delete",
+      "method": "DELETE",
+      "path": "/api/services/{sid}/ratelimit/policies/{id}/overrides/{sub}",
+      "flags": [
+        "DESTRUCTIVE",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.ratelimit.overrides.list",
+      "method": "GET",
+      "path": "/api/services/{sid}/ratelimit/policies/{id}/overrides",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.ratelimit.overrides.set",
+      "method": "PUT",
+      "path": "/api/services/{sid}/ratelimit/policies/{id}/overrides/{sub}",
+      "flags": [
+        "MUTATION",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.ratelimit.policies.create",
+      "method": "POST",
+      "path": "/api/services/{sid}/ratelimit/policies",
+      "flags": [
+        "MUTATION",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.ratelimit.policies.delete",
+      "method": "DELETE",
+      "path": "/api/services/{sid}/ratelimit/policies/{id}",
+      "flags": [
+        "DESTRUCTIVE",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.ratelimit.policies.get",
+      "method": "GET",
+      "path": "/api/services/{sid}/ratelimit/policies/{id}",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.ratelimit.policies.list",
+      "method": "GET",
+      "path": "/api/services/{sid}/ratelimit/policies",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.ratelimit.policies.stats",
+      "method": "GET",
+      "path": "/api/services/{sid}/ratelimit/policies/{id}/stats",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.ratelimit.policies.top",
+      "method": "GET",
+      "path": "/api/services/{sid}/ratelimit/policies/{id}/top",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.ratelimit.policies.update",
+      "method": "PATCH",
+      "path": "/api/services/{sid}/ratelimit/policies/{id}",
+      "flags": [
+        "MUTATION",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.ratelimit.stats.get",
+      "method": "GET",
+      "path": "/api/services/{sid}/ratelimit/stats",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.ratelimit.subjects.get",
+      "method": "GET",
+      "path": "/api/services/{sid}/ratelimit/policies/{id}/subjects/{sub}",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.ratelimit.subjects.resetUsage",
+      "method": "DELETE",
+      "path": "/api/services/{sid}/ratelimit/policies/{id}/subjects/{sub}/usage",
+      "flags": [
+        "DESTRUCTIVE",
+        "OPERATOR",
+        "POOR_MCP_FIT",
+        "HIGH_RISK"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.ready.get",
+      "method": "GET",
+      "path": "/ready",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR"
+      ],
+      "exposedInPhase3": true
+    },
+    {
+      "service": "console",
+      "operationId": "console.scheduler.jobs.create",
+      "method": "POST",
+      "path": "/api/services/{sid}/scheduler/jobs",
+      "flags": [
+        "MUTATION",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.scheduler.jobs.delete",
+      "method": "DELETE",
+      "path": "/api/services/{sid}/scheduler/jobs/{id}",
+      "flags": [
+        "DESTRUCTIVE",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.scheduler.jobs.get",
+      "method": "GET",
+      "path": "/api/services/{sid}/scheduler/jobs/{id}",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.scheduler.jobs.list",
+      "method": "GET",
+      "path": "/api/services/{sid}/scheduler/jobs",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.scheduler.jobs.run",
+      "method": "POST",
+      "path": "/api/services/{sid}/scheduler/jobs/{id}/run",
+      "flags": [
+        "MUTATION",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.scheduler.jobs.runs",
+      "method": "GET",
+      "path": "/api/services/{sid}/scheduler/jobs/{id}/runs",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.scheduler.jobs.update",
+      "method": "PATCH",
+      "path": "/api/services/{sid}/scheduler/jobs/{id}",
+      "flags": [
+        "MUTATION",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.scheduler.preview.get",
+      "method": "GET",
+      "path": "/api/services/{sid}/scheduler/preview",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.scheduler.runs.cancel",
+      "method": "POST",
+      "path": "/api/services/{sid}/scheduler/runs/{id}/cancel",
+      "flags": [
+        "MUTATION",
+        "OPERATOR",
+        "POOR_MCP_FIT",
+        "HIGH_RISK"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.scheduler.runs.get",
+      "method": "GET",
+      "path": "/api/services/{sid}/scheduler/runs/{id}",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.scheduler.runs.list",
+      "method": "GET",
+      "path": "/api/services/{sid}/scheduler/runs",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.scheduler.stats.get",
+      "method": "GET",
+      "path": "/api/services/{sid}/scheduler/stats",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.scheduler.targetKeys.list",
+      "method": "GET",
+      "path": "/api/services/{sid}/scheduler/target-keys",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.scheduler.timezones.list",
+      "method": "GET",
+      "path": "/api/services/{sid}/scheduler/timezones",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.search.documents.browse",
+      "method": "GET",
+      "path": "/api/services/{sid}/search/indexes/{id}/documents",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.search.documents.delete",
+      "method": "DELETE",
+      "path": "/api/services/{sid}/search/indexes/{id}/documents/{sub}",
+      "flags": [
+        "DESTRUCTIVE",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.search.documents.get",
+      "method": "GET",
+      "path": "/api/services/{sid}/search/indexes/{id}/documents/{sub}",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.search.documents.upsert",
+      "method": "PUT",
+      "path": "/api/services/{sid}/search/indexes/{id}/documents",
+      "flags": [
+        "MUTATION",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.search.indexes.clear",
+      "method": "POST",
+      "path": "/api/services/{sid}/search/indexes/{id}/clear",
+      "flags": [
+        "MUTATION",
+        "OPERATOR",
+        "POOR_MCP_FIT",
+        "HIGH_RISK"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.search.indexes.create",
+      "method": "POST",
+      "path": "/api/services/{sid}/search/indexes",
+      "flags": [
+        "MUTATION",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.search.indexes.delete",
+      "method": "DELETE",
+      "path": "/api/services/{sid}/search/indexes/{id}",
+      "flags": [
+        "DESTRUCTIVE",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.search.indexes.get",
+      "method": "GET",
+      "path": "/api/services/{sid}/search/indexes/{id}",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.search.indexes.list",
+      "method": "GET",
+      "path": "/api/services/{sid}/search/indexes",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.search.indexes.search",
+      "method": "POST",
+      "path": "/api/services/{sid}/search/indexes/{id}/search",
+      "flags": [
+        "MUTATION",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.search.indexes.update",
+      "method": "PATCH",
+      "path": "/api/services/{sid}/search/indexes/{id}",
+      "flags": [
+        "MUTATION",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.search.stats.get",
+      "method": "GET",
+      "path": "/api/services/{sid}/search/stats",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.services.about",
+      "method": "GET",
+      "path": "/api/services/about",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.services.list",
+      "method": "GET",
+      "path": "/api/services",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.services.overview",
+      "method": "GET",
+      "path": "/api/services/overview",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.services.status",
+      "method": "GET",
+      "path": "/api/services/{sid}/status",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.services.updateSettings",
+      "method": "PATCH",
+      "path": "/api/services/{sid}/settings",
+      "flags": [
+        "MUTATION",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.session.get",
+      "method": "GET",
+      "path": "/api/session",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.session.login",
+      "method": "POST",
+      "path": "/api/session/login",
+      "flags": [
+        "MUTATION",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.session.logout",
+      "method": "POST",
+      "path": "/api/session/logout",
+      "flags": [
+        "MUTATION",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.session.totp",
+      "method": "POST",
+      "path": "/api/session/totp",
+      "flags": [
+        "MUTATION",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.shortlink.links.create",
+      "method": "POST",
+      "path": "/api/services/{sid}/shortlink/links",
+      "flags": [
+        "MUTATION",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.shortlink.links.delete",
+      "method": "DELETE",
+      "path": "/api/services/{sid}/shortlink/links/{id}",
+      "flags": [
+        "DESTRUCTIVE",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.shortlink.links.get",
+      "method": "GET",
+      "path": "/api/services/{sid}/shortlink/links/{id}",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.shortlink.links.list",
+      "method": "GET",
+      "path": "/api/services/{sid}/shortlink/links",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.shortlink.links.qr",
+      "method": "GET",
+      "path": "/api/services/{sid}/shortlink/links/{id}/qr.png",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.shortlink.links.stats",
+      "method": "GET",
+      "path": "/api/services/{sid}/shortlink/links/{id}/stats",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.shortlink.links.update",
+      "method": "PATCH",
+      "path": "/api/services/{sid}/shortlink/links/{id}",
+      "flags": [
+        "MUTATION",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.shortlink.stats.get",
+      "method": "GET",
+      "path": "/api/services/{sid}/shortlink/stats",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.webhookOut.deliveries.cancel",
+      "method": "POST",
+      "path": "/api/services/{sid}/webhook-out/deliveries/{id}/cancel",
+      "flags": [
+        "MUTATION",
+        "OPERATOR",
+        "POOR_MCP_FIT",
+        "HIGH_RISK"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.webhookOut.deliveries.get",
+      "method": "GET",
+      "path": "/api/services/{sid}/webhook-out/deliveries/{id}",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.webhookOut.deliveries.list",
+      "method": "GET",
+      "path": "/api/services/{sid}/webhook-out/deliveries",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.webhookOut.deliveries.redeliver",
+      "method": "POST",
+      "path": "/api/services/{sid}/webhook-out/deliveries/{id}/redeliver",
+      "flags": [
+        "MUTATION",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.webhookOut.events.get",
+      "method": "GET",
+      "path": "/api/services/{sid}/webhook-out/events/{id}",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.webhookOut.events.list",
+      "method": "GET",
+      "path": "/api/services/{sid}/webhook-out/events",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.webhookOut.eventTypes.list",
+      "method": "GET",
+      "path": "/api/services/{sid}/webhook-out/event-types",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.webhookOut.stats.get",
+      "method": "GET",
+      "path": "/api/services/{sid}/webhook-out/stats",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.webhookOut.subscriptions.create",
+      "method": "POST",
+      "path": "/api/services/{sid}/webhook-out/subscriptions",
+      "flags": [
+        "MUTATION",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.webhookOut.subscriptions.delete",
+      "method": "DELETE",
+      "path": "/api/services/{sid}/webhook-out/subscriptions/{id}",
+      "flags": [
+        "DESTRUCTIVE",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.webhookOut.subscriptions.get",
+      "method": "GET",
+      "path": "/api/services/{sid}/webhook-out/subscriptions/{id}",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.webhookOut.subscriptions.list",
+      "method": "GET",
+      "path": "/api/services/{sid}/webhook-out/subscriptions",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.webhookOut.subscriptions.replay",
+      "method": "POST",
+      "path": "/api/services/{sid}/webhook-out/subscriptions/{id}/replay",
+      "flags": [
+        "MUTATION",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.webhookOut.subscriptions.rotate",
+      "method": "POST",
+      "path": "/api/services/{sid}/webhook-out/subscriptions/{id}/rotate",
+      "flags": [
+        "MUTATION",
+        "OPERATOR",
+        "POOR_MCP_FIT",
+        "HIGH_RISK"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.webhookOut.subscriptions.test",
+      "method": "POST",
+      "path": "/api/services/{sid}/webhook-out/subscriptions/{id}/test",
+      "flags": [
+        "MUTATION",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.webhookOut.subscriptions.update",
+      "method": "PATCH",
+      "path": "/api/services/{sid}/webhook-out/subscriptions/{id}",
+      "flags": [
+        "MUTATION",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "flags",
+      "operationId": "flags.environments.list",
+      "method": "GET",
+      "path": "/v1/environments",
+      "flags": [
+        "READ_SAFE"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "flags",
+      "operationId": "flags.envs.copy",
+      "method": "POST",
+      "path": "/v1/flags/{key}/envs/{env}/copy",
+      "flags": [
+        "MUTATION"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "flags",
+      "operationId": "flags.envs.get",
+      "method": "GET",
+      "path": "/v1/flags/{key}/envs/{env}",
+      "flags": [
+        "READ_SAFE"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "flags",
+      "operationId": "flags.envs.patch",
+      "method": "PATCH",
+      "path": "/v1/flags/{key}/envs/{env}",
+      "flags": [
+        "MUTATION"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "flags",
+      "operationId": "flags.evaluate.get",
+      "method": "GET",
+      "path": "/v1/evaluate",
+      "flags": [
+        "READ_SAFE"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "flags",
+      "operationId": "flags.evaluate.post",
+      "method": "POST",
+      "path": "/v1/evaluate",
+      "flags": [
+        "MUTATION"
+      ],
+      "exposedInPhase3": true
+    },
+    {
+      "service": "flags",
+      "operationId": "flags.flags.create",
+      "method": "POST",
+      "path": "/v1/flags",
+      "flags": [
+        "MUTATION"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "flags",
+      "operationId": "flags.flags.delete",
+      "method": "DELETE",
+      "path": "/v1/flags/{key}",
+      "flags": [
+        "DESTRUCTIVE"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "flags",
+      "operationId": "flags.flags.get",
+      "method": "GET",
+      "path": "/v1/flags/{key}",
+      "flags": [
+        "READ_SAFE"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "flags",
+      "operationId": "flags.flags.getHistory",
+      "method": "GET",
+      "path": "/v1/flags/{key}/history",
+      "flags": [
+        "READ_SAFE"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "flags",
+      "operationId": "flags.flags.list",
+      "method": "GET",
+      "path": "/v1/flags",
+      "flags": [
+        "READ_SAFE"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "flags",
+      "operationId": "flags.flags.patch",
+      "method": "PATCH",
+      "path": "/v1/flags/{key}",
+      "flags": [
+        "MUTATION"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "flags",
+      "operationId": "flags.health.get",
+      "method": "GET",
+      "path": "/health",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR"
+      ],
+      "exposedInPhase3": true
+    },
+    {
+      "service": "flags",
+      "operationId": "flags.history.list",
+      "method": "GET",
+      "path": "/v1/history",
+      "flags": [
+        "READ_SAFE"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "flags",
+      "operationId": "flags.info.get",
+      "method": "GET",
+      "path": "/v1/info",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR"
+      ],
+      "exposedInPhase3": true
+    },
+    {
+      "service": "flags",
+      "operationId": "flags.metrics.get",
+      "method": "GET",
+      "path": "/metrics",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "flags",
+      "operationId": "flags.ready.get",
+      "method": "GET",
+      "path": "/ready",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR"
+      ],
+      "exposedInPhase3": true
+    },
+    {
+      "service": "flags",
+      "operationId": "flags.snapshot.get",
+      "method": "GET",
+      "path": "/v1/snapshot/{env}",
+      "flags": [
+        "READ_SAFE"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "flags",
+      "operationId": "flags.stats.get",
+      "method": "GET",
+      "path": "/v1/stats",
+      "flags": [
+        "READ_SAFE"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "gateway",
+      "operationId": "gateway.health.check",
+      "method": "GET",
+      "path": "/health",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR"
+      ],
+      "exposedInPhase3": true
+    },
+    {
+      "service": "gateway",
+      "operationId": "gateway.info.get",
+      "method": "GET",
+      "path": "/v1/info",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR"
+      ],
+      "exposedInPhase3": true
+    },
+    {
+      "service": "gateway",
+      "operationId": "gateway.metrics.get",
+      "method": "GET",
+      "path": "/metrics",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "gateway",
+      "operationId": "gateway.ready.check",
+      "method": "GET",
+      "path": "/ready",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR"
+      ],
+      "exposedInPhase3": true
+    },
+    {
+      "service": "geo",
+      "operationId": "geo.collections.clear",
+      "method": "POST",
+      "path": "/v1/collections/{name}/clear",
+      "flags": [
+        "MUTATION",
+        "HIGH_RISK"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "geo",
+      "operationId": "geo.collections.create",
+      "method": "POST",
+      "path": "/v1/collections",
+      "flags": [
+        "MUTATION"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "geo",
+      "operationId": "geo.collections.delete",
+      "method": "DELETE",
+      "path": "/v1/collections/{name}",
+      "flags": [
+        "DESTRUCTIVE"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "geo",
+      "operationId": "geo.collections.get",
+      "method": "GET",
+      "path": "/v1/collections/{name}",
+      "flags": [
+        "READ_SAFE"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "geo",
+      "operationId": "geo.collections.list",
+      "method": "GET",
+      "path": "/v1/collections",
+      "flags": [
+        "READ_SAFE"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "geo",
+      "operationId": "geo.collections.patch",
+      "method": "PATCH",
+      "path": "/v1/collections/{name}",
+      "flags": [
+        "MUTATION"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "geo",
+      "operationId": "geo.countries.get",
+      "method": "GET",
+      "path": "/v1/countries/{code}",
+      "flags": [
+        "READ_SAFE"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "geo",
+      "operationId": "geo.countries.list",
+      "method": "GET",
+      "path": "/v1/countries",
+      "flags": [
+        "READ_SAFE"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "geo",
+      "operationId": "geo.currencies.get",
+      "method": "GET",
+      "path": "/v1/currencies/{code}",
+      "flags": [
+        "READ_SAFE"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "geo",
+      "operationId": "geo.currencies.list",
+      "method": "GET",
+      "path": "/v1/currencies",
+      "flags": [
+        "READ_SAFE"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "geo",
+      "operationId": "geo.database.getInfo",
+      "method": "GET",
+      "path": "/v1/database",
+      "flags": [
+        "READ_SAFE"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "geo",
+      "operationId": "geo.database.reload",
+      "method": "POST",
+      "path": "/v1/database/reload",
+      "flags": [
+        "MUTATION",
+        "HIGH_RISK"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "geo",
+      "operationId": "geo.distance.compute",
+      "method": "GET",
+      "path": "/v1/distance",
+      "flags": [
+        "READ_SAFE"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "geo",
+      "operationId": "geo.health.check",
+      "method": "GET",
+      "path": "/health",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR"
+      ],
+      "exposedInPhase3": true
+    },
+    {
+      "service": "geo",
+      "operationId": "geo.info.get",
+      "method": "GET",
+      "path": "/v1/info",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR"
+      ],
+      "exposedInPhase3": true
+    },
+    {
+      "service": "geo",
+      "operationId": "geo.ip.lookup",
+      "method": "GET",
+      "path": "/v1/ip/{ip}",
+      "flags": [
+        "READ_SAFE"
+      ],
+      "exposedInPhase3": true
+    },
+    {
+      "service": "geo",
+      "operationId": "geo.ip.lookupBatch",
+      "method": "POST",
+      "path": "/v1/ip/batch",
+      "flags": [
+        "MUTATION"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "geo",
+      "operationId": "geo.ip.lookupSelf",
+      "method": "GET",
+      "path": "/v1/ip/self",
+      "flags": [
+        "READ_SAFE"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "geo",
+      "operationId": "geo.metrics.get",
+      "method": "GET",
+      "path": "/metrics",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "geo",
+      "operationId": "geo.phone.normalize",
+      "method": "GET",
+      "path": "/v1/phone",
+      "flags": [
+        "READ_SAFE"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "geo",
+      "operationId": "geo.phone.normalizeBatch",
+      "method": "POST",
+      "path": "/v1/phone/batch",
+      "flags": [
+        "MUTATION"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "geo",
+      "operationId": "geo.places.delete",
+      "method": "DELETE",
+      "path": "/v1/collections/{name}/places/{id}",
+      "flags": [
+        "DESTRUCTIVE"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "geo",
+      "operationId": "geo.places.get",
+      "method": "GET",
+      "path": "/v1/collections/{name}/places/{id}",
+      "flags": [
+        "READ_SAFE"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "geo",
+      "operationId": "geo.places.list",
+      "method": "GET",
+      "path": "/v1/collections/{name}/places",
+      "flags": [
+        "READ_SAFE"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "geo",
+      "operationId": "geo.places.nearby",
+      "method": "GET",
+      "path": "/v1/collections/{name}/nearby",
+      "flags": [
+        "READ_SAFE"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "geo",
+      "operationId": "geo.places.upsert",
+      "method": "PUT",
+      "path": "/v1/collections/{name}/places",
+      "flags": [
+        "MUTATION"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "geo",
+      "operationId": "geo.ready.check",
+      "method": "GET",
+      "path": "/ready",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR"
+      ],
+      "exposedInPhase3": true
+    },
+    {
+      "service": "geo",
+      "operationId": "geo.stats.get",
+      "method": "GET",
+      "path": "/v1/stats",
+      "flags": [
+        "READ_SAFE"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "geo",
+      "operationId": "geo.timezones.get",
+      "method": "GET",
+      "path": "/v1/timezones/{tzPath}",
+      "flags": [
+        "READ_SAFE"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "geo",
+      "operationId": "geo.timezones.list",
+      "method": "GET",
+      "path": "/v1/timezones",
+      "flags": [
+        "READ_SAFE"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "media",
+      "operationId": "media.files.delete",
+      "method": "DELETE",
+      "path": "/v1/files/{id}",
+      "flags": [
+        "DESTRUCTIVE"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "media",
+      "operationId": "media.files.deliver",
+      "method": "GET",
+      "path": "/files/{id}/{variant}",
+      "flags": [
+        "READ_SAFE",
+        "BINARY",
+        "ASYNC"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "media",
+      "operationId": "media.files.get",
+      "method": "GET",
+      "path": "/v1/files/{id}",
+      "flags": [
+        "READ_SAFE"
+      ],
+      "exposedInPhase3": true
+    },
+    {
+      "service": "media",
+      "operationId": "media.files.list",
+      "method": "GET",
+      "path": "/v1/files",
+      "flags": [
+        "READ_SAFE"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "media",
+      "operationId": "media.files.patch",
+      "method": "PATCH",
+      "path": "/v1/files/{id}",
+      "flags": [
+        "MUTATION"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "media",
+      "operationId": "media.files.restore",
+      "method": "POST",
+      "path": "/v1/files/{id}/restore",
+      "flags": [
+        "MUTATION"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "media",
+      "operationId": "media.files.signUrls",
+      "method": "POST",
+      "path": "/v1/files/{id}/urls",
+      "flags": [
+        "MUTATION"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "media",
+      "operationId": "media.files.upload",
+      "method": "PUT",
+      "path": "/v1/files",
+      "flags": [
+        "MUTATION",
+        "BINARY"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "media",
+      "operationId": "media.files.uploadTicketed",
+      "method": "PUT",
+      "path": "/v1/uploads/{token}",
+      "flags": [
+        "MUTATION",
+        "BINARY"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "media",
+      "operationId": "media.ops.health",
+      "method": "GET",
+      "path": "/health",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR"
+      ],
+      "exposedInPhase3": true
+    },
+    {
+      "service": "media",
+      "operationId": "media.ops.info",
+      "method": "GET",
+      "path": "/v1/info",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR"
+      ],
+      "exposedInPhase3": true
+    },
+    {
+      "service": "media",
+      "operationId": "media.ops.metrics",
+      "method": "GET",
+      "path": "/metrics",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "media",
+      "operationId": "media.ops.ready",
+      "method": "GET",
+      "path": "/ready",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR"
+      ],
+      "exposedInPhase3": true
+    },
+    {
+      "service": "media",
+      "operationId": "media.tickets.create",
+      "method": "POST",
+      "path": "/v1/uploads",
+      "flags": [
+        "MUTATION"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "notify",
+      "operationId": "notify.health.get",
+      "method": "GET",
+      "path": "/health",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR"
+      ],
+      "exposedInPhase3": true
+    },
+    {
+      "service": "notify",
+      "operationId": "notify.info.get",
+      "method": "GET",
+      "path": "/v1/info",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR"
+      ],
+      "exposedInPhase3": true
+    },
+    {
+      "service": "notify",
+      "operationId": "notify.messages.create",
+      "method": "POST",
+      "path": "/v1/messages",
+      "flags": [
+        "MUTATION",
+        "ASYNC"
+      ],
+      "exposedInPhase3": true
+    },
+    {
+      "service": "notify",
+      "operationId": "notify.messages.get",
+      "method": "GET",
+      "path": "/v1/messages/{id}",
+      "flags": [
+        "READ_SAFE",
+        "ASYNC"
+      ],
+      "exposedInPhase3": true
+    },
+    {
+      "service": "notify",
+      "operationId": "notify.messages.list",
+      "method": "GET",
+      "path": "/v1/messages",
+      "flags": [
+        "READ_SAFE",
+        "ASYNC"
+      ],
+      "exposedInPhase3": true
+    },
+    {
+      "service": "notify",
+      "operationId": "notify.messages.retry",
+      "method": "POST",
+      "path": "/v1/messages/{id}/retry",
+      "flags": [
+        "MUTATION",
+        "ASYNC"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "notify",
+      "operationId": "notify.metrics.get",
+      "method": "GET",
+      "path": "/metrics",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "notify",
+      "operationId": "notify.ready.get",
+      "method": "GET",
+      "path": "/ready",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR"
+      ],
+      "exposedInPhase3": true
+    },
+    {
+      "service": "notify",
+      "operationId": "notify.templates.list",
+      "method": "GET",
+      "path": "/v1/templates",
+      "flags": [
+        "READ_SAFE"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "ratelimit",
+      "operationId": "ratelimit.check",
+      "method": "POST",
+      "path": "/v1/check",
+      "flags": [
+        "MUTATION"
+      ],
+      "exposedInPhase3": true
+    },
+    {
+      "service": "ratelimit",
+      "operationId": "ratelimit.checkBatch",
+      "method": "POST",
+      "path": "/v1/check/batch",
+      "flags": [
+        "MUTATION"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "ratelimit",
+      "operationId": "ratelimit.health.check",
+      "method": "GET",
+      "path": "/health",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR"
+      ],
+      "exposedInPhase3": true
+    },
+    {
+      "service": "ratelimit",
+      "operationId": "ratelimit.info.get",
+      "method": "GET",
+      "path": "/v1/info",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR"
+      ],
+      "exposedInPhase3": true
+    },
+    {
+      "service": "ratelimit",
+      "operationId": "ratelimit.metrics.get",
+      "method": "GET",
+      "path": "/metrics",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "ratelimit",
+      "operationId": "ratelimit.overrides.delete",
+      "method": "DELETE",
+      "path": "/v1/policies/{name}/overrides/{subject}",
+      "flags": [
+        "DESTRUCTIVE",
+        "OPERATOR"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "ratelimit",
+      "operationId": "ratelimit.overrides.list",
+      "method": "GET",
+      "path": "/v1/policies/{name}/overrides",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "ratelimit",
+      "operationId": "ratelimit.overrides.set",
+      "method": "PUT",
+      "path": "/v1/policies/{name}/overrides/{subject}",
+      "flags": [
+        "MUTATION",
+        "OPERATOR"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "ratelimit",
+      "operationId": "ratelimit.policies.create",
+      "method": "POST",
+      "path": "/v1/policies",
+      "flags": [
+        "MUTATION"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "ratelimit",
+      "operationId": "ratelimit.policies.delete",
+      "method": "DELETE",
+      "path": "/v1/policies/{name}",
+      "flags": [
+        "DESTRUCTIVE"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "ratelimit",
+      "operationId": "ratelimit.policies.get",
+      "method": "GET",
+      "path": "/v1/policies/{name}",
+      "flags": [
+        "READ_SAFE"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "ratelimit",
+      "operationId": "ratelimit.policies.getStats",
+      "method": "GET",
+      "path": "/v1/policies/{name}/stats",
+      "flags": [
+        "READ_SAFE"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "ratelimit",
+      "operationId": "ratelimit.policies.getTop",
+      "method": "GET",
+      "path": "/v1/policies/{name}/top",
+      "flags": [
+        "READ_SAFE"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "ratelimit",
+      "operationId": "ratelimit.policies.list",
+      "method": "GET",
+      "path": "/v1/policies",
+      "flags": [
+        "READ_SAFE"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "ratelimit",
+      "operationId": "ratelimit.policies.patch",
+      "method": "PATCH",
+      "path": "/v1/policies/{name}",
+      "flags": [
+        "MUTATION"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "ratelimit",
+      "operationId": "ratelimit.ready.check",
+      "method": "GET",
+      "path": "/ready",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR"
+      ],
+      "exposedInPhase3": true
+    },
+    {
+      "service": "ratelimit",
+      "operationId": "ratelimit.release",
+      "method": "POST",
+      "path": "/v1/release",
+      "flags": [
+        "MUTATION"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "ratelimit",
+      "operationId": "ratelimit.stats.get",
+      "method": "GET",
+      "path": "/v1/stats",
+      "flags": [
+        "READ_SAFE"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "ratelimit",
+      "operationId": "ratelimit.subjects.getUsage",
+      "method": "GET",
+      "path": "/v1/policies/{name}/subjects/{subject}",
+      "flags": [
+        "READ_SAFE"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "ratelimit",
+      "operationId": "ratelimit.subjects.resetUsage",
+      "method": "DELETE",
+      "path": "/v1/policies/{name}/subjects/{subject}/usage",
+      "flags": [
+        "DESTRUCTIVE",
+        "HIGH_RISK"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "scheduler",
+      "operationId": "scheduler.health.get",
+      "method": "GET",
+      "path": "/health",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR"
+      ],
+      "exposedInPhase3": true
+    },
+    {
+      "service": "scheduler",
+      "operationId": "scheduler.info.get",
+      "method": "GET",
+      "path": "/v1/info",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR"
+      ],
+      "exposedInPhase3": true
+    },
+    {
+      "service": "scheduler",
+      "operationId": "scheduler.jobs.create",
+      "method": "POST",
+      "path": "/v1/jobs",
+      "flags": [
+        "MUTATION"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "scheduler",
+      "operationId": "scheduler.jobs.delete",
+      "method": "DELETE",
+      "path": "/v1/jobs/{name}",
+      "flags": [
+        "DESTRUCTIVE"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "scheduler",
+      "operationId": "scheduler.jobs.get",
+      "method": "GET",
+      "path": "/v1/jobs/{name}",
+      "flags": [
+        "READ_SAFE"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "scheduler",
+      "operationId": "scheduler.jobs.list",
+      "method": "GET",
+      "path": "/v1/jobs",
+      "flags": [
+        "READ_SAFE"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "scheduler",
+      "operationId": "scheduler.jobs.listRuns",
+      "method": "GET",
+      "path": "/v1/jobs/{name}/runs",
+      "flags": [
+        "READ_SAFE"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "scheduler",
+      "operationId": "scheduler.jobs.patch",
+      "method": "PATCH",
+      "path": "/v1/jobs/{name}",
+      "flags": [
+        "MUTATION"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "scheduler",
+      "operationId": "scheduler.jobs.run",
+      "method": "POST",
+      "path": "/v1/jobs/{name}/run",
+      "flags": [
+        "MUTATION",
+        "ASYNC"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "scheduler",
+      "operationId": "scheduler.metrics.get",
+      "method": "GET",
+      "path": "/metrics",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "scheduler",
+      "operationId": "scheduler.ready.get",
+      "method": "GET",
+      "path": "/ready",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR"
+      ],
+      "exposedInPhase3": true
+    },
+    {
+      "service": "scheduler",
+      "operationId": "scheduler.runs.cancel",
+      "method": "POST",
+      "path": "/v1/runs/{id}/cancel",
+      "flags": [
+        "MUTATION",
+        "HIGH_RISK",
+        "ASYNC"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "scheduler",
+      "operationId": "scheduler.runs.get",
+      "method": "GET",
+      "path": "/v1/runs/{id}",
+      "flags": [
+        "READ_SAFE",
+        "ASYNC"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "scheduler",
+      "operationId": "scheduler.runs.list",
+      "method": "GET",
+      "path": "/v1/runs",
+      "flags": [
+        "READ_SAFE",
+        "ASYNC"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "scheduler",
+      "operationId": "scheduler.schedule.preview",
+      "method": "GET",
+      "path": "/v1/schedule/preview",
+      "flags": [
+        "READ_SAFE"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "scheduler",
+      "operationId": "scheduler.stats.get",
+      "method": "GET",
+      "path": "/v1/stats",
+      "flags": [
+        "READ_SAFE"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "scheduler",
+      "operationId": "scheduler.targetKeys.list",
+      "method": "GET",
+      "path": "/v1/target-keys",
+      "flags": [
+        "READ_SAFE"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "scheduler",
+      "operationId": "scheduler.timezones.list",
+      "method": "GET",
+      "path": "/v1/timezones",
+      "flags": [
+        "READ_SAFE"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "search",
+      "operationId": "search.documents.browse",
+      "method": "GET",
+      "path": "/v1/indexes/{name}/documents",
+      "flags": [
+        "READ_SAFE"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "search",
+      "operationId": "search.documents.delete",
+      "method": "DELETE",
+      "path": "/v1/indexes/{name}/documents/{id}",
+      "flags": [
+        "DESTRUCTIVE"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "search",
+      "operationId": "search.documents.get",
+      "method": "GET",
+      "path": "/v1/indexes/{name}/documents/{id}",
+      "flags": [
+        "READ_SAFE"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "search",
+      "operationId": "search.documents.upsert",
+      "method": "PUT",
+      "path": "/v1/indexes/{name}/documents",
+      "flags": [
+        "MUTATION"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "search",
+      "operationId": "search.indexes.clear",
+      "method": "POST",
+      "path": "/v1/indexes/{name}/clear",
+      "flags": [
+        "MUTATION",
+        "HIGH_RISK"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "search",
+      "operationId": "search.indexes.create",
+      "method": "POST",
+      "path": "/v1/indexes",
+      "flags": [
+        "MUTATION"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "search",
+      "operationId": "search.indexes.delete",
+      "method": "DELETE",
+      "path": "/v1/indexes/{name}",
+      "flags": [
+        "DESTRUCTIVE"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "search",
+      "operationId": "search.indexes.get",
+      "method": "GET",
+      "path": "/v1/indexes/{name}",
+      "flags": [
+        "READ_SAFE"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "search",
+      "operationId": "search.indexes.list",
+      "method": "GET",
+      "path": "/v1/indexes",
+      "flags": [
+        "READ_SAFE"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "search",
+      "operationId": "search.indexes.patch",
+      "method": "PATCH",
+      "path": "/v1/indexes/{name}",
+      "flags": [
+        "MUTATION"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "search",
+      "operationId": "search.query.get",
+      "method": "GET",
+      "path": "/v1/indexes/{name}/search",
+      "flags": [
+        "READ_SAFE"
+      ],
+      "exposedInPhase3": true
+    },
+    {
+      "service": "search",
+      "operationId": "search.query.post",
+      "method": "POST",
+      "path": "/v1/indexes/{name}/search",
+      "flags": [
+        "MUTATION"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "search",
+      "operationId": "search.stats.get",
+      "method": "GET",
+      "path": "/v1/stats",
+      "flags": [
+        "READ_SAFE"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "search",
+      "operationId": "search.suggest",
+      "method": "GET",
+      "path": "/v1/indexes/{name}/suggest",
+      "flags": [
+        "READ_SAFE"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "search",
+      "operationId": "search.system.health",
+      "method": "GET",
+      "path": "/health",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR"
+      ],
+      "exposedInPhase3": true
+    },
+    {
+      "service": "search",
+      "operationId": "search.system.info",
+      "method": "GET",
+      "path": "/v1/info",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR"
+      ],
+      "exposedInPhase3": true
+    },
+    {
+      "service": "search",
+      "operationId": "search.system.metrics",
+      "method": "GET",
+      "path": "/metrics",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "search",
+      "operationId": "search.system.ready",
+      "method": "GET",
+      "path": "/ready",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR"
+      ],
+      "exposedInPhase3": true
+    },
+    {
+      "service": "shortlink",
+      "operationId": "shortlink.health.get",
+      "method": "GET",
+      "path": "/health",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR"
+      ],
+      "exposedInPhase3": true
+    },
+    {
+      "service": "shortlink",
+      "operationId": "shortlink.info.get",
+      "method": "GET",
+      "path": "/v1/info",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR"
+      ],
+      "exposedInPhase3": true
+    },
+    {
+      "service": "shortlink",
+      "operationId": "shortlink.links.create",
+      "method": "POST",
+      "path": "/v1/links",
+      "flags": [
+        "MUTATION"
+      ],
+      "exposedInPhase3": true
+    },
+    {
+      "service": "shortlink",
+      "operationId": "shortlink.links.delete",
+      "method": "DELETE",
+      "path": "/v1/links/{code}",
+      "flags": [
+        "DESTRUCTIVE"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "shortlink",
+      "operationId": "shortlink.links.get",
+      "method": "GET",
+      "path": "/v1/links/{code}",
+      "flags": [
+        "READ_SAFE"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "shortlink",
+      "operationId": "shortlink.links.getQr",
+      "method": "GET",
+      "path": "/v1/links/{code}/qr",
+      "flags": [
+        "READ_SAFE",
+        "BINARY"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "shortlink",
+      "operationId": "shortlink.links.getStats",
+      "method": "GET",
+      "path": "/v1/links/{code}/stats",
+      "flags": [
+        "READ_SAFE"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "shortlink",
+      "operationId": "shortlink.links.list",
+      "method": "GET",
+      "path": "/v1/links",
+      "flags": [
+        "READ_SAFE"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "shortlink",
+      "operationId": "shortlink.links.patch",
+      "method": "PATCH",
+      "path": "/v1/links/{code}",
+      "flags": [
+        "MUTATION"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "shortlink",
+      "operationId": "shortlink.metrics.get",
+      "method": "GET",
+      "path": "/metrics",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "shortlink",
+      "operationId": "shortlink.qr.getForText",
+      "method": "GET",
+      "path": "/v1/qr",
+      "flags": [
+        "READ_SAFE",
+        "BINARY"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "shortlink",
+      "operationId": "shortlink.qr.getPublic",
+      "method": "GET",
+      "path": "/{code}/qr",
+      "flags": [
+        "READ_SAFE",
+        "BINARY"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "shortlink",
+      "operationId": "shortlink.ready.get",
+      "method": "GET",
+      "path": "/ready",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR"
+      ],
+      "exposedInPhase3": true
+    },
+    {
+      "service": "shortlink",
+      "operationId": "shortlink.redirect.follow",
+      "method": "GET",
+      "path": "/{code}",
+      "flags": [
+        "READ_SAFE"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "shortlink",
+      "operationId": "shortlink.robots.get",
+      "method": "GET",
+      "path": "/robots.txt",
+      "flags": [
+        "READ_SAFE"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "shortlink",
+      "operationId": "shortlink.stats.get",
+      "method": "GET",
+      "path": "/v1/stats",
+      "flags": [
+        "READ_SAFE"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "webhook-out",
+      "operationId": "webhookOut.deliveries.cancel",
+      "method": "POST",
+      "path": "/v1/deliveries/{id}/cancel",
+      "flags": [
+        "MUTATION",
+        "HIGH_RISK",
+        "ASYNC"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "webhook-out",
+      "operationId": "webhookOut.deliveries.get",
+      "method": "GET",
+      "path": "/v1/deliveries/{id}",
+      "flags": [
+        "READ_SAFE",
+        "ASYNC"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "webhook-out",
+      "operationId": "webhookOut.deliveries.list",
+      "method": "GET",
+      "path": "/v1/deliveries",
+      "flags": [
+        "READ_SAFE",
+        "ASYNC"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "webhook-out",
+      "operationId": "webhookOut.deliveries.redeliver",
+      "method": "POST",
+      "path": "/v1/deliveries/{id}/redeliver",
+      "flags": [
+        "MUTATION",
+        "ASYNC"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "webhook-out",
+      "operationId": "webhookOut.events.get",
+      "method": "GET",
+      "path": "/v1/events/{id}",
+      "flags": [
+        "READ_SAFE"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "webhook-out",
+      "operationId": "webhookOut.events.list",
+      "method": "GET",
+      "path": "/v1/events",
+      "flags": [
+        "READ_SAFE"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "webhook-out",
+      "operationId": "webhookOut.events.publish",
+      "method": "POST",
+      "path": "/v1/events",
+      "flags": [
+        "MUTATION",
+        "ASYNC"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "webhook-out",
+      "operationId": "webhookOut.eventTypes.list",
+      "method": "GET",
+      "path": "/v1/event-types",
+      "flags": [
+        "READ_SAFE"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "webhook-out",
+      "operationId": "webhookOut.health.get",
+      "method": "GET",
+      "path": "/health",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR"
+      ],
+      "exposedInPhase3": true
+    },
+    {
+      "service": "webhook-out",
+      "operationId": "webhookOut.info.get",
+      "method": "GET",
+      "path": "/v1/info",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR"
+      ],
+      "exposedInPhase3": true
+    },
+    {
+      "service": "webhook-out",
+      "operationId": "webhookOut.metrics.get",
+      "method": "GET",
+      "path": "/metrics",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "webhook-out",
+      "operationId": "webhookOut.ready.get",
+      "method": "GET",
+      "path": "/ready",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR"
+      ],
+      "exposedInPhase3": true
+    },
+    {
+      "service": "webhook-out",
+      "operationId": "webhookOut.stats.get",
+      "method": "GET",
+      "path": "/v1/stats",
+      "flags": [
+        "READ_SAFE"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "webhook-out",
+      "operationId": "webhookOut.subscriptions.create",
+      "method": "POST",
+      "path": "/v1/subscriptions",
+      "flags": [
+        "MUTATION"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "webhook-out",
+      "operationId": "webhookOut.subscriptions.delete",
+      "method": "DELETE",
+      "path": "/v1/subscriptions/{id}",
+      "flags": [
+        "DESTRUCTIVE"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "webhook-out",
+      "operationId": "webhookOut.subscriptions.get",
+      "method": "GET",
+      "path": "/v1/subscriptions/{id}",
+      "flags": [
+        "READ_SAFE"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "webhook-out",
+      "operationId": "webhookOut.subscriptions.list",
+      "method": "GET",
+      "path": "/v1/subscriptions",
+      "flags": [
+        "READ_SAFE"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "webhook-out",
+      "operationId": "webhookOut.subscriptions.listDeliveries",
+      "method": "GET",
+      "path": "/v1/subscriptions/{id}/deliveries",
+      "flags": [
+        "READ_SAFE"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "webhook-out",
+      "operationId": "webhookOut.subscriptions.patch",
+      "method": "PATCH",
+      "path": "/v1/subscriptions/{id}",
+      "flags": [
+        "MUTATION"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "webhook-out",
+      "operationId": "webhookOut.subscriptions.replay",
+      "method": "POST",
+      "path": "/v1/subscriptions/{id}/replay",
+      "flags": [
+        "MUTATION",
+        "ASYNC"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "webhook-out",
+      "operationId": "webhookOut.subscriptions.rotate",
+      "method": "POST",
+      "path": "/v1/subscriptions/{id}/rotate",
+      "flags": [
+        "MUTATION",
+        "HIGH_RISK"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "webhook-out",
+      "operationId": "webhookOut.subscriptions.test",
+      "method": "POST",
+      "path": "/v1/subscriptions/{id}/test",
+      "flags": [
+        "MUTATION",
+        "ASYNC"
+      ],
+      "exposedInPhase3": false
+    }
+  ]
+}
