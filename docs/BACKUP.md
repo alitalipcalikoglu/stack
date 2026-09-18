@@ -53,8 +53,11 @@ actual bytes exist in exactly one place in a snapshot: its own file, under that 
 - **media's `tmp/` and `trash/`** — excluded because `EXTRA_PATHS.media` only lists `objects` and
   `variants` (`snapshot.js:45-48`). Per `media/src/storage/local-storage.js:27,51-53,62`: `tmp/`
   holds in-flight uploads and scratch content, wiped on every `prepare()` (service start) and left
-  alone by `check()` (the readiness probe); `trash/` holds objects/variants moved aside by a purge,
-  pending permanent deletion — neither is durable state worth snapshotting.
+  alone by `check()` (the readiness probe); `trash/` holds objects/variants a purge has quarantined,
+  pending permanent deletion — as of post-production Phase 4, media's own maintenance
+  (`LocalStorage#reconcileTrash`) actively cleans up an aged `trash/` entry itself rather than
+  leaving it as a permanent leak, so this is no longer state that only ever grows — neither `tmp/`
+  nor `trash/` is durable state worth snapshotting either way.
 - **console's `SECRETS_KEY`/`SECRETS_PREVIOUS_KEY`** — env-var only, no file; excluded because
   everything under `.env` is excluded.
 - **an out-of-tree `ANCHOR_PRIVATE_KEY_PATH`/`ANCHOR_PREVIOUS_PUBLIC_KEY_PATH`** — if either resolves

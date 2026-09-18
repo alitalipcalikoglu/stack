@@ -5,6 +5,7 @@ import { dirname, join, resolve } from 'node:path';
 import { createRequire } from 'node:module';
 import { pathToFileURL } from 'node:url';
 import { EnvFile } from './env-file.js';
+import { runMaintenance } from './media-maintenance.js';
 import { SERVICES } from './manifest.js';
 import { SetupContext } from './setup-context.js';
 import { Snapshot } from './snapshot.js';
@@ -306,6 +307,19 @@ export class Stack {
       throw new Error(`restore failed at ${result.failed?.service}/${result.failed?.path} (${result.failed?.phase}): ${result.failed?.error} — rolled back cleanly, every service restarted on its original data`);
     }
     return result;
+  }
+
+  /**
+   * Post-production Phase 4: an operator-triggered, one-shot run of a service's real production
+   * maintenance path (today: media only — see {@link runMaintenance}'s own doc for the trigger
+   * mechanism decision). Safe to run alongside a live, already-running instance of the service —
+   * never starts an HTTP listener, never touches anything the live process's own startup path
+   * would treat as exclusively its own (no destructive `tmp/` wipe, no port bind).
+   * @param {string} serviceId
+   * @returns {Promise<import('../../media/src/maintenance.js').MaintenanceResult>}
+   */
+  async maintenance(serviceId) {
+    return runMaintenance(this.root, serviceId);
   }
 
   /** @param {string} id */

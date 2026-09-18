@@ -307,6 +307,33 @@ already-documented starting state, not a new risk).
 the user in favor of adding a role concept to media, stop and re-scope this phase before implementing
 — that's a larger, different change than what's designed here and deserves its own sign-off.
 
+**Implemented, with two corrections found only by re-verifying against real code before building**:
+
+1. **Trigger mechanism changed, not just the route path** — the user's own decision (see the Phase 4
+   report) was `stack`'s operational control plane instead of an HTTP route: `stack/src/media-
+   maintenance.js` + `Stack#maintenance('media')` + `stack maintenance <service>` CLI, constructing
+   the real `Config`/`Database`/`LocalStorage`/`FileStore`/`TicketStore`/`MediaService`/`Maintenance`
+   graph directly (same classes `Application#start` wires, minus the Fastify listener) and calling
+   the real `Maintenance#run('manual')` — never a second purge implementation, matching this plan's
+   own item 1 requirement regardless of transport.
+2. **This changes the plan's own concurrency assumption** — "no cross-process concurrency to guard
+   against for media" (this plan's own Invariants, above) is no longer true: `stack maintenance
+   media` runs as a genuinely separate OS process from the live, already-running media server.
+   Verified safe anyway, empirically, not just by re-reading the existing reasoning: `media/test/
+   maintenance-concurrency.test.js` races two fully independent `MediaService`/`Database`/
+   `LocalStorage` object graphs (standing in for two separate processes) against the same real
+   SQLite file and real data directory, confirming the DB compare-and-swap + storage fencing already
+   proven in `purge-race.test.js` holds across process boundaries too, not only within one process's
+   event loop — this was always the real correctness primitive; `Maintenance#run()`'s dedup guard was
+   only ever a same-process optimization.
+3. **Reconciliation's age tracking uses ctime, not mtime** — see the Phase 4 audit closure note for
+   why mtime would have been silently wrong.
+
+Everything else matches this plan's scope: `LocalStorage#reconcileTrash`, wired into
+`MediaService#purge()` so all three triggers share it; no new DB table; malformed/unexpected trash
+entries skipped with a warning, never deleted; a bounded config default (conservative) with test
+values overridable.
+
 ---
 
 ## Phase 5 — Backend traceparent consumption

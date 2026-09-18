@@ -194,6 +194,19 @@ existing dedup guard — no new lock table needed. Response surfaces the existin
 tickets}` counts plus a new `errors` count (currently discarded, would need one line to accumulate
 instead of swallow).
 
+**Closed in Phase 4 — trigger mechanism changed from this sketch, not just implemented as sketched**
+(`stack/src/media-maintenance.js`, `stack/src/stack.js`'s `Stack#maintenance`, `stack maintenance
+media` CLI command): re-verification at implementation time found media's flat API-key model is
+shared with its public upload/download surface (`api.addHook('onRequest', this.auth.hook)` covers
+every `/v1/*` route identically, `ops`'s `/metrics` included) — an HTTP endpoint under that same
+model would let any caller with any valid media key force a maintenance run, which is a materially
+different exposure than "any valid key can also do this" reads on paper. Used `stack`'s own
+operational control plane instead (the same trust boundary `stack backup`/`stack restore` already
+assume), avoiding both a new auth tier and blurring the public API's own boundary — no HTTP surface
+added. The handler still calls the real `Maintenance#run()` (now `run('manual')`, not
+`service.purge()` directly), so the in-flight dedup guard applies exactly as this sketch intended.
+`errors` is now a real returned field, not discarded.
+
 ---
 
 ## 4. Media trash reconciliation
@@ -243,6 +256,16 @@ If `stack backup`'s exclusion list for media (`tmp/`, `trash/`) changes as a res
 reconciliation, `stack/docs/BACKUP.md` needs a corresponding update — but reconciliation itself
 doesn't change what's excluded, only how fast `trash/` gets cleaned, so no BACKUP.md change is
 actually anticipated here.
+
+**Closed in Phase 4** (`LocalStorage#reconcileTrash`, `media/src/storage/local-storage.js`;
+`media/test/trash-reconcile.test.js`; wired into `MediaService#purge()` so it runs on every trigger
+— startup, timer, manual alike). One correction to this sketch, found only by empirically testing
+the age mechanism before trusting it: **ctime, not mtime**. `mtime` on the `.object` half of a trash
+entry is the ORIGINAL upload's last-write time (renames don't touch it), completely unrelated to
+when `detachForDelete` moved it into quarantine — using it would have made the grace period
+meaningless for anything re-uploaded long ago. `ctime` (verified empirically: a real `rename()` does
+update it, `mtime` does not) is the real signal for "time since this entry entered quarantine". No
+new DB table, exactly as sketched. `stack/docs/BACKUP.md` confirmed unaffected, as anticipated.
 
 ---
 

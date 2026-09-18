@@ -48,6 +48,15 @@ npm run restore -- backups/<timestamp>            # stop, restore, start, wait f
 See [docs/UPGRADE.md](docs/UPGRADE.md) for what's covered, restore's validation and atomicity, and
 rollback after a bad upgrade.
 
+Operator maintenance (post-production Phase 4 — today: media only):
+
+```bash
+atc-stack maintenance media    # one-shot: purge + trash reconciliation, safe alongside a live server
+```
+
+Runs media's real production `Maintenance`/`MediaService#purge()` directly against its `.env`/data
+directory — no HTTP route, no new auth system; see [media/README.md](../media/README.md#maintenance).
+
 ## What `setup` does
 
 1. **Dependencies**: `npm ci` in every folder that has no `node_modules` (or all with `--install`).
@@ -118,7 +127,7 @@ A new service is part of the stack from its first release. In the same delivery:
 | `EnvFile` | `src/env-file.js` | `.env` read/modify/write that keeps comments and order |
 | `SERVICES` | `src/manifest.js` | The service list: ports, keys, env, files, console entry |
 | `SetupContext` | `src/setup-context.js` | In-memory envs, secrets, key issuing, routes and services.json, save |
-| `Stack` | `src/stack.js` | `setup`, `up`, `down`, `dev`, `status`, `matrix`, `backup`, `restore`, first admin |
+| `Stack` | `src/stack.js` | `setup`, `up`, `down`, `dev`, `status`, `matrix`, `backup`, `restore`, `maintenance`, first admin |
 | `Snapshot` | `src/snapshot.js` | Whole-workspace backup creation and validated restore |
 | `Cli` | `bin/stack.js` | Argument parsing |
 

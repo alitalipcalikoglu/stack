@@ -9,6 +9,7 @@ import { Stack } from '../src/stack.js';
  *   up [--split-workers] | down [--split-workers] | status [--matrix] | dev   --root <dir>
  *   backup   --root <dir> --dir <snapshot dir>                     (default dir: <root>/backups/<timestamp>)
  *   restore  <snapshot dir> --root <dir> --service <id>             (default: every service the snapshot covers)
+ *   maintenance <service>   --root <dir>                            (one-shot; today: media only)
  * `--root` defaults to the parent folder of this checkout (the workspace with one folder per service).
  */
 export class Cli {
@@ -61,8 +62,14 @@ export class Cli {
         if (r.skipped.length) console.log(`skipped (not in snapshot): ${r.skipped.join(', ')}`);
         return 0;
       }
+      case 'maintenance': {
+        if (!positional[0]) { console.error('usage: atc-stack maintenance <service> [--root dir]'); return 2; }
+        const r = await stack.maintenance(positional[0]);
+        console.log(JSON.stringify(r));
+        return r.errors ? 1 : 0;
+      }
       default:
-        console.log('usage: atc-stack setup [--root dir] [--host host] [--public] [--install] [--admin-email e] [--admin-password p] | up [--split-workers] | down [--split-workers] | status [--matrix] | dev | backup [--dir dir] | restore <snapshot dir> [--service id]');
+        console.log('usage: atc-stack setup [--root dir] [--host host] [--public] [--install] [--admin-email e] [--admin-password p] | up [--split-workers] | down [--split-workers] | status [--matrix] | dev | backup [--dir dir] | restore <snapshot dir> [--service id] | maintenance <service>');
         return 2;
     }
   }
