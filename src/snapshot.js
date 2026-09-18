@@ -266,18 +266,18 @@ export class Snapshot {
     // Phase 1 — prepare: move every existing target aside (never delete), one at a time. A failure
     // here means nothing has been applied yet, so undoing it is just moving back what this phase
     // itself already moved.
-    /** @type {{ item: any, aside: string|null }[]} */
+    /** @type {{ item: any, aside: string|null|{ main: string|null, wal: string|null, shm: string|null } }[]} */
     const prepared = [];
     for (const item of plan) {
       try {
-        prepared.push({ item, aside: this.#moveAside(item.target, runId) });
+        prepared.push({ item, aside: this.#moveAside(item.target, runId, item.entry.kind === 'db') });
       } catch (err) {
         return this.#abortPrepare(prepared, item, err, skipped, runId);
       }
     }
 
     // Phase 2 — apply: write the validated snapshot content into each target.
-    /** @type {{ item: any, aside: string|null }[]} */
+    /** @type {{ item: any, aside: string|null|{ main: string|null, wal: string|null, shm: string|null } }[]} */
     const applied = [];
     for (const { item, aside } of prepared) {
       try {
@@ -293,7 +293,7 @@ export class Snapshot {
 
   /**
    * Phase-1 failure: revert whatever this call already moved aside; nothing was ever applied.
-   * @param {{ item: any, aside: string|null }[]} prepared @param {any} failedItem @param {unknown} err
+   * @param {{ item: any, aside: string|null|{ main: string|null, wal: string|null, shm: string|null } }[]} prepared @param {any} failedItem @param {unknown} err
    * @param {string[]} skipped @param {string} runId
    * @returns {RestoreResult}
    */
@@ -301,7 +301,7 @@ export class Snapshot {
     const rolledBack = [];
     const rollbackFailed = [];
     for (const { item, aside } of prepared) {
-      if (!aside) { rolledBack.push(item.label); continue; }
+      if (Snapshot.#asideIsEmpty(aside)) { rolledBack.push(item.label); continue; }
       try {
         this.#revert(aside, item.target, 'rollback');
         rolledBack.push(item.label);
@@ -323,7 +323,7 @@ export class Snapshot {
   /**
    * Phase-2 failure: revert the failed item itself plus every item already applied before it, each
    * from its own phase-1 aside copy.
-   * @param {{ item: any, aside: string|null }[]} applied @param {{ item: any, aside: string|null }} failed
+   * @param {{ item: any, aside: string|null|{ main: string|null, wal: string|null, shm: string|null } }[]} applied @param {{ item: any, aside: string|null|{ main: string|null, wal: string|null, shm: string|null } }} failed
    * @param {unknown} err @param {string[]} skipped @param {string} runId
    * @returns {RestoreResult}
    */
@@ -374,14 +374,14 @@ export class Snapshot {
   }
 
   /**
-   * Phase 1 primitive: move a live target aside if it exists, so phase 2 can freely overwrite it and
-   * still have something to revert to. Returns the aside path, or `null` when there was nothing to
-   * move (the target didn't exist before this restore — its correct "reverted" state is absent).
+   * Move one file/dir aside if it exists, otherwise a no-op. Shared by `#moveAside`'s main-target
+   * call and its `-wal`/`-shm` sidecar calls — never gates on `_fault` itself (the caller already
+   * did, once, for the main target only, so a db entry's fault injection fires exactly once per
+   * phase, matching every other entry kind).
    * @param {string} target @param {string} runId
    * @returns {string|null}
    */
-  #moveAside(target, runId) {
-    if (this._fault('prepare', target)) throw new Error(`injected failure: prepare ${target}`);
+  #moveAsideOne(target, runId) {
     if (!existsSync(target)) return null;
     const aside = `${target}.before-restore-${runId}`;
     mkdirSync(dirname(aside), { recursive: true });
@@ -390,8 +390,45 @@ export class Snapshot {
   }
 
   /**
+   * Phase 1 primitive: move a live target aside if it exists, so phase 2 can freely overwrite it and
+   * still have something to revert to. Returns the aside path, or `null` when there was nothing to
+   * move (the target didn't exist before this restore — its correct "reverted" state is absent).
+   *
+   * For a `kind: 'db'` entry, a live SQLite database's `-wal`/`-shm` sidecar files are part of the
+   * same logical unit as the main file, not separate content of their own (they are never listed in
+   * the backup manifest — `#backupDb`'s `VACUUM INTO` already flattens the live WAL into one
+   * consistent file, so there is nothing to back up in a sidecar). But on the *restore* side, a
+   * stale `-wal` left sitting next to a freshly-restored main file gets replayed by SQLite the next
+   * time anything opens it — silently reintroducing exactly the writes the restore was supposed to
+   * discard (confirmed empirically: a real service process, not cleanly closed at restore time,
+   * left a real, substantial `-wal` file; SQLite replayed it into the restored main file on next
+   * open). So a db entry's sidecars are moved aside — and, on rollback, restored — as one atomic
+   * unit with the main file, even though they were never part of the snapshot's own content.
+   * @param {string} target @param {string} runId @param {boolean} isDb
+   * @returns {string|null|{ main: string|null, wal: string|null, shm: string|null }}
+   */
+  #moveAside(target, runId, isDb) {
+    if (this._fault('prepare', target)) throw new Error(`injected failure: prepare ${target}`);
+    const main = this.#moveAsideOne(target, runId);
+    if (!isDb) return main;
+    return { main, wal: this.#moveAsideOne(`${target}-wal`, runId), shm: this.#moveAsideOne(`${target}-shm`, runId) };
+  }
+
+  /**
+   * Whether an `#moveAside` result represents "nothing existed before this restore, for any part
+   * of this entry".
+   * @param {string|null|{ main: string|null, wal: string|null, shm: string|null }} aside
+   */
+  static #asideIsEmpty(aside) {
+    if (aside === null) return true;
+    if (typeof aside === 'object') return aside.main === null && aside.wal === null && aside.shm === null;
+    return false;
+  }
+
+  /**
    * Phase 2 primitive: write the validated snapshot copy into `target` (which phase 1 already
-   * cleared, directly or via `#moveAside`).
+   * cleared, directly or via `#moveAside` — including any stale `-wal`/`-shm` sidecars for a `db`
+   * entry, so nothing stale is left for a later SQLite open to replay).
    * @param {any} entry @param {string} src @param {string} target
    */
   #applyContent(entry, src, target) {
@@ -401,17 +438,32 @@ export class Snapshot {
     else Snapshot.#copyFile(src, target);
   }
 
+  /** Revert one file/dir aside back to `target`, or just clear `target` when there was no aside. @param {string|null} aside @param {string} target */
+  #revertOne(aside, target) {
+    if (existsSync(target)) rmSync(target, { recursive: true, force: true });
+    if (aside) renameSync(aside, target);
+  }
+
   /**
    * Rollback primitive: discard whatever now sits at `target` (a phase-2 write, possibly partial)
    * and move the phase-1 aside copy back — or, when there was no aside copy (the target legitimately
-   * didn't exist before), just clear `target` again. Throws (uncaught, by design — the caller records
-   * it as a `rollbackFailed` entry) if the aside copy is itself gone or the filesystem refuses.
-   * @param {string|null} aside @param {string} target @param {'rollback'} op
+   * didn't exist before), just clear `target` again. For a `db` entry, the main file and its
+   * `-wal`/`-shm` sidecars are reverted together, as the one atomic unit `#moveAside` moved aside —
+   * a rollback that restored the main file but dropped a sidecar would leave the service's next
+   * SQLite open in an inconsistent, not-actually-pre-restore state. Throws (uncaught, by design — the
+   * caller records it as a `rollbackFailed` entry) if an aside copy is itself gone or the filesystem
+   * refuses.
+   * @param {string|null|{ main: string|null, wal: string|null, shm: string|null }} aside @param {string} target @param {'rollback'} op
    */
   #revert(aside, target, op) {
     if (this._fault(op, target)) throw new Error(`injected failure: ${op} ${target}`);
-    if (existsSync(target)) rmSync(target, { recursive: true, force: true });
-    if (aside) renameSync(aside, target);
+    if (aside !== null && typeof aside === 'object') {
+      this.#revertOne(aside.main, target);
+      this.#revertOne(aside.wal, `${target}-wal`);
+      this.#revertOne(aside.shm, `${target}-shm`);
+      return;
+    }
+    this.#revertOne(aside, target);
   }
 
   /** @param {unknown} err */

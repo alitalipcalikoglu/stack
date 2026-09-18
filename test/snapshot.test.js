@@ -82,6 +82,91 @@ test('backup then restore round-trips a real service database (ratelimit) unchan
   assert.equal(asideDirs.length, 1);
 });
 
+/**
+ * Post-production R1: a real, confirmed bug — restore only replaced a DB entry's main file, never
+ * touching a live `-wal`/`-shm` sidecar sitting next to it. SQLite replays a stale WAL into whatever
+ * main file it finds at open time, so a service that was not cleanly closed before restore (a real,
+ * ordinary case — a crash, `kill -9`, or a forced exit past a shutdown timeout, none of them exotic)
+ * had its post-backup writes silently reappear after "restore". Confirmed empirically before writing
+ * this test, not assumed: a clean `db.close()`, or a script simply running to its natural end,
+ * checkpoints WAL away (verified directly with `node:sqlite`); an explicit `process.exit()` does not
+ * — real service processes hit exactly this path via their own documented `forceExitMs` ceiling.
+ * These two tests reproduce a real, non-empty WAL (never a hand-created stand-in file) by leaving a
+ * live connection's post-backup write un-checkpointed — no `.close()` call — the same real condition
+ * a killed process leaves behind, not a synthetic approximation of it.
+ */
+test('successful restore discards a stale, un-checkpointed WAL — a service that was not cleanly closed leaves exactly this behind', async () => {
+  const root = mkdtempSync(join(fixtureRoot, 'wal-restore-'));
+  const dir = realServiceFixture(root, 'ratelimit');
+  const db = await openDb(dir);
+  db.prepare("INSERT INTO policies (name, limits, created_by, created_at, updated_at) VALUES ('pre-backup', '[]', 'test', 0, 0)").run();
+  db.close(); // clean close: VACUUM INTO's own backup already sees a flattened, WAL-free file regardless
+
+  const snap = new Snapshot({ root, exec: fakeExec });
+  const { dir: snapshotDir } = await snap.create();
+
+  // Post-backup write, deliberately left un-checkpointed (no .close()) — reproducing a real service
+  // killed/force-exited rather than shut down cleanly.
+  const live = await openDb(dir);
+  live.prepare("INSERT INTO policies (name, limits, created_by, created_at, updated_at) VALUES ('post-backup', '[]', 'test', 0, 0)").run();
+
+  const dbPath = join(dir, 'data', 'ratelimit.db');
+  assert.ok(existsSync(`${dbPath}-wal`), 'precondition: a real WAL sits next to the live file');
+  assert.ok(statSync(`${dbPath}-wal`).size > 0, 'precondition: the WAL genuinely holds the post-backup write, not an empty file');
+
+  const result = await snap.restore(snapshotDir);
+  assert.equal(result.outcome, 'restored');
+
+  assert.equal(existsSync(`${dbPath}-wal`), false, 'no stale WAL left at the canonical path after a successful restore');
+  assert.equal(existsSync(`${dbPath}-shm`), false, 'no stale SHM left at the canonical path after a successful restore');
+
+  const restored = await openDb(dir);
+  const names = /** @type {any[]} */ (restored.prepare('SELECT name FROM policies ORDER BY name').all()).map((r) => r.name);
+  assert.deepEqual(names, ['pre-backup'], 'the post-backup write does not reappear via stale-WAL replay on the next real SQLite open');
+  restored.close();
+  live.close();
+});
+
+test('failed-restore rollback restores the WAL/SHM sidecars together with the main file, not just the main file', async () => {
+  const root = mkdtempSync(join(fixtureRoot, 'wal-rollback-'));
+  const mediaDir = realServiceFixture(root, 'media', 'DATA_DIR=./data/files\n');
+  const rtDir = realServiceFixture(root, 'ratelimit');
+  mkdirSync(join(mediaDir, 'data', 'files', 'objects'), { recursive: true });
+  writeFileSync(join(mediaDir, 'data', 'files', 'objects', 'x.bin'), 'blob v1');
+  (await openDb(mediaDir)).close();
+  const rtdb = await openDb(rtDir);
+  rtdb.prepare("INSERT INTO policies (name, limits, created_by, created_at, updated_at) VALUES ('pre-backup', '[]', 'test', 0, 0)").run();
+  rtdb.close();
+
+  const snap = new Snapshot({ root, exec: fakeExec });
+  const { dir: snapshotDir } = await snap.create();
+
+  writeFileSync(join(mediaDir, 'data', 'files', 'objects', 'x.bin'), 'blob v2 (mutated after backup)');
+  const rtLive = await openDb(rtDir);
+  rtLive.prepare("INSERT INTO policies (name, limits, created_by, created_at, updated_at) VALUES ('post-backup', '[]', 'test', 0, 0)").run();
+
+  const rtDbPath = join(rtDir, 'data', 'ratelimit.db');
+  assert.ok(existsSync(`${rtDbPath}-wal`) && statSync(`${rtDbPath}-wal`).size > 0, 'precondition: real, un-checkpointed WAL on ratelimit before the restore attempt');
+
+  // manifest.entries order (ALL_SERVICES): media/db, media/objects, ratelimit/db — fault the last
+  // entry's apply, after ratelimit's db (and its WAL) has already been moved aside in phase 1.
+  const snapWithFault = new Snapshot({
+    root, exec: fakeExec,
+    _fault: (op, target) => op === 'apply' && target.endsWith(join('ratelimit', 'data', 'ratelimit.db')),
+  });
+  const result = await snapWithFault.restore(snapshotDir);
+
+  assert.equal(result.outcome, 'rolled_back');
+  assert.equal(result.rollbackFailed.length, 0);
+
+  assert.ok(existsSync(`${rtDbPath}-wal`), 'the WAL sidecar itself is back at the canonical path after rollback, not dropped');
+  const rtCheck = await openDb(rtDir);
+  const names = /** @type {any[]} */ (rtCheck.prepare('SELECT name FROM policies ORDER BY name').all()).map((r) => r.name);
+  assert.deepEqual(names, ['post-backup', 'pre-backup'], 'rollback brought back the full pre-restore-attempt logical state, including the un-checkpointed post-backup write — not just whatever was in the main file alone');
+  rtCheck.close();
+  rtLive.close();
+});
+
 test('backup then restore round-trips a real service database plus its extra directories (media: objects/variants)', async () => {
   const root = mkdtempSync(join(fixtureRoot, 'media-'));
   const dir = realServiceFixture(root, 'media', 'DATA_DIR=./data/files\n');
