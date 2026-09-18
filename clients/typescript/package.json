@@ -1,0 +1,15 @@
+{
+  "name": "@stack/typescript-clients",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Generated TypeScript clients for atc-web's 13 canonical OpenAPI contracts, plus the deterministic generation tooling that produces them. Isolated from stack's own root package.json/toolchain on purpose (see README.md).",
+  "type": "module",
+  "devDependencies": {
+    "openapi-typescript": "7.13.0",
+    "typescript": "5.9.3",
+    "yaml": "2.9.1"
+  },
+  "dependencies": {
+    "openapi-fetch": "0.17.0"
+  }
+}

@@ -24,7 +24,15 @@
     "backup": "node bin/stack.js backup",
     "restore": "node bin/stack.js restore",
     "test": "node --disable-warning=ExperimentalWarning --test \"test/**/*.test.js\"",
-    "typecheck": "tsc -p jsconfig.json"
+    "typecheck": "tsc -p jsconfig.json",
+    "openapi:validate": "node openapi-validation/validate.mjs",
+    "openapi:info-parity": "node openapi-validation/check-info-parity.mjs",
+    "clients:generate": "node clients/typescript/generate.mjs",
+    "clients:check": "node clients/typescript/check.mjs",
+    "clients:typecheck": "clients/typescript/node_modules/.bin/tsc -p clients/typescript/tsconfig.json",
+    "clients:test": "node --disable-warning=ExperimentalWarning --test \"clients/typescript/test/**/*.test.js\"",
+    "clients:smoke": "node --disable-warning=ExperimentalWarning --experimental-strip-types --test \"clients/typescript/test/smoke/*.test.ts\"",
+    "contracts:check": "npm run openapi:validate && npm run openapi:info-parity && npm run clients:check && npm run clients:typecheck && npm run clients:test"
   },
   "devDependencies": {
     "@types/node": "22.20.3",
