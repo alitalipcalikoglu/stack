@@ -1,155 +1,240 @@
 # Upgrading a running stack
 
-## Normal upgrade
+There is no `stack upgrade` command. An upgrade is this documented sequence of existing commands —
+`atc-stack backup`/`restore`/`status`/`up`/`down` (`npm run backup`/`restore`/`status`/`up`/`down`
+from `stack/`, or `git`/`npm ci` per service — see `stack/bin/stack.js:1-13` for the full command
+surface). See [BACKUP.md](BACKUP.md) for what a snapshot actually contains and the full restore
+outcome/rollback mechanics; this document only covers the upgrade sequence itself.
+
+## Preflight
+
+- Read the target version's changelog/diff for every service you're upgrading, specifically for a
+  new `MIGRATIONS` entry in its `src/db.js` (each service extends
+  `@atc-web/service-core`'s `Database` with its own `static MIGRATIONS` array — see "DB migration
+  implications" below) and for any new required env var (`Config.fromEnv` in that service throws
+  `ConfigError` at startup if one is missing — see "Config validation" below).
+- `atc-stack status --matrix` (from `stack/`) to record the current `version`/`schemaVersion`/
+  `serviceCore` of every service before you touch anything — this is your rollback reference point,
+  and the same command you'll re-run at the end to confirm the upgrade (`stack/src/stack.js:182-255`,
+  `Stack#matrix`).
+
+## Backup
 
 ```
-git -C <service> pull                # repeat for every service you're upgrading
+npm run backup            # from stack/ — see BACKUP.md for exactly what this captures/excludes
+```
+
+Do this before touching any service's code or config, even for a same-day rollout — it is the
+supported rollback path, not merely a precaution (see "Rollback decision" below). `stack backup`
+does not stop anything and is safe to run against a live stack (`VACUUM INTO` against each live
+database, per BACKUP.md).
+
+## Service-core compatibility check
+
+Every service pins its own `@atc-web/service-core` version and reports it at `GET /v1/info` as
+`serviceCore` (Stage 7, `stack/src/manifest.js` / each service's `/v1/info` route). `atc-stack status
+--matrix` reads this from every service and prints a warning line when more than one `serviceCore`
+major is present across the fleet (`Stack#matrix` → `#printMatrix`, `stack/src/stack.js:232-255`;
+proven by `stack/test/matrix.test.js`, "a mismatched serviceCore major never affects the
+ok/exit-code semantics").
+
+**This warning is informational only.** Per that same test and the code it exercises: a
+`serviceCore` major mismatch across services never blocks a service from starting, never appears as
+a startup check anywhere, and never affects `matrix()`'s or `status()`'s `ok`/exit-code semantics —
+`ok` reflects only `/health`+`/ready` reachability, exactly like plain `status()`. A `serviceCore`
+**minor** difference is not flagged as incompatible at all — the mismatch grouping in
+`#printMatrix` buckets purely by major version (`stack.js:245-251`; also proven by the matrix test
+suite's "grouping is by MAJOR only" assertion).
+
+**Services in this workspace are independently deployable — there is no global lockstep
+requirement.** Do not read the `serviceCore` warning as "every service must be on the same version
+before upgrading the next one." It exists so an operator upgrading services one at a time (the
+normal case — see "Service rollout" below) can see the fleet's version spread at a glance, nothing
+more.
+
+**Two separate concerns, do not conflate them:**
+- **API compatibility** — whether callers of a service's HTTP `/v1` contract still work after the
+  upgrade. This is about the wire contract that service exposes, unrelated to `serviceCore`.
+- **DB schema compatibility** — whether that service's *own* database's migrations are
+  forward-only-safe (see next section). This is purely local to one service and its own database
+  file; it has nothing to do with any other service's `serviceCore` version or schema.
+A `serviceCore` major mismatch says nothing about either of these on its own — it only tells you
+which shared-library generation each service was built against.
+
+## Config validation
+
+There is no separate "validate config" command. Configuration validation happens as an unavoidable
+part of a service actually starting: every service's entry point builds its `Config` via
+`Config.fromEnv(process.env)` as the first argument to its `Application` constructor (e.g.
+`notify/src/application.js:76-78`, and the equivalent in every other service), which runs — and can
+throw `ConfigError` — strictly before that service's `Database` is even constructed, let alone
+migrated. A missing or malformed required env var therefore always fails fast, before any migration
+is attempted, as part of the normal `pm2 start`/`stack up` step below. There is nothing to run ahead
+of that step beyond the preflight changelog read above (to know what a new required var would be).
+
+## DB migration implications
+
+Every stateful service's `Database` (`@atc-web/service-core/src/db.js`, subclassed per service with
+that service's own `static MIGRATIONS` array) applies any pending migration the moment its
+constructor runs, inside the service's own normal startup path — there is no separate migration
+step or command, and a fresh install and an upgrade of an existing database go through the exact
+same code path (`service-core/src/db.js:84-107`, `#migrate`).
+
+**Migrations are forward-only. There is no `migrate down`, in this codebase or in `service-core`.**
+Every migration is one SQL block in `MIGRATIONS[]`, applied in its own `BEGIN`/`COMMIT`; nothing
+generates or runs an inverse.
+
+**Never assume rolling back to the previous binary is safe once its DB schema has moved forward.**
+The moment a migration has been applied and `PRAGMA user_version` has advanced, starting the
+*previous* version of that service's code against that same database file is not automatically
+safe — `Database`'s constructor checks `user_version` against `this.constructor.MIGRATIONS.length`
+and refuses outright when the file is ahead of what the running build supports:
+
+```
+database is newer than this build supports (schema v<current>, build supports up to v<migrations.length>); refusing to open <path>
+```
+
+(the exact message thrown as `ConfigError`, `service-core/src/db.js:90`). This is not a soft warning
+— it is a hard refusal to open the database at all, so an older binary started against a newer
+schema does not start. **This applies even if a given migration happens to be additive-only and
+would, in principle, tolerate the old code reading around the new column/table** — the guard doesn't
+inspect what a migration actually changed, only the version number, so it refuses uniformly. Do not
+special-case a "safe" migration in an upgrade runbook on that basis. **The supported rollback path
+is restoring the pre-migration backup** — either the automatic `<DB_PATH>.pre-v<N>-<timestamp>` copy
+`Database` itself writes just before applying the first pending migration (`#backup`,
+`service-core/src/db.js:109-122`, skipped for `:memory:` and for a brand-new database with nothing
+to protect), or an `atc-stack backup` snapshot taken beforehand — not simply checking out the old
+code and pointing it at the now-migrated file. See [BACKUP.md](BACKUP.md) for the full restore
+procedure and its outcome states.
+
+### Worker-split rollout ordering (notify, scheduler, webhook-out)
+
+These three services are the ones with `splitWorkers: true` in `stack/src/manifest.js` and their own
+`src/api-main.js`/`src/worker-main.js` entry points (Stage 6), started as `<id>-api` + `<id>-worker`
+under `atc-stack up --split-workers` instead of one combined process
+(`Stack#generateSplitEcosystem`, `stack/src/stack.js:102-127`).
+
+**Both the api and the worker process independently construct their own `Application`, and every
+`Application` constructor — regardless of `role` — opens its own `Database(config.dbPath, ...)`
+against the same file** (confirmed in the real code: `notify/src/application.js:34-39`,
+`scheduler/src/application.js:34-44`, `webhook-out/src/application.js:34-39` all show identical
+`this.db = new Database(config.dbPath, { backupDir: config.dbBackupDir })` regardless of `role`).
+There is no leader-election or single-migration-owner mechanism between the two split processes —
+migration ownership is "whichever process's `Database` constructor runs first (or wins the SQLite
+write lock) for a given pending version."
+
+**This is not proven safe for a true simultaneous first start, and nothing in the code or test
+suite claims it is.** `service-core`'s own migration tests
+(`service-core/test/db.test.js`) cover reopening after a completed migration (no re-invocation, the
+`schema_migrations` version `PRIMARY KEY` catching a *corrupted* `user_version` that fools the
+version-gate into re-attempting an already-applied, idempotent migration) but there is no test for
+two `Database` instances racing to migrate the *same* database file from a genuinely pending version
+at the same time. Reasoning from the actual transaction shape (`#migrate`, `service-core/src/db.js:
+84-107`): each migration runs inside its own `BEGIN`/`COMMIT` with `busy_timeout = 5000`, so SQLite
+serializes the two processes' writes rather than corrupting the file — but the *loser* of that race,
+having already read `user_version` as pending before the winner committed, will attempt to
+re-apply the same migration SQL once it gets the write lock. If that migration is not itself
+idempotent (most `CREATE TABLE`/`ALTER TABLE` migrations in this codebase are not — see the "canary"
+test in `service-core/test/db.test.js`, "reopening at the latest version never re-invokes an
+already-applied migration callback"), the loser's own migration statement throws, its transaction
+rolls back, and that process's `Database` constructor — and so its whole startup — throws. **Treat a
+simultaneous first start of both split processes against a database with a pending migration as
+unsupported**, not as a race that has been made safe by design.
+
+**Rollout ordering for `--split-workers` across an upgrade that includes a pending migration:**
+start the two processes staggered, not simultaneously, so exactly one of them performs the
+migration and the second one only ever opens an already-current database:
+
+1. Stop both `<id>-api` and `<id>-worker` (or use `atc-stack down --split-workers` for the whole
+   affected service).
+2. `npm ci` the new code.
+3. Start **one** of the two processes first (either one — `role` doesn't change what
+   `Database` does) and wait for it to report ready before starting the second. In practice this
+   means: `pm2 start <id>-worker` (or `<id>-api`), wait for its readiness signal (`/ready` for the
+   api process; for the worker process, which has no HTTP listener at all — "PM2's own process
+   state is the liveness signal for this role", `notify/src/worker-main.js` — wait for PM2 to report
+   it online and check its log for the migration having completed, or simply pause a few seconds
+   given migrations in this codebase run synchronously at startup before either role does anything
+   else), then start the second process.
+4. `atc-stack up --split-workers` itself starts every service's two apps back-to-back within the
+   same loop with no readiness gate between `<id>-api` and `<id>-worker` (`Stack#up`,
+   `stack/src/stack.js:65-75` — `pm2 startOrRestart` is called for one app, then immediately the
+   next) — **this is fine when there is no pending migration for that service** (both processes just
+   open an already-current database, which is the common case), but is exactly the scenario above to
+   avoid for a service that does have a new migration in this upgrade. For a split-workers upgrade
+   that includes a migration, restart that one service's two processes by hand with the pause in
+   step 3, rather than relying on `atc-stack up --split-workers` for that service.
+
+Every other service in the manifest has no `splitWorkers` flag and only ever runs one process per
+service, so this ordering concern does not apply to it — one process, one `Database` instance, no
+race is possible.
+
+## Service rollout
+
+Per service you're upgrading:
+
+```
+git -C <service> pull
 cd <service> && npm ci
+pm2 restart <service>       # or, for a split-capable service already run with --split-workers,
+                             # restart its two apps per "Worker-split rollout ordering" above
 ```
 
-```
-npm run backup            # from stack/ — snapshots every service's database, plus media's blob
-                           # storage, auth's JWT keys, gateway's routes.json, console's
-                           # services.json (see "What's covered" below)
-```
+This is the step where config validation (above) and DB migration (above) both actually happen, as
+part of that service's own normal startup — there's nothing additional to run. A fresh install and
+an upgrade of an existing database go through the exact same migration code, so there's no separate
+"first run" path to get out of sync with the upgrade path.
+
+For the whole workspace at once: `atc-stack up [--split-workers]` (`npm run up` from `stack/`) —
+iterates every service in manifest order (`stack/src/manifest.js`) and `pm2 startOrRestart`s it.
+
+## Readiness verification
 
 ```
-pm2 restart <service>     # or `stack up` for the whole workspace
+npm run status              # from stack/ — confirm every service reports health=200 ready=200
 ```
 
-Each service's own `Database` applies any pending migration the moment it opens the file, inside
-the new code's normal startup path — there is no separate migration step to run. Before it touches
-anything, it snapshots the file itself to `<DB_PATH>.pre-v<N>-<timestamp>` (next to the database, or
-under `DB_BACKUP_DIR` if set); `npm run backup` above is the operator-driven equivalent, covering the
-whole workspace at once rather than one file.
+`Stack#status` (`stack/src/stack.js:154-164`) probes every service's `/health` and `/ready` in
+manifest order and reports `ok` only when both are `200`. Do this before moving on to the matrix
+check below — a service that isn't ready yet will also just show `?` fields in the matrix, which is
+less specific about what's actually wrong.
+
+## Matrix verification
 
 ```
-npm run status             # from stack/ — confirm every service reports health=200 ready=200
+npm run status -- --matrix    # or: atc-stack status --matrix
 ```
 
-A fresh install and an upgrade of an existing database go through the exact same migration code —
-there is no separate "first run" path to get out of sync with the upgrade path.
+Confirms, per service, `version`/`apiVersion`/`schemaVersion`/`serviceCore`/`capabilities` as read
+from its own `GET /v1/info` (`Stack#matrix`, `stack/src/stack.js:182-194`). Compare against the
+preflight snapshot you took at the start: `schemaVersion` for each upgraded service should now match
+that service's own highest `MIGRATIONS` index; `version`/`apiVersion` should match what you intended
+to deploy. A service that hasn't adopted `/v1/info` yet, or is unreachable, reports `infoOk: false`
+with a human-readable `infoError` (`no /v1/info (older version)`, `unreachable: ...`, etc.) rather
+than aborting the whole command — every other row still reports normally (`Stack#info`,
+`stack.js:196-230`).
 
-## What's covered
+## Rollback decision
 
-`npm run backup` snapshots:
+**None of the migrations are reversible.** If the upgrade needs to be rolled back:
 
-| Service | What |
-|---|---|
-| every stateful service | its SQLite database (`DB_PATH`), via `VACUUM INTO` against the live file — safe to run without stopping anything |
-| `media` | the database, plus `objects/` and `variants/` under `DATA_DIR` (content-addressed blob storage) — `tmp/` is excluded, it holds only in-flight uploads and is cleared on the next start |
-| `auth` | the database, plus `keys/` (the JWT signing key pair) — restoring the database with a different signing key invalidates every outstanding access token |
-| `gateway` | `routes.json` only (it has no database) |
-| `console` | the database, plus `services.json` |
+1. Decide whether any migration actually ran during this upgrade (check the matrix output's
+   `schemaVersion` against your preflight snapshot, or that service's own
+   `<DB_PATH>.pre-v<N>-<timestamp>` file appearing). If none did, checking out the previous code and
+   restarting is sufficient — there's no schema mismatch to worry about.
+2. If a migration did run: **do not** just check out the previous version of that service's code and
+   start it — per "DB migration implications" above, the old binary's `Database` constructor will
+   refuse to open a database whose `user_version` is ahead of what it supports. Instead:
+   - `atc-stack restore <snapshot-dir>` from the `atc-stack backup` you took in the Backup step
+     above (or, as a last resort if that snapshot is unavailable, restore that service's own
+     automatic `<DB_PATH>.pre-v<N>-<timestamp>` copy by hand) — see [BACKUP.md](BACKUP.md) for the
+     full restore procedure, validation, and the exact `restored`/`rolled_back`/`rollback_incomplete`
+     outcomes it can produce.
+   - Then check out the previous version of that service's code and restart it against the restored
+     file.
+3. A backup taken *after* the upgrade already reflects the new schema and cannot be used to go back
+   to the old code — the rollback backup has to predate the migration that ran.
 
-Not covered, deliberately: `.env` files (secrets; keep these under your own secret management, not
-in a snapshot directory), `node_modules`, PM2 logs, and media's `tmp/`.
-
-A snapshot is a plain directory (`stack/backups/<timestamp>/` by default, or `--dir <path>`) with a
-`manifest.json` (per-item sha256, each database's schema version, each service's package version)
-and one subfolder per service. There is no archive/compression step — pipe it through `tar`/`zip`
-yourself if you want one file to move around or store off-host.
-
-## Rotating a secret-sealing or signing key
-
-Three services hold a key file or env-var key that seals or signs something, each with its own
-online rotation path (current + previous, no downtime, no forced re-enrol/re-issue): `auth`'s JWT
-signing key (`keys/`, `JWT_PREVIOUS_PUBLIC_KEY_PATH`), `audit`'s anchor signing key
-(`keys/`, `ANCHOR_PREVIOUS_PUBLIC_KEY_PATH`), and `console`'s TOTP-sealing key
-(`SECRETS_KEY`/`SECRETS_PREVIOUS_KEY`, no file — env only). The exact steps differ per service (see
-each one's own README — console's "Rotating SECRETS_KEY" is the most involved, since it actively
-reseals stored data rather than just accepting either key going forward), but the shape is the same:
-
-1. Generate the new key/pair.
-2. Configure it as current, and the old one as previous.
-3. Restart that one service. Confirm it started clean (no `ConfigError`) and, for console
-   specifically, that the reseal actually completed (see its README).
-4. Once confident nothing still needs the old key, remove the "previous" config and restart again.
-
-**Backups taken before a rotation completes** are sealed/signed under whatever key was live at that
-time — restoring one may need a key you have since retired from live config. Keep a retired key
-alongside any backup snapshot taken before you removed it, for as long as you might restore that
-snapshot; `stack backup` does not capture `SECRETS_KEY`/`SECRETS_PREVIOUS_KEY` (they're `.env`
-values, deliberately excluded — see "What's covered" above), so this is entirely on your own secret
-management, not something a snapshot restore recovers for you.
-
-## Restore
-
-```
-npm run restore -- stack/backups/2026-01-15T10-30-00-000Z
-```
-
-Or one service only:
-
-```
-npm run restore -- stack/backups/2026-01-15T10-30-00-000Z --service media
-```
-
-Restore validates everything in the snapshot before touching any live file: the manifest is
-well-formed, every recorded database and directory is present with a matching checksum (an
-incomplete or corrupted backup is refused outright), and every database is opened, through the
-target service's own current code, from a temporary staged copy — which is also where a snapshot
-whose schema is newer than what the running code supports gets rejected (`ConfigError`), before
-anything is touched.
-
-### All-or-nothing across the items in scope
-
-Applying a validated restore is two steps, both scoped to one `runId`:
-
-1. **Prepare** — every live file/directory about to be replaced is moved aside to
-   `<path>.before-restore-<runId>` (never deleted), one item at a time.
-2. **Apply** — the validated snapshot content is written into each target in turn.
-
-If *anything* fails in either step, restore reverts every item this run had already touched, using
-the aside copies `prepare` just made, so a failed restore never leaves some services on the new
-snapshot and others on the old one. Only after both steps succeed for every item does restore stop
-being reversible for this run and go on to (re)start PM2. The outcome is always one of three:
-
-- **`restored`** — every item now has the snapshot's content; affected services are started on it.
-- **`rolled_back`** — the restore failed, but every item is confirmed back at its exact pre-restore
-  state; affected services are started on that original state. The command still exits non-zero (it
-  was a failed restore), but nothing was lost.
-- **`rollback_incomplete`** — the restore failed *and* reverting at least one item also failed (its
-  aside copy went missing mid-run, a second disk error, …). **Nothing is (re)started** — a stopped
-  service is safer than one started against a file whose state is now unknown. The error names every
-  item and whether it's confirmed reverted or unknown, and points at its `.before-restore-<runId>`
-  copy; check that copy by hand before starting anything.
-
-`rollback_incomplete` is never reported as an ordinary restore failure — it is a distinct outcome
-specifically because "the rollback also failed" needs a human to look, not a retry.
-
-### What this is not: a cross-service transaction
-
-This is a best-effort, in-process saga — not a filesystem transaction spanning every service's
-files. It protects against *ordinary* failures during apply (a permissions problem, a full disk, a
-missing aside copy): every one of those is caught and rolled back as described above. It does **not**
-protect against the process running `stack restore` itself being killed, or the machine losing power,
-partway through the apply step. If that happens: some targets may be on the new content, others on
-the old, `.before-restore-<runId>` copies sit next to whichever targets were already touched, and
-there is no automatic detection or resume on the next run — compare the aside copies against the
-current files by hand, decide per item, and re-run `restore` (it re-validates from the snapshot every
-time) once you're confident about the starting state. This is a deliberate scope decision: a
-restore-journal that detects and resumes an interrupted run is real complexity for a failure mode
-(the operator's own machine or process dying mid-restore, while every affected service is already
-stopped) that ordinary in-process error handling doesn't need to solve.
-
-### Retention
-
-`.before-restore-<runId>` copies are **never deleted automatically**, whether the restore succeeded,
-rolled back, or left `rollback_incomplete` — deleting them automatically is exactly the kind of
-"probably fine" behavior that turns into lost data the one time it wasn't. Every copy from the same
-`restore` call shares the same `runId` (its timestamp), so `ls`-ing a service's data directory for
-`*.before-restore-2026-*` shows you everything one run touched. Clean them up by hand once you're
-confident you no longer need them.
-
-## Rollback
-
-**None of the migrations are reversible.** To roll back a service after a bad upgrade:
-
-1. Restore the pre-migration copy that `Database` wrote automatically (`<DB_PATH>.pre-v<N>-<ts>`,
-   or under `DB_BACKUP_DIR`), or a `npm run backup` snapshot taken before the upgrade.
-2. Check out the previous version of that service's code.
-3. Start it against the restored file.
-
-A backup taken *after* an upgrade already reflects the new schema and cannot be used to go back to
-the old code.
+See [BACKUP.md](BACKUP.md) for secret/key semantics that also matter on a rollback (a restored
+database and a mismatched signing/sealing key can break verification even when the schema itself
+restores cleanly).

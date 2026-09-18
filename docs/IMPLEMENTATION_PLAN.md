@@ -132,7 +132,7 @@ Repositories: notify, scheduler, webhook-out (+ core `Lifecycle`).
 
 ## Stage 11 — Cross-service integration tests (completion)
 
-Flows added to the harness with failure paths: signup with notify down (201 + `verificationEmailSent:false`, audit still gets the event via outbox after notify recovers), gateway with ratelimit down on a `failOpen:false` route (503) and `true` route (200 + dependency metric), webhook-out receiver 500 → retry → success and 5× failure → subscription disabled, scheduler target timeout → retry → run failed, media upload then purge then download 404, flag update → snapshot ETag changes → evaluate reflects it, ratelimit policy edit while checks run. Runs in CI of `stack` only when `STACK_INTEGRATION=1`.
+Flows added to the harness with failure paths: signup with notify down (201 + `verificationEmailSent:false`; the audit event for the signup is independent of notify's own state and is already durable via auth's own outbox — see the Stage 11 report), gateway with ratelimit down on a `failOpen:false` route (503) and `true` route (200 + dependency metric), webhook-out receiver 500 → retry → success and repeated failure → subscription disabled once `DISABLE_AFTER_FAILURES` (default 10, operator-configurable; earlier drafts of this plan said "5×" — that number was never the real default and the Stage 11 tests exercise the actual configured threshold) consecutive terminal failures are reached, scheduler target timeout → retry → run failed, media upload then purge then download 404, flag update → snapshot ETag changes → evaluate reflects it, ratelimit policy edit while checks run. Runs in CI of `stack` only when `STACK_INTEGRATION=1`.
 
 ## Stage 12 — Stack deployment, upgrade and documentation
 

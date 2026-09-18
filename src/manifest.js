@@ -14,6 +14,12 @@
  *   One-off preparation before the env is computed (key pairs, builds).
  * @property {{ type: string, label: string, keyEnv?: string, metricsTokenEnv?: string, polling?: { enabled: boolean, intervalSec: number } }} [console]
  *   How the service appears in the console's `services.json`.
+ * @property {boolean} [splitWorkers]
+ *   True for a service whose `ecosystem.config.cjs` ships a commented-out split template
+ *   (`<id>-api` + `<id>-worker`, via `src/api-main.js`/`src/worker-main.js` — Stage 6). Read by
+ *   `Stack#up({ splitWorkers: true })` to generate that split ecosystem at runtime instead of
+ *   requiring an operator to hand-edit the file. Services without this flag only ever run their
+ *   single combined app, `--split-workers` or not.
  */
 
 /**
@@ -27,7 +33,7 @@ const auditEnv = (c, id) => ({ AUDIT_URL: String(c.url('audit')), AUDIT_API_KEY:
 /** @type {Service[]} */
 export const SERVICES = [
   {
-    id: 'notify', port: 3001, keysVar: 'NOTIFY_API_KEYS',
+    id: 'notify', port: 3001, keysVar: 'NOTIFY_API_KEYS', splitWorkers: true,
     env: (c) => ({ ...auditEnv(c, 'notify'), SMTP_URL: c.keep('notify', 'SMTP_URL', 'json:'), SMTP_FROM: c.keep('notify', 'SMTP_FROM', '"atc-web <no-reply@localhost>"'), WEBHOOK_SIGNING_SECRET: c.secret('notify', 'WEBHOOK_SIGNING_SECRET'), WEBHOOK_ALLOW_HTTP: c.local ? 'true' : c.keep('notify', 'WEBHOOK_ALLOW_HTTP', 'false') }),
     console: { type: 'notify', label: 'Notify', keyEnv: 'NOTIFY_API_KEY', polling: { enabled: true, intervalSec: 30 } },
   },
@@ -63,7 +69,7 @@ export const SERVICES = [
     console: { type: 'flags', label: 'Flags', keyEnv: 'FLAGS_API_KEY' },
   },
   {
-    id: 'scheduler', port: 3008, keysVar: 'SCHEDULER_API_KEYS',
+    id: 'scheduler', port: 3008, keysVar: 'SCHEDULER_API_KEYS', splitWorkers: true,
     env: (c) => ({
       SIGNING_SECRET: c.secret('scheduler', 'SIGNING_SECRET'),
       ...auditEnv(c, 'scheduler'),
@@ -73,7 +79,7 @@ export const SERVICES = [
     console: { type: 'scheduler', label: 'Scheduler', keyEnv: 'SCHEDULER_API_KEY' },
   },
   {
-    id: 'webhook-out', port: 3009, keysVar: 'WEBHOOK_API_KEYS',
+    id: 'webhook-out', port: 3009, keysVar: 'WEBHOOK_API_KEYS', splitWorkers: true,
     env: (c) => ({ ...auditEnv(c, 'webhook-out'), SECRETS_KEY: c.secret('webhook-out', 'SECRETS_KEY'), ...c.outbound('webhook-out') }),
     console: { type: 'webhook-out', label: 'Webhooks', keyEnv: 'WEBHOOK_OUT_API_KEY' },
   },

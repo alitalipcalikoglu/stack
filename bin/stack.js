@@ -6,7 +6,7 @@ import { Stack } from '../src/stack.js';
 /**
  * atc-stack <command> [options]
  *   setup    --root <dir> --host <host> --public --install --admin-email <email> --admin-password <pw>
- *   up | down | status [--matrix] | dev   --root <dir>
+ *   up [--split-workers] | down [--split-workers] | status [--matrix] | dev   --root <dir>
  *   backup   --root <dir> --dir <snapshot dir>                     (default dir: <root>/backups/<timestamp>)
  *   restore  <snapshot dir> --root <dir> --service <id>             (default: every service the snapshot covers)
  * `--root` defaults to the parent folder of this checkout (the workspace with one folder per service).
@@ -42,8 +42,8 @@ export class Cli {
         console.log('\nnext: "npm run dev" (this terminal) or "npm run up" (PM2)');
         return 0;
       }
-      case 'up': await stack.up(); return 0;
-      case 'down': await stack.down(); return 0;
+      case 'up': await stack.up({ splitWorkers: flags['split-workers'] === true }); return 0;
+      case 'down': await stack.down({ splitWorkers: flags['split-workers'] === true }); return 0;
       case 'status': {
         if (flags.matrix) { const rows = await stack.matrix(); return rows.every((r) => r.ok) ? 0 : 1; }
         const rows = await stack.status(); return rows.every((r) => r.ok) ? 0 : 1;
@@ -62,7 +62,7 @@ export class Cli {
         return 0;
       }
       default:
-        console.log('usage: atc-stack setup [--root dir] [--host host] [--public] [--install] [--admin-email e] [--admin-password p] | up | down | status [--matrix] | dev | backup [--dir dir] | restore <snapshot dir> [--service id]');
+        console.log('usage: atc-stack setup [--root dir] [--host host] [--public] [--install] [--admin-email e] [--admin-password p] | up [--split-workers] | down [--split-workers] | status [--matrix] | dev | backup [--dir dir] | restore <snapshot dir> [--service id]');
         return 2;
     }
   }

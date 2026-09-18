@@ -73,15 +73,15 @@ Options: `--root <dir>` (default: the parent of this checkout), `--admin-email <
 | Service | Port | Repository | What it does | Calls |
 |---|---|---|---|---|
 | gateway | 3000 | [gateway](https://github.com/alitalipcalikoglu/gateway) | Public edge: routes, JWT verification, service-key injection, CORS, per-IP limits, central rate limit policies, geo headers | auth (JWKS), ratelimit, geo, every upstream |
-| notify | 3001 | [notify](https://github.com/alitalipcalikoglu/notify) | Queued e-mail and signed webhooks with templates and retries | audit |
+| notify | 3001 | [notify](https://github.com/alitalipcalikoglu/notify) | Queued e-mail with templates and retries, plus a legacy signed webhook for one-off calls (`webhook-out` is the durable delivery service — see below). API/worker split-capable. | audit |
 | auth | 3002 | [auth](https://github.com/alitalipcalikoglu/auth) | Users, passwords, ES256 JWT + JWKS, refresh tokens, e-mail verification, password reset | notify, audit |
 | media | 3003 | [media](https://github.com/alitalipcalikoglu/media) | Uploads, deduplication, image variants, signed URLs, upload tickets | audit |
 | console | 3004 | [console](https://github.com/alitalipcalikoglu/console) | Admin web app for every service: own admins, 2FA, console log | every service, audit |
 | audit | 3005 | [audit](https://github.com/alitalipcalikoglu/audit) | Append-only event log with a hash chain, filters, export, retention | – |
 | shortlink | 3006 | [shortlink](https://github.com/alitalipcalikoglu/shortlink) | Short links, click statistics, QR codes | audit |
 | flags | 3007 | [flags](https://github.com/alitalipcalikoglu/flags) | Feature flags and typed settings per environment, rollouts, targeting rules | audit |
-| scheduler | 3008 | [scheduler](https://github.com/alitalipcalikoglu/scheduler) | Cron and one-shot jobs calling HTTP targets with signatures and retries | flags, notify, webhook-out (targets), audit |
-| webhook-out | 3009 | [webhook-out](https://github.com/alitalipcalikoglu/webhook-out) | Outbound webhooks: subscriptions, signed deliveries, retries, replay | audit |
+| scheduler | 3008 | [scheduler](https://github.com/alitalipcalikoglu/scheduler) | Cron and one-shot jobs calling HTTP targets with signatures and retries. API/worker split-capable. | flags, notify, webhook-out (targets), audit |
+| webhook-out | 3009 | [webhook-out](https://github.com/alitalipcalikoglu/webhook-out) | The durable, general-purpose outbound-webhook service: subscriptions, signed deliveries, retries, replay. API/worker split-capable. | audit |
 | search | 3010 | [search](https://github.com/alitalipcalikoglu/search) | Full-text search over your documents with facets and highlights (SQLite FTS5) | audit |
 | ratelimit | 3011 | [ratelimit](https://github.com/alitalipcalikoglu/ratelimit) | Central rate limits and quotas: policies, sliding windows, overrides, blocks | audit |
 | geo | 3012 | [geo](https://github.com/alitalipcalikoglu/geo) | IP geolocation (MMDB), countries, currencies, time zones, phone normalization, places | audit |
@@ -129,7 +129,9 @@ A new service is part of the stack from its first release. In the same delivery:
 - [docs/OBSERVABILITY.md](docs/OBSERVABILITY.md) — the request-id/`traceparent` propagation rules and structured-log field vocabulary every service is measured against.
 - [docs/UPGRADE.md](docs/UPGRADE.md) — how migrations apply on upgrade, what `backup`/`restore` cover, restore's validation and atomicity, and rollback.
 - [docs/READINESS_TEMPLATE.md](docs/READINESS_TEMPLATE.md) — the 19-section production-readiness contract; every service has its own filled copy at `<service>/docs/READINESS.md`.
+- [docs/READINESS.md](docs/READINESS.md) — index into every service's own `docs/READINESS.md`, one real line each.
 - [docs/API_CONTRACT.md](docs/API_CONTRACT.md) — the `/v1/info` contract (Stage 7) every service serves, and what `stack status --matrix` does with it.
+- [docs/COMPATIBILITY.md](docs/COMPATIBILITY.md) — what `stack status --matrix` reports and the compatibility semantics around it (major/minor `serviceCore` mismatch, API vs. schema compatibility, mixed-version rollout coverage).
 - [test/integration/](test/integration/) — cross-service integration tests that spawn real service processes (`STACK_INTEGRATION=1 npm test`; plain `npm test` stays fast and spawns nothing).
 
 ## License
