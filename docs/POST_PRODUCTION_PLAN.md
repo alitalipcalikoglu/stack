@@ -217,6 +217,17 @@ proceed unless the security-posture judgment call flagged in the audit (is backi
 signing key via the same mechanism as auth's JWT key acceptable) comes back "no" from the user, in
 which case this phase is dropped entirely, not partially done.
 
+**Implemented**: `stack/src/snapshot.js`'s `EXTRA_PATHS.audit`, `stack/test/snapshot.test.js` (7 new
+tests), `stack/test/integration/audit-anchor-continuity.test.js`, `stack/docs/BACKUP.md`,
+`audit/README.md`, `audit/docs/READINESS.md`. Two design refinements beyond this plan's original
+scope, both re-verified against real code before implementing (not applied on the audit's design
+sketch alone): configured-but-missing key material fails the backup (fatal, matching
+`AnchorSigner.fromFiles`'s own startup-refusal contract) rather than degrading silently; a configured
+path outside the audit service folder is excluded with a warning rather than followed, a security
+boundary. `#copyFile`'s missing permission-bit preservation (a pre-existing gap affecting `auth`'s
+keys too) was found and fixed in the same phase, since leaving it would have made every restored
+private key world/group-readable, audit's new one included. No audit production code changed.
+
 ---
 
 ## Phase 4 — Media maintenance trigger and trash reconciliation

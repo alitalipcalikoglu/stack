@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { chmodSync, cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { chmodSync, cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { after, test } from 'node:test';
@@ -29,6 +29,16 @@ function realServiceFixture(root, id, envExtra = '') {
   cpSync(join(real, 'package.json'), join(dir, 'package.json'));
   writeFileSync(join(dir, '.env'), `DB_PATH=./data/${id}.db\n${envExtra}`);
   return dir;
+}
+
+/**
+ * Real Ed25519 anchor key pair via audit's own `AnchorKeyGenerator` (never a hand-rolled stand-in
+ * for key generation) written under `dir/keys/anchor-*`.
+ * @param {string} dir
+ */
+async function generateAnchorKeys(dir) {
+  const { AnchorKeyGenerator } = await import(pathToFileURL(join(workspaceRoot, 'audit', 'scripts', 'anchor-keygen.js')).href);
+  return new AnchorKeyGenerator(join(dir, 'keys', 'anchor')).run();
 }
 
 /** @param {string} serviceDir */
@@ -290,4 +300,135 @@ test('restore refuses a schema newer than the running service supports, via the 
   writeFileSync(join(snapshotDir, 'manifest.json'), JSON.stringify(manifest));
 
   await assert.rejects(() => snap.restore(snapshotDir), /newer than this build supports/);
+});
+
+test('restored audit private key keeps its 0600 permissions, not the process umask default', async () => {
+  const root = mkdtempSync(join(fixtureRoot, 'audit-key-perms-'));
+  const dir = realServiceFixture(root, 'audit', 'ANCHOR_PRIVATE_KEY_PATH=./keys/anchor-private.pem\n');
+  await generateAnchorKeys(dir);
+  assert.equal(statSync(join(dir, 'keys', 'anchor-private.pem')).mode & 0o777, 0o600, 'sanity: AnchorKeyGenerator itself writes 0600');
+  (await openDb(dir)).close();
+
+  const snap = new Snapshot({ root, exec: fakeExec });
+  const { dir: snapshotDir } = await snap.create();
+  assert.equal(statSync(join(snapshotDir, 'audit', 'keys', 'anchor-private.pem')).mode & 0o777, 0o600, 'the backup copy itself keeps 0600, not writeFileSync\'s default umask mode');
+
+  // Corrupt live permissions to prove restore actively re-asserts 0600 rather than happening to leave it alone.
+  chmodSync(join(dir, 'keys', 'anchor-private.pem'), 0o644);
+  const result = await snap.restore(snapshotDir);
+  assert.equal(result.outcome, 'restored');
+  assert.equal(statSync(join(dir, 'keys', 'anchor-private.pem')).mode & 0o777, 0o600, 'restore writes the private key back at 0600, not world/group-readable');
+});
+
+test('audit anchor private key is included in stack backup and checksummed in the manifest', async () => {
+  const root = mkdtempSync(join(fixtureRoot, 'audit-key-'));
+  const dir = realServiceFixture(root, 'audit', 'ANCHOR_PRIVATE_KEY_PATH=./keys/anchor-private.pem\n');
+  await generateAnchorKeys(dir);
+  (await openDb(dir)).close();
+
+  const snap = new Snapshot({ root, exec: fakeExec });
+  const { manifest } = await snap.create();
+  const keyEntry = manifest.entries.find((/** @type {any} */ e) => e.service === 'audit' && e.path === 'keys/anchor-private.pem');
+  assert.ok(keyEntry, `expected an audit/keys/anchor-private.pem entry, got: ${JSON.stringify(manifest.entries.map((/** @type {any} */ e) => e.path))}`);
+  assert.equal(keyEntry.kind, 'file');
+  const { createHash } = await import('node:crypto');
+  assert.equal(keyEntry.sha256, createHash('sha256').update(readFileSync(join(dir, 'keys', 'anchor-private.pem'))).digest('hex'));
+  assert.ok(!JSON.stringify(manifest).includes(readFileSync(join(dir, 'keys', 'anchor-private.pem'), 'utf8')), 'the manifest never carries the key bytes themselves, only its checksum');
+});
+
+test('anchoring not configured: no audit key entry, and no error', async () => {
+  const root = mkdtempSync(join(fixtureRoot, 'audit-no-key-'));
+  const dir = realServiceFixture(root, 'audit');
+  (await openDb(dir)).close();
+
+  const snap = new Snapshot({ root, exec: fakeExec });
+  const { manifest } = await snap.create();
+  assert.equal(manifest.entries.filter((/** @type {any} */ e) => e.service === 'audit').length, 1, 'only the database entry — anchoring is off, nothing else to back up');
+});
+
+test('anchoring configured but the key file is missing: backup refuses rather than silently completing an incomplete snapshot', async () => {
+  const root = mkdtempSync(join(fixtureRoot, 'audit-missing-key-'));
+  const dir = realServiceFixture(root, 'audit', 'ANCHOR_PRIVATE_KEY_PATH=./keys/anchor-private.pem\n');
+  (await openDb(dir)).close();
+  // Deliberately never generated — ANCHOR_PRIVATE_KEY_PATH is configured but nothing exists there.
+
+  const snap = new Snapshot({ root, exec: fakeExec });
+  await assert.rejects(() => snap.create(), /ANCHOR_PRIVATE_KEY_PATH is configured.*but the file does not exist/);
+});
+
+test('tampering with the snapshot copy of the audit private key is caught by checksum validation before anything live is touched', async () => {
+  const root = mkdtempSync(join(fixtureRoot, 'audit-tamper-'));
+  const dir = realServiceFixture(root, 'audit', 'ANCHOR_PRIVATE_KEY_PATH=./keys/anchor-private.pem\n');
+  await generateAnchorKeys(dir);
+  const liveKeyBefore = readFileSync(join(dir, 'keys', 'anchor-private.pem'));
+  (await openDb(dir)).close();
+
+  const snap = new Snapshot({ root, exec: fakeExec });
+  const { dir: snapshotDir } = await snap.create();
+  writeFileSync(join(snapshotDir, 'audit', 'keys', 'anchor-private.pem'), 'tampered, not a real key file');
+
+  await assert.rejects(() => snap.restore(snapshotDir), /checksum mismatch/);
+  assert.deepEqual(readFileSync(join(dir, 'keys', 'anchor-private.pem')), liveKeyBefore, 'the live private key file was never touched by the refused restore');
+});
+
+test('restore failure rolls the audit database and its anchor key back together, as one consistency unit', async () => {
+  const root = mkdtempSync(join(fixtureRoot, 'audit-key-rollback-'));
+  const dir = realServiceFixture(root, 'audit', 'ANCHOR_PRIVATE_KEY_PATH=./keys/anchor-private.pem\n');
+  await generateAnchorKeys(dir);
+  const db = await openDb(dir);
+  db.prepare("INSERT INTO events (id, client_id, source, action, outcome, at, received_at, prev_hash, hash) VALUES ('e1', NULL, 'harness', 'seed', 'success', 0, 0, ?, 'h1')").run('0'.repeat(64));
+  db.close();
+
+  const snap = new Snapshot({ root, exec: fakeExec });
+  const { dir: snapshotDir } = await snap.create();
+
+  // Mutate BOTH the live database and the live key material after the backup, so "reverted" is
+  // distinguishable from "left on the snapshot's content" for both at once.
+  const liveDb = await openDb(dir);
+  liveDb.prepare("UPDATE events SET action = 'mutated-after-backup' WHERE id = 'e1'").run();
+  liveDb.close();
+  const mutatedKeyBytes = 'mutated-after-backup, not a real key';
+  writeFileSync(join(dir, 'keys', 'anchor-private.pem'), mutatedKeyBytes);
+
+  // manifest.entries for audit alone: db first (DB_SERVICES loop runs before EXTRA_PATHS in
+  // `create()`), then the key. Fault the key's apply so the db's apply has already genuinely
+  // succeeded by the time this hits — proving rollback reverts both, not just the one that failed.
+  const snapWithFault = new Snapshot({
+    root, exec: fakeExec,
+    _fault: (op, target) => op === 'apply' && target.endsWith(join('audit', 'keys', 'anchor-private.pem')),
+  });
+  const result = await snapWithFault.restore(snapshotDir);
+
+  assert.equal(result.outcome, 'rolled_back');
+  assert.equal(result.failed?.service, 'audit');
+  assert.equal(result.failed?.path, 'keys/anchor-private.pem');
+  assert.equal(result.rollbackFailed.length, 0);
+  assert.deepEqual(result.rolledBack.sort(), ['audit/data/audit.db', 'audit/keys/anchor-private.pem'].sort());
+
+  const restoredDb = await openDb(dir);
+  assert.equal(/** @type {any} */ (restoredDb.prepare("SELECT action FROM events WHERE id = 'e1'").get())?.action, 'mutated-after-backup', 'db reverted to its pre-restore (mutated) state, not left on the (failed) snapshot apply');
+  restoredDb.close();
+  assert.equal(readFileSync(join(dir, 'keys', 'anchor-private.pem'), 'utf8'), mutatedKeyBytes, 'key material reverted to its pre-restore (mutated) state too — DB and key never end up on different sides of the restore');
+});
+
+test('auth regression: JWT signing keys are still included, restored, and manifest-validated after the audit key addition', async () => {
+  const root = mkdtempSync(join(fixtureRoot, 'auth-key-regression-'));
+  const dir = realServiceFixture(root, 'auth');
+  const { generateKeyPairSync } = await import('node:crypto');
+  const { privateKey, publicKey } = generateKeyPairSync('ec', { namedCurve: 'P-256' });
+  mkdirSync(join(dir, 'keys'), { recursive: true });
+  writeFileSync(join(dir, 'keys', 'jwt-private.pem'), privateKey.export({ type: 'pkcs8', format: 'pem' }), { mode: 0o600 });
+  writeFileSync(join(dir, 'keys', 'jwt-public.pem'), publicKey.export({ type: 'spki', format: 'pem' }));
+  (await openDb(dir)).close();
+
+  const snap = new Snapshot({ root, exec: fakeExec });
+  const { dir: snapshotDir, manifest } = await snap.create();
+  const keyEntry = manifest.entries.find((/** @type {any} */ e) => e.service === 'auth' && e.path === 'keys');
+  assert.ok(keyEntry, 'auth/keys directory still included');
+  assert.equal(keyEntry.kind, 'dir');
+
+  writeFileSync(join(dir, 'keys', 'jwt-private.pem'), 'mutated after backup');
+  const result = await snap.restore(snapshotDir);
+  assert.equal(result.outcome, 'restored');
+  assert.ok(readFileSync(join(dir, 'keys', 'jwt-private.pem'), 'utf8').includes('BEGIN PRIVATE KEY'), 'the real private key is back after restore, not the post-backup mutation');
 });

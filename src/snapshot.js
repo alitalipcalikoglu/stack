@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { existsSync, lstatSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { chmodSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { DatabaseSync } from 'node:sqlite';
 import { tmpdir } from 'node:os';
 import { dirname, join, relative, resolve, sep } from 'node:path';
@@ -26,13 +26,20 @@ function relTo(serviceDir, path) {
   return relative(serviceDir, resolve(serviceDir, path));
 }
 
+/** Whether `target` resolves to `root` itself or somewhere under it. @param {string} root @param {string} target */
+function pathInside(root, target) {
+  const r = resolve(root);
+  const t = resolve(target);
+  return t === r || t.startsWith(r + sep);
+}
+
 /**
  * What a full-stack backup covers, beyond "every service's SQLite database": paths that hold data
  * a database restore alone cannot reconstruct. Anything not listed here (media's `tmp/`, generated
  * `node_modules`, PM2 logs, …) is either regenerable or not data. Resolved per service from its own
  * `.env` (paths are configurable), not hardcoded, so the manifest always records what that service
  * was actually configured to use at backup time.
- * @type {Record<string, (serviceDir: string) => string[]>}
+ * @type {Record<string, (serviceDir: string, log?: (line: string) => void) => string[]>}
  */
 const EXTRA_PATHS = {
   media: (dir) => {
@@ -42,6 +49,51 @@ const EXTRA_PATHS = {
   auth: () => ['keys'],
   gateway: (dir) => [relTo(dir, envVar(dir, 'ROUTES_FILE') || 'routes.json')],
   console: (dir) => [relTo(dir, envVar(dir, 'SERVICES_FILE') || 'services.json')],
+  /**
+   * The Ed25519 anchor signing key pair — cryptographic continuity material for
+   * `chain/verify`/anchoring, not reconstructible from the database alone (the private key is
+   * never stored there; `anchors` rows carry only a `key_id`, `signature` pair — see
+   * `audit/src/crypto/anchor-signer.js`). Unlike `auth`'s hardcoded `'keys'`, both paths here are
+   * genuinely operator-configurable (`ANCHOR_PRIVATE_KEY_PATH`/`ANCHOR_PREVIOUS_PUBLIC_KEY_PATH`),
+   * so they're resolved from the service's real `.env`, not assumed.
+   *
+   * Anchoring is opt-in (`ANCHOR_PRIVATE_KEY_PATH` empty by default): unconfigured means nothing to
+   * back up, not an error. Configured-but-missing is treated as fatal, matching
+   * `AnchorSigner.fromFiles`'s own behavior (the real service itself refuses to start in that
+   * state) — a backup silently completing without the key it was told exists would claim a
+   * "complete recoverable snapshot" that isn't one. A path that resolves outside the audit service
+   * folder is deliberately never followed into an arbitrary host location (unlike `media`/
+   * `gateway`/`console`'s in-tree defaults, an operator-chosen out-of-tree key path, e.g. an HSM
+   * mount, is excluded with a loud warning rather than silently or fatally handled — see
+   * `stack/docs/BACKUP.md`).
+   * @param {string} dir @param {(line: string) => void} [log]
+   */
+  audit: (dir, log = () => {}) => {
+    /** @param {string} envName @param {string} configuredPath */
+    const resolveKeyPath = (envName, configuredPath) => {
+      const resolved = resolve(dir, configuredPath);
+      if (!pathInside(dir, resolved)) {
+        log(`audit: ${envName} (${configuredPath}) resolves outside the audit service folder — refusing to pull an arbitrary host path into the snapshot; back this key up separately (see stack/docs/BACKUP.md)`);
+        return null;
+      }
+      if (!existsSync(resolved)) {
+        throw new Error(`audit: ${envName} is configured (${configuredPath}) but the file does not exist — anchor signing is enabled but its key material is missing; refusing to produce an incomplete backup`);
+      }
+      return relTo(dir, resolved);
+    };
+    const privatePath = envVar(dir, 'ANCHOR_PRIVATE_KEY_PATH');
+    if (!privatePath) return []; // anchoring not configured: nothing to back up
+    /** @type {string[]} */
+    const paths = [];
+    const rel = resolveKeyPath('ANCHOR_PRIVATE_KEY_PATH', privatePath);
+    if (rel) paths.push(rel);
+    const previousPath = envVar(dir, 'ANCHOR_PREVIOUS_PUBLIC_KEY_PATH');
+    if (previousPath) {
+      const prevRel = resolveKeyPath('ANCHOR_PREVIOUS_PUBLIC_KEY_PATH', previousPath);
+      if (prevRel) paths.push(prevRel);
+    }
+    return paths;
+  },
 };
 
 /** Services backed up by their SQLite database (every stateful service; gateway has none). */
@@ -154,7 +206,7 @@ export class Snapshot {
         }
       }
 
-      for (const rel of EXTRA_PATHS[id]?.(serviceDir) ?? []) {
+      for (const rel of EXTRA_PATHS[id]?.(serviceDir, this.log) ?? []) {
         const src = join(serviceDir, rel);
         if (!existsSync(src)) { this.log(`${id}: ${rel} does not exist, skipped`); continue; }
         const out = join(outDir, rel);
@@ -412,10 +464,8 @@ export class Snapshot {
 
   /** Refuse a snapshot or target path that would resolve outside `root` (traversal/symlink guard). @param {string} root @param {string} target */
   static #assertInside(root, target) {
-    const r = resolve(root);
-    const t = resolve(target);
-    if (t !== r && !t.startsWith(r + sep)) throw new Error(`${target}: escapes ${root}`);
-    return t;
+    if (!pathInside(root, target)) throw new Error(`${target}: escapes ${root}`);
+    return resolve(target);
   }
 
   /** @param {string} path */
@@ -425,10 +475,17 @@ export class Snapshot {
     if (st.isDirectory()) for (const child of readdirSync(path)) Snapshot.#assertNoSymlinks(join(path, child));
   }
 
-  /** @param {string} src @param {string} dest */
+  /**
+   * Copies file bytes AND permission bits — a plain `writeFileSync` would otherwise create `dest`
+   * at the process umask's default (typically world-readable), silently loosening a private key's
+   * `0600` on every backup/restore round-trip. Best-effort on non-POSIX filesystems (`chmodSync`
+   * has limited effect on Windows — see `stack/docs/BACKUP.md`).
+   * @param {string} src @param {string} dest
+   */
   static #copyFile(src, dest) {
     mkdirSync(dirname(dest), { recursive: true });
     writeFileSync(dest, readFileSync(src));
+    chmodSync(dest, statSync(src).mode & 0o777);
   }
 
   /** @param {string} src @param {string} dest */

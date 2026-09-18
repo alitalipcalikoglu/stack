@@ -379,6 +379,19 @@ from "excluded, back this up yourself" to "included" language. Test: create a re
 mutate both DB and key material, restore, verify the pre-existing anchor still verifies and a new
 anchor signs under continuous chain semantics.
 
+**Closed in Phase 3** (`stack/src/snapshot.js`'s `EXTRA_PATHS.audit`, `stack/test/snapshot.test.js`,
+`stack/test/integration/audit-anchor-continuity.test.js`): the finding and recommended fix above stand
+as originally written — re-verification during implementation found the recommended design needed two
+refinements the audit's design-only sketch didn't anticipate: (1) a configured-but-missing key file is
+treated as a fatal backup error, not a graceful skip, matching `AnchorSigner.fromFiles`'s own
+startup-refusal contract, since a naive skip here would silently produce an incomplete snapshot; (2) a
+configured path resolving outside the audit service folder is excluded with a loud warning rather than
+followed, a security boundary the design-only sketch didn't consider. Both the private key and, when
+configured, the previous public key are included — not just the private key, since historical anchor
+verification depends on whichever public key actually signed a given anchor. A pre-existing,
+unrelated gap in the shared `#copyFile` primitive (no permission-bit preservation, affecting `auth`'s
+JWT keys too, not just audit's addition) was found and fixed in the same phase.
+
 ---
 
 ## 8. At-least-once duplicate windows
