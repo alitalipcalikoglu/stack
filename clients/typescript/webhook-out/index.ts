@@ -25,7 +25,7 @@ export interface ClientConfig {
 }
 
 /**
- * One operationId-keyed method per operation in webhook-out's openapi.yaml (22 total).
+ * One operationId-keyed method per operation in webhook-out's openapi.yaml (23 total).
  * Each call returns openapi-fetch's own { data, error, response } union -- status, headers and
  * the raw Response are always reachable via .response; nothing throws on a non-2xx by default.
  * No retry, no timeout, no polling: this is a transport, not a workflow SDK. Pass an AbortSignal
@@ -50,6 +50,7 @@ export function createClient(config: ClientConfig) {
     "webhookOut.health.get": (init: FetchOptions<operations["webhookOut.health.get"]>) => client.GET("/health", init),
     "webhookOut.info.get": (init: FetchOptions<operations["webhookOut.info.get"]>) => client.GET("/v1/info", init),
     "webhookOut.metrics.get": (init: FetchOptions<operations["webhookOut.metrics.get"]>) => client.GET("/metrics", init),
+    "webhookout.openapi": (init: FetchOptions<operations["webhookout.openapi"]>) => client.GET("/openapi.yaml", init),
     "webhookOut.ready.get": (init: FetchOptions<operations["webhookOut.ready.get"]>) => client.GET("/ready", init),
     "webhookOut.stats.get": (init: FetchOptions<operations["webhookOut.stats.get"]>) => client.GET("/v1/stats", init),
     "webhookOut.subscriptions.create": (init: FetchOptions<operations["webhookOut.subscriptions.create"]>) => client.POST("/v1/subscriptions", init),

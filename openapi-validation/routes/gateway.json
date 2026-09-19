@@ -2,6 +2,7 @@
   "service": "gateway",
   "routes": [
     { "method": "GET", "path": "/health" },
+    { "method": "GET", "path": "/openapi.yaml" },
     { "method": "GET", "path": "/ready" },
     { "method": "GET", "path": "/v1/info" },
     { "method": "GET", "path": "/metrics" }

@@ -25,7 +25,7 @@ export interface ClientConfig {
 }
 
 /**
- * One operationId-keyed method per operation in geo's openapi.yaml (30 total).
+ * One operationId-keyed method per operation in geo's openapi.yaml (31 total).
  * Each call returns openapi-fetch's own { data, error, response } union -- status, headers and
  * the raw Response are always reachable via .response; nothing throws on a non-2xx by default.
  * No retry, no timeout, no polling: this is a transport, not a workflow SDK. Pass an AbortSignal
@@ -58,6 +58,7 @@ export function createClient(config: ClientConfig) {
     "geo.ip.lookupBatch": (init: FetchOptions<operations["geo.ip.lookupBatch"]>) => client.POST("/v1/ip/batch", init),
     "geo.ip.lookupSelf": (init: FetchOptions<operations["geo.ip.lookupSelf"]>) => client.GET("/v1/ip/self", init),
     "geo.metrics.get": (init: FetchOptions<operations["geo.metrics.get"]>) => client.GET("/metrics", init),
+    "geo.openapi": (init: FetchOptions<operations["geo.openapi"]>) => client.GET("/openapi.yaml", init),
     "geo.phone.normalize": (init: FetchOptions<operations["geo.phone.normalize"]>) => client.GET("/v1/phone", init),
     "geo.phone.normalizeBatch": (init: FetchOptions<operations["geo.phone.normalizeBatch"]>) => client.POST("/v1/phone/batch", init),
     "geo.places.delete": (init: FetchOptions<operations["geo.places.delete"]>) => client.DELETE("/v1/collections/{name}/places/{id}", init),

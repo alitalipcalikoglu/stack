@@ -9,6 +9,26 @@
  */
 
 export interface paths {
+    "/openapi.yaml": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Download the canonical OpenAPI document
+         * @description Returns this service's repository-root OpenAPI 3.1 document byte-for-byte.
+         */
+        get: operations["console.openapi"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/health": {
         parameters: {
             query?: never;
@@ -387,6 +407,46 @@ export interface paths {
          *     Requires any signed-in session (`requireSession`); both `admin` and `viewer` may call it.
          */
         get: operations["console.activity.list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/docs/services": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List services with API documentation.
+         * @description Returns Console plus every explicitly configured service instance. No credentials or internal URLs are exposed.
+         */
+        get: operations["console.docs.services.list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/docs/services/{sid}/openapi": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get one validated canonical OpenAPI document.
+         * @description Reads Console's own repository-root document locally, or fetches the selected allowlisted service's public `/openapi.yaml` once with a bounded timeout and no API key. The response is returned only after parsing and validating its OpenAPI 3.1, info.title and paths structure.
+         */
+        get: operations["console.docs.openapi.get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3113,6 +3173,13 @@ export interface components {
             /** Format: date-time */
             at: string;
         };
+        /** @description Public identity used by the API documentation selector; contains no URL or credential. */
+        DocumentationService: {
+            id: string;
+            /** @enum {string} */
+            type: "audit" | "auth" | "console" | "flags" | "gateway" | "geo" | "media" | "notify" | "ratelimit" | "scheduler" | "search" | "shortlink" | "webhook-out";
+            label: string;
+        };
         /** @description A configured service instance as `ServiceRegistry#describe` projects it. API keys and metrics tokens are never included. */
         ServiceDescriptor: {
             /** @description The `sid` used on every proxy route. */
@@ -3295,6 +3362,15 @@ export interface components {
                 "application/json": components["schemas"]["DownstreamErrorEnvelope"];
             };
         };
+        /** @description The selected service was unreachable, timed out, returned a non-success status, or served an invalid OpenAPI document. */
+        DocumentationUpstreamError: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["DownstreamErrorEnvelope"];
+            };
+        };
         /** @description Any other status the downstream service returned, relayed with its own status code, `error.code`, `error.message` and `error.details`, plus `error.service`. console does not translate, normalize or re-map downstream error codes. */
         DownstreamDefault: {
             headers: {
@@ -3449,6 +3525,26 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    "console.openapi": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Canonical OpenAPI document. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/yaml": string;
+                };
+            };
+        };
+    };
     "console.health.get": {
         parameters: {
             query?: never;
@@ -4234,6 +4330,70 @@ export interface operations {
             };
             400: components["responses"]["ValidationFailed"];
             401: components["responses"]["Unauthenticated"];
+        };
+    };
+    "console.docs.services.list": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Documentation service selector entries. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        items: components["schemas"]["DocumentationService"][];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+        };
+    };
+    "console.docs.openapi.get": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Parsed OpenAPI document and its public service identity. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        service: components["schemas"]["DocumentationService"];
+                        document: {
+                            openapi: string;
+                            info: {
+                                title: string;
+                            } & {
+                                [key: string]: unknown;
+                            };
+                            paths: {
+                                [key: string]: unknown;
+                            };
+                        } & {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            404: components["responses"]["NotFound"];
+            502: components["responses"]["DocumentationUpstreamError"];
+            504: components["responses"]["DocumentationUpstreamError"];
         };
     };
     "console.services.list": {

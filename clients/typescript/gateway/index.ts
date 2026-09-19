@@ -25,7 +25,7 @@ export interface ClientConfig {
 }
 
 /**
- * One operationId-keyed method per operation in gateway's openapi.yaml (4 total).
+ * One operationId-keyed method per operation in gateway's openapi.yaml (5 total).
  * Each call returns openapi-fetch's own { data, error, response } union -- status, headers and
  * the raw Response are always reachable via .response; nothing throws on a non-2xx by default.
  * No retry, no timeout, no polling: this is a transport, not a workflow SDK. Pass an AbortSignal
@@ -42,6 +42,7 @@ export function createClient(config: ClientConfig) {
     "gateway.health.check": (init: FetchOptions<operations["gateway.health.check"]>) => client.GET("/health", init),
     "gateway.info.get": (init: FetchOptions<operations["gateway.info.get"]>) => client.GET("/v1/info", init),
     "gateway.metrics.get": (init: FetchOptions<operations["gateway.metrics.get"]>) => client.GET("/metrics", init),
+    "gateway.openapi": (init: FetchOptions<operations["gateway.openapi"]>) => client.GET("/openapi.yaml", init),
     "gateway.ready.check": (init: FetchOptions<operations["gateway.ready.check"]>) => client.GET("/ready", init),
   } as const;
 }

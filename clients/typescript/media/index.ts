@@ -25,7 +25,7 @@ export interface ClientConfig {
 }
 
 /**
- * One operationId-keyed method per operation in media's openapi.yaml (14 total).
+ * One operationId-keyed method per operation in media's openapi.yaml (15 total).
  * Each call returns openapi-fetch's own { data, error, response } union -- status, headers and
  * the raw Response are always reachable via .response; nothing throws on a non-2xx by default.
  * No retry, no timeout, no polling: this is a transport, not a workflow SDK. Pass an AbortSignal
@@ -48,6 +48,7 @@ export function createClient(config: ClientConfig) {
     "media.files.signUrls": (init: FetchOptions<operations["media.files.signUrls"]>) => client.POST("/v1/files/{id}/urls", init),
     "media.files.upload": (init: FetchOptions<operations["media.files.upload"]>) => client.PUT("/v1/files", init),
     "media.files.uploadTicketed": (init: FetchOptions<operations["media.files.uploadTicketed"]>) => client.PUT("/v1/uploads/{token}", init),
+    "media.openapi": (init: FetchOptions<operations["media.openapi"]>) => client.GET("/openapi.yaml", init),
     "media.ops.health": (init: FetchOptions<operations["media.ops.health"]>) => client.GET("/health", init),
     "media.ops.info": (init: FetchOptions<operations["media.ops.info"]>) => client.GET("/v1/info", init),
     "media.ops.metrics": (init: FetchOptions<operations["media.ops.metrics"]>) => client.GET("/metrics", init),

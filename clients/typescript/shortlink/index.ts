@@ -25,7 +25,7 @@ export interface ClientConfig {
 }
 
 /**
- * One operationId-keyed method per operation in shortlink's openapi.yaml (16 total).
+ * One operationId-keyed method per operation in shortlink's openapi.yaml (17 total).
  * Each call returns openapi-fetch's own { data, error, response } union -- status, headers and
  * the raw Response are always reachable via .response; nothing throws on a non-2xx by default.
  * No retry, no timeout, no polling: this is a transport, not a workflow SDK. Pass an AbortSignal
@@ -49,6 +49,7 @@ export function createClient(config: ClientConfig) {
     "shortlink.links.list": (init: FetchOptions<operations["shortlink.links.list"]>) => client.GET("/v1/links", init),
     "shortlink.links.patch": (init: FetchOptions<operations["shortlink.links.patch"]>) => client.PATCH("/v1/links/{code}", init),
     "shortlink.metrics.get": (init: FetchOptions<operations["shortlink.metrics.get"]>) => client.GET("/metrics", init),
+    "shortlink.openapi": (init: FetchOptions<operations["shortlink.openapi"]>) => client.GET("/openapi.yaml", init),
     "shortlink.qr.getForText": (init: FetchOptions<operations["shortlink.qr.getForText"]>) => client.GET("/v1/qr", init),
     "shortlink.qr.getPublic": (init: FetchOptions<operations["shortlink.qr.getPublic"]>) => client.GET("/{code}/qr", init),
     "shortlink.ready.get": (init: FetchOptions<operations["shortlink.ready.get"]>) => client.GET("/ready", init),

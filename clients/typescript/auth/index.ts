@@ -25,7 +25,7 @@ export interface ClientConfig {
 }
 
 /**
- * One operationId-keyed method per operation in auth's openapi.yaml (23 total).
+ * One operationId-keyed method per operation in auth's openapi.yaml (24 total).
  * Each call returns openapi-fetch's own { data, error, response } union -- status, headers and
  * the raw Response are always reachable via .response; nothing throws on a non-2xx by default.
  * No retry, no timeout, no polling: this is a transport, not a workflow SDK. Pass an AbortSignal
@@ -49,6 +49,7 @@ export function createClient(config: ClientConfig) {
     "auth.login": (init: FetchOptions<operations["auth.login"]>) => client.POST("/v1/auth/login", init),
     "auth.logout": (init: FetchOptions<operations["auth.logout"]>) => client.POST("/v1/auth/logout", init),
     "auth.metrics.get": (init: FetchOptions<operations["auth.metrics.get"]>) => client.GET("/metrics", init),
+    "auth.openapi": (init: FetchOptions<operations["auth.openapi"]>) => client.GET("/openapi.yaml", init),
     "auth.password.change": (init: FetchOptions<operations["auth.password.change"]>) => client.POST("/v1/auth/password/change", init),
     "auth.password.forgot": (init: FetchOptions<operations["auth.password.forgot"]>) => client.POST("/v1/auth/password/forgot", init),
     "auth.password.reset": (init: FetchOptions<operations["auth.password.reset"]>) => client.POST("/v1/auth/password/reset", init),

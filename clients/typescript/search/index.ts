@@ -25,7 +25,7 @@ export interface ClientConfig {
 }
 
 /**
- * One operationId-keyed method per operation in search's openapi.yaml (18 total).
+ * One operationId-keyed method per operation in search's openapi.yaml (19 total).
  * Each call returns openapi-fetch's own { data, error, response } union -- status, headers and
  * the raw Response are always reachable via .response; nothing throws on a non-2xx by default.
  * No retry, no timeout, no polling: this is a transport, not a workflow SDK. Pass an AbortSignal
@@ -49,6 +49,7 @@ export function createClient(config: ClientConfig) {
     "search.indexes.get": (init: FetchOptions<operations["search.indexes.get"]>) => client.GET("/v1/indexes/{name}", init),
     "search.indexes.list": (init: FetchOptions<operations["search.indexes.list"]>) => client.GET("/v1/indexes", init),
     "search.indexes.patch": (init: FetchOptions<operations["search.indexes.patch"]>) => client.PATCH("/v1/indexes/{name}", init),
+    "search.openapi": (init: FetchOptions<operations["search.openapi"]>) => client.GET("/openapi.yaml", init),
     "search.query.get": (init: FetchOptions<operations["search.query.get"]>) => client.GET("/v1/indexes/{name}/search", init),
     "search.query.post": (init: FetchOptions<operations["search.query.post"]>) => client.POST("/v1/indexes/{name}/search", init),
     "search.stats.get": (init: FetchOptions<operations["search.stats.get"]>) => client.GET("/v1/stats", init),

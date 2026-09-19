@@ -2,7 +2,7 @@
 // Marks tool-catalog.json entries `exposedInPhase3: true` for exactly the operationIds the real,
 // explicit tool allowlist (mcp/src/tools/index.mjs) actually calls -- nothing else. This is a
 // reconciliation step, not a generator: it never invents a tool from the catalog, it only records,
-// against the real allowlist, which of the 361 classified operations that allowlist happens to use.
+// against the real allowlist, which classified operations that allowlist happens to use.
 // Run after tool-catalog.generate.mjs, and again whenever src/tools/index.mjs changes:
 // `node mcp/tool-catalog.generate.mjs && node mcp/tool-catalog.reconcile.mjs`.
 import { readFile, writeFile } from 'node:fs/promises';

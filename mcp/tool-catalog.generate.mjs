@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Generates mcp/tool-catalog.json: the full, classified inventory of all 361 canonical operations
+// Generates mcp/tool-catalog.json: the full, classified inventory of all canonical operations
 // across the 13 services' openapi.yaml. This is the *candidate universe* -- it is NOT the MCP
 // server's exposed tool list (see mcp/src/tools/index.mjs for the actual, explicit, small
 // allowlist). Re-run whenever a service's openapi.yaml changes: `node mcp/tool-catalog.generate.mjs`.
@@ -19,7 +19,7 @@ const HTTP_METHODS = ['get', 'post', 'put', 'patch', 'delete', 'head', 'options'
 
 /**
  * Classification is intentionally rule-based over (service, method, operationId), not hand-typed
- * per operation -- 361 hand-written classifications would itself be an unreviewable drift trap.
+ * per operation -- hundreds of hand-written classifications would itself be an unreviewable drift trap.
  * A flag set errs conservative: when in doubt, classify UP (more restrictive), never down.
  * @param {string} service @param {string} method @param {string} opId @param {string} p
  */

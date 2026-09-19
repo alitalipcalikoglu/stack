@@ -2,6 +2,7 @@
   "service": "console",
   "routes": [
     { "method": "GET", "path": "/health" },
+    { "method": "GET", "path": "/openapi.yaml" },
     { "method": "GET", "path": "/ready" },
     { "method": "GET", "path": "/v1/info" },
     { "method": "POST", "path": "/api/session/login" },
@@ -21,6 +22,8 @@
     { "method": "POST", "path": "/api/admins/{id}/unlock" },
     { "method": "DELETE", "path": "/api/admins/{id}" },
     { "method": "GET", "path": "/api/audit" },
+    { "method": "GET", "path": "/api/docs/services" },
+    { "method": "GET", "path": "/api/docs/services/{sid}/openapi" },
     { "method": "GET", "path": "/api/services" },
     { "method": "GET", "path": "/api/services/overview" },
     { "method": "GET", "path": "/api/services/about" },

@@ -25,7 +25,7 @@ export interface ClientConfig {
 }
 
 /**
- * One operationId-keyed method per operation in console's openapi.yaml (153 total).
+ * One operationId-keyed method per operation in console's openapi.yaml (156 total).
  * Each call returns openapi-fetch's own { data, error, response } union -- status, headers and
  * the raw Response are always reachable via .response; nothing throws on a non-2xx by default.
  * No retry, no timeout, no polling: this is a transport, not a workflow SDK. Pass an AbortSignal
@@ -63,6 +63,8 @@ export function createClient(config: ClientConfig) {
     "console.auth.users.revokeAllSessions": (init: FetchOptions<operations["console.auth.users.revokeAllSessions"]>) => client.DELETE("/api/services/{sid}/auth/users/{id}/sessions", init),
     "console.auth.users.revokeSession": (init: FetchOptions<operations["console.auth.users.revokeSession"]>) => client.DELETE("/api/services/{sid}/auth/users/{id}/sessions/{sub}", init),
     "console.auth.users.update": (init: FetchOptions<operations["console.auth.users.update"]>) => client.PATCH("/api/services/{sid}/auth/users/{id}", init),
+    "console.docs.openapi.get": (init: FetchOptions<operations["console.docs.openapi.get"]>) => client.GET("/api/docs/services/{sid}/openapi", init),
+    "console.docs.services.list": (init: FetchOptions<operations["console.docs.services.list"]>) => client.GET("/api/docs/services", init),
     "console.flags.environments.list": (init: FetchOptions<operations["console.flags.environments.list"]>) => client.GET("/api/services/{sid}/flags/environments", init),
     "console.flags.envs.copy": (init: FetchOptions<operations["console.flags.envs.copy"]>) => client.POST("/api/services/{sid}/flags/flags/{id}/envs/{sub}/copy", init),
     "console.flags.envs.update": (init: FetchOptions<operations["console.flags.envs.update"]>) => client.PATCH("/api/services/{sid}/flags/flags/{id}/envs/{sub}", init),
@@ -118,6 +120,7 @@ export function createClient(config: ClientConfig) {
     "console.notify.messages.retry": (init: FetchOptions<operations["console.notify.messages.retry"]>) => client.POST("/api/services/{sid}/notify/messages/{id}/retry", init),
     "console.notify.messages.send": (init: FetchOptions<operations["console.notify.messages.send"]>) => client.POST("/api/services/{sid}/notify/messages", init),
     "console.notify.templates.list": (init: FetchOptions<operations["console.notify.templates.list"]>) => client.GET("/api/services/{sid}/notify/templates", init),
+    "console.openapi": (init: FetchOptions<operations["console.openapi"]>) => client.GET("/openapi.yaml", init),
     "console.ratelimit.check.post": (init: FetchOptions<operations["console.ratelimit.check.post"]>) => client.POST("/api/services/{sid}/ratelimit/check", init),
     "console.ratelimit.overrides.delete": (init: FetchOptions<operations["console.ratelimit.overrides.delete"]>) => client.DELETE("/api/services/{sid}/ratelimit/policies/{id}/overrides/{sub}", init),
     "console.ratelimit.overrides.list": (init: FetchOptions<operations["console.ratelimit.overrides.list"]>) => client.GET("/api/services/{sid}/ratelimit/policies/{id}/overrides", init),

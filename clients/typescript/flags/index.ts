@@ -25,7 +25,7 @@ export interface ClientConfig {
 }
 
 /**
- * One operationId-keyed method per operation in flags's openapi.yaml (19 total).
+ * One operationId-keyed method per operation in flags's openapi.yaml (20 total).
  * Each call returns openapi-fetch's own { data, error, response } union -- status, headers and
  * the raw Response are always reachable via .response; nothing throws on a non-2xx by default.
  * No retry, no timeout, no polling: this is a transport, not a workflow SDK. Pass an AbortSignal
@@ -55,6 +55,7 @@ export function createClient(config: ClientConfig) {
     "flags.history.list": (init: FetchOptions<operations["flags.history.list"]>) => client.GET("/v1/history", init),
     "flags.info.get": (init: FetchOptions<operations["flags.info.get"]>) => client.GET("/v1/info", init),
     "flags.metrics.get": (init: FetchOptions<operations["flags.metrics.get"]>) => client.GET("/metrics", init),
+    "flags.openapi": (init: FetchOptions<operations["flags.openapi"]>) => client.GET("/openapi.yaml", init),
     "flags.ready.get": (init: FetchOptions<operations["flags.ready.get"]>) => client.GET("/ready", init),
     "flags.snapshot.get": (init: FetchOptions<operations["flags.snapshot.get"]>) => client.GET("/v1/snapshot/{env}", init),
     "flags.stats.get": (init: FetchOptions<operations["flags.stats.get"]>) => client.GET("/v1/stats", init),

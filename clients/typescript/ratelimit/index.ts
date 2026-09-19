@@ -25,7 +25,7 @@ export interface ClientConfig {
 }
 
 /**
- * One operationId-keyed method per operation in ratelimit's openapi.yaml (20 total).
+ * One operationId-keyed method per operation in ratelimit's openapi.yaml (21 total).
  * Each call returns openapi-fetch's own { data, error, response } union -- status, headers and
  * the raw Response are always reachable via .response; nothing throws on a non-2xx by default.
  * No retry, no timeout, no polling: this is a transport, not a workflow SDK. Pass an AbortSignal
@@ -44,6 +44,7 @@ export function createClient(config: ClientConfig) {
     "ratelimit.health.check": (init: FetchOptions<operations["ratelimit.health.check"]>) => client.GET("/health", init),
     "ratelimit.info.get": (init: FetchOptions<operations["ratelimit.info.get"]>) => client.GET("/v1/info", init),
     "ratelimit.metrics.get": (init: FetchOptions<operations["ratelimit.metrics.get"]>) => client.GET("/metrics", init),
+    "ratelimit.openapi": (init: FetchOptions<operations["ratelimit.openapi"]>) => client.GET("/openapi.yaml", init),
     "ratelimit.overrides.delete": (init: FetchOptions<operations["ratelimit.overrides.delete"]>) => client.DELETE("/v1/policies/{name}/overrides/{subject}", init),
     "ratelimit.overrides.list": (init: FetchOptions<operations["ratelimit.overrides.list"]>) => client.GET("/v1/policies/{name}/overrides", init),
     "ratelimit.overrides.set": (init: FetchOptions<operations["ratelimit.overrides.set"]>) => client.PUT("/v1/policies/{name}/overrides/{subject}", init),

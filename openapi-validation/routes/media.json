@@ -2,6 +2,7 @@
   "service": "media",
   "routes": [
     { "method": "GET", "path": "/health" },
+    { "method": "GET", "path": "/openapi.yaml" },
     { "method": "GET", "path": "/ready" },
     { "method": "GET", "path": "/v1/info" },
     { "method": "PUT", "path": "/v1/files" },

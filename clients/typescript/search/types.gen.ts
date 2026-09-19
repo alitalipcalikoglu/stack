@@ -9,6 +9,26 @@
  */
 
 export interface paths {
+    "/openapi.yaml": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Download the canonical OpenAPI document
+         * @description Returns this service's repository-root OpenAPI 3.1 document byte-for-byte.
+         */
+        get: operations["search.openapi"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/health": {
         parameters: {
             query?: never;
@@ -564,6 +584,26 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    "search.openapi": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Canonical OpenAPI document. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/yaml": string;
+                };
+            };
+        };
+    };
     "search.system.health": {
         parameters: {
             query?: never;

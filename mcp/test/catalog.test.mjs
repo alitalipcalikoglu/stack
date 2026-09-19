@@ -5,15 +5,27 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { parse as parseYaml } from 'yaml';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
+const WORKSPACE_ROOT = path.resolve(HERE, '..', '..', '..');
+const SERVICES = ['gateway', 'notify', 'auth', 'media', 'console', 'audit', 'shortlink', 'flags', 'scheduler', 'webhook-out', 'search', 'ratelimit', 'geo'];
+const HTTP_METHODS = new Set(['get', 'post', 'put', 'patch', 'delete', 'head', 'options', 'trace']);
 /** @typedef {{ service: string, operationId: string, method: string, path: string, flags: string[], exposedInPhase3: boolean }} CatalogEntry */
 /** @type {{ totalOperations: number, entries: CatalogEntry[] }} */
 const catalog = JSON.parse(await readFile(path.join(HERE, '..', 'tool-catalog.json'), 'utf8'));
 
-test('catalog accounts for exactly 361 canonical operations, matching the Phase 1 total', () => {
-  assert.equal(catalog.totalOperations, 361);
-  assert.equal(catalog.entries.length, 361);
+test('catalog accounts for every canonical operation, with the expected total derived from the 13 specs', async () => {
+  let expected = 0;
+  for (const service of SERVICES) {
+    const spec = parseYaml(await readFile(path.join(WORKSPACE_ROOT, service, 'openapi.yaml'), 'utf8'));
+    for (const item of Object.values(spec.paths ?? {})) {
+      if (item && typeof item === 'object') expected += Object.keys(item).filter((key) => HTTP_METHODS.has(key)).length;
+    }
+  }
+  assert.ok(expected > 0);
+  assert.equal(catalog.totalOperations, expected);
+  assert.equal(catalog.entries.length, expected);
 });
 
 test('every entry has at least one classification flag and a real service/operationId/method/path', () => {
@@ -33,11 +45,11 @@ test('operationIds are globally unique within the catalog (matches Phase 1\'s ow
   assert.equal(new Set(ids).size, ids.length);
 });
 
-test('the catalog is a candidate universe, not the exposed tool list: far fewer than 361 entries are exposedInPhase3', async () => {
+test('the catalog is a candidate universe, not the exposed tool list: far fewer entries are exposedInPhase3', async () => {
   const exposedCount = catalog.entries.filter((e) => e.exposedInPhase3).length;
   const { TOOLS } = await import('../src/tools/index.mjs');
   assert.ok(exposedCount > 0, 'reconcile.mjs has not been run, or found nothing');
-  assert.ok(exposedCount < 361, 'catalog exposure count must not equal the full 361 -- that would mean every operation became a tool');
+  assert.ok(exposedCount < catalog.totalOperations, 'catalog exposure count must not equal the full catalog -- that would mean every operation became a tool');
   // exposedCount (operation-level) and TOOLS.length (tool-level) are deliberately different numbers
   // -- stack.status alone accounts for 39 of the exposed operations under one tool.
   assert.notEqual(exposedCount, TOOLS.length, 'exposedCount and tool count coincidentally matching would be worth double-checking by hand');

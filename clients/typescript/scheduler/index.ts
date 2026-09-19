@@ -25,7 +25,7 @@ export interface ClientConfig {
 }
 
 /**
- * One operationId-keyed method per operation in scheduler's openapi.yaml (18 total).
+ * One operationId-keyed method per operation in scheduler's openapi.yaml (19 total).
  * Each call returns openapi-fetch's own { data, error, response } union -- status, headers and
  * the raw Response are always reachable via .response; nothing throws on a non-2xx by default.
  * No retry, no timeout, no polling: this is a transport, not a workflow SDK. Pass an AbortSignal
@@ -49,6 +49,7 @@ export function createClient(config: ClientConfig) {
     "scheduler.jobs.patch": (init: FetchOptions<operations["scheduler.jobs.patch"]>) => client.PATCH("/v1/jobs/{name}", init),
     "scheduler.jobs.run": (init: FetchOptions<operations["scheduler.jobs.run"]>) => client.POST("/v1/jobs/{name}/run", init),
     "scheduler.metrics.get": (init: FetchOptions<operations["scheduler.metrics.get"]>) => client.GET("/metrics", init),
+    "scheduler.openapi": (init: FetchOptions<operations["scheduler.openapi"]>) => client.GET("/openapi.yaml", init),
     "scheduler.ready.get": (init: FetchOptions<operations["scheduler.ready.get"]>) => client.GET("/ready", init),
     "scheduler.runs.cancel": (init: FetchOptions<operations["scheduler.runs.cancel"]>) => client.POST("/v1/runs/{id}/cancel", init),
     "scheduler.runs.get": (init: FetchOptions<operations["scheduler.runs.get"]>) => client.GET("/v1/runs/{id}", init),

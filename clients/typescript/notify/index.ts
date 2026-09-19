@@ -25,7 +25,7 @@ export interface ClientConfig {
 }
 
 /**
- * One operationId-keyed method per operation in notify's openapi.yaml (9 total).
+ * One operationId-keyed method per operation in notify's openapi.yaml (10 total).
  * Each call returns openapi-fetch's own { data, error, response } union -- status, headers and
  * the raw Response are always reachable via .response; nothing throws on a non-2xx by default.
  * No retry, no timeout, no polling: this is a transport, not a workflow SDK. Pass an AbortSignal
@@ -46,6 +46,7 @@ export function createClient(config: ClientConfig) {
     "notify.messages.list": (init: FetchOptions<operations["notify.messages.list"]>) => client.GET("/v1/messages", init),
     "notify.messages.retry": (init: FetchOptions<operations["notify.messages.retry"]>) => client.POST("/v1/messages/{id}/retry", init),
     "notify.metrics.get": (init: FetchOptions<operations["notify.metrics.get"]>) => client.GET("/metrics", init),
+    "notify.openapi": (init: FetchOptions<operations["notify.openapi"]>) => client.GET("/openapi.yaml", init),
     "notify.ready.get": (init: FetchOptions<operations["notify.ready.get"]>) => client.GET("/ready", init),
     "notify.templates.list": (init: FetchOptions<operations["notify.templates.list"]>) => client.GET("/v1/templates", init),
   } as const;

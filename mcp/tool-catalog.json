@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-09-18",
-  "totalOperations": 361,
+  "generatedAt": "2026-09-19",
+  "totalOperations": 376,
   "note": "Candidate universe for MCP tool exposure -- NOT the exposed tool list. See mcp/src/tools/index.mjs for the actual, explicit allowlist (mcp/src/tools/index.mjs is the only place a tool is really registered). exposedInPhase3 here is reconciled against that allowlist by mcp/tool-catalog.reconcile.mjs, not hand-edited.",
   "entries": [
     {
@@ -139,6 +139,16 @@
     },
     {
       "service": "audit",
+      "operationId": "audit.openapi",
+      "method": "GET",
+      "path": "/openapi.yaml",
+      "flags": [
+        "READ_SAFE"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "audit",
       "operationId": "audit.ready.get",
       "method": "GET",
       "path": "/ready",
@@ -265,6 +275,17 @@
       "flags": [
         "READ_SAFE",
         "OPERATOR"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "auth",
+      "operationId": "auth.openapi",
+      "method": "GET",
+      "path": "/openapi.yaml",
+      "flags": [
+        "READ_SAFE",
+        "HIGH_RISK"
       ],
       "exposedInPhase3": false
     },
@@ -697,6 +718,30 @@
       "path": "/api/services/{sid}/auth/users/{id}",
       "flags": [
         "MUTATION",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.docs.openapi.get",
+      "method": "GET",
+      "path": "/api/docs/services/{sid}/openapi",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.docs.services.list",
+      "method": "GET",
+      "path": "/api/docs/services",
+      "flags": [
+        "READ_SAFE",
         "OPERATOR",
         "POOR_MCP_FIT"
       ],
@@ -1355,6 +1400,18 @@
       "operationId": "console.notify.templates.list",
       "method": "GET",
       "path": "/api/services/{sid}/notify/templates",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR",
+        "POOR_MCP_FIT"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "console",
+      "operationId": "console.openapi",
+      "method": "GET",
+      "path": "/openapi.yaml",
       "flags": [
         "READ_SAFE",
         "OPERATOR",
@@ -2419,6 +2476,16 @@
     },
     {
       "service": "flags",
+      "operationId": "flags.openapi",
+      "method": "GET",
+      "path": "/openapi.yaml",
+      "flags": [
+        "READ_SAFE"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "flags",
       "operationId": "flags.ready.get",
       "method": "GET",
       "path": "/ready",
@@ -2475,6 +2542,17 @@
       "operationId": "gateway.metrics.get",
       "method": "GET",
       "path": "/metrics",
+      "flags": [
+        "READ_SAFE",
+        "OPERATOR"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "gateway",
+      "operationId": "gateway.openapi",
+      "method": "GET",
+      "path": "/openapi.yaml",
       "flags": [
         "READ_SAFE",
         "OPERATOR"
@@ -2689,6 +2767,16 @@
     },
     {
       "service": "geo",
+      "operationId": "geo.openapi",
+      "method": "GET",
+      "path": "/openapi.yaml",
+      "flags": [
+        "READ_SAFE"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "geo",
       "operationId": "geo.phone.normalize",
       "method": "GET",
       "path": "/v1/phone",
@@ -2894,6 +2982,16 @@
     },
     {
       "service": "media",
+      "operationId": "media.openapi",
+      "method": "GET",
+      "path": "/openapi.yaml",
+      "flags": [
+        "READ_SAFE"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "media",
       "operationId": "media.ops.health",
       "method": "GET",
       "path": "/health",
@@ -3025,6 +3123,16 @@
     },
     {
       "service": "notify",
+      "operationId": "notify.openapi",
+      "method": "GET",
+      "path": "/openapi.yaml",
+      "flags": [
+        "READ_SAFE"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "notify",
       "operationId": "notify.ready.get",
       "method": "GET",
       "path": "/ready",
@@ -3094,6 +3202,16 @@
       "flags": [
         "READ_SAFE",
         "OPERATOR"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "ratelimit",
+      "operationId": "ratelimit.openapi",
+      "method": "GET",
+      "path": "/openapi.yaml",
+      "flags": [
+        "READ_SAFE"
       ],
       "exposedInPhase3": false
     },
@@ -3358,6 +3476,16 @@
     },
     {
       "service": "scheduler",
+      "operationId": "scheduler.openapi",
+      "method": "GET",
+      "path": "/openapi.yaml",
+      "flags": [
+        "READ_SAFE"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "scheduler",
       "operationId": "scheduler.ready.get",
       "method": "GET",
       "path": "/ready",
@@ -3539,6 +3667,16 @@
       "path": "/v1/indexes/{name}",
       "flags": [
         "MUTATION"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "search",
+      "operationId": "search.openapi",
+      "method": "GET",
+      "path": "/openapi.yaml",
+      "flags": [
+        "READ_SAFE"
       ],
       "exposedInPhase3": false
     },
@@ -3732,6 +3870,16 @@
     },
     {
       "service": "shortlink",
+      "operationId": "shortlink.openapi",
+      "method": "GET",
+      "path": "/openapi.yaml",
+      "flags": [
+        "READ_SAFE"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "shortlink",
       "operationId": "shortlink.qr.getForText",
       "method": "GET",
       "path": "/v1/qr",
@@ -3909,6 +4057,16 @@
       "flags": [
         "READ_SAFE",
         "OPERATOR"
+      ],
+      "exposedInPhase3": false
+    },
+    {
+      "service": "webhook-out",
+      "operationId": "webhookout.openapi",
+      "method": "GET",
+      "path": "/openapi.yaml",
+      "flags": [
+        "READ_SAFE"
       ],
       "exposedInPhase3": false
     },
