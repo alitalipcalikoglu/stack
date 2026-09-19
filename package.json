@@ -10,7 +10,8 @@
   },
   "type": "module",
   "bin": {
-    "atc-stack": "bin/stack.js"
+    "atc-stack": "bin/stack.js",
+    "stack": "bin/stack.js"
   },
   "engines": {
     "node": ">=22.13"

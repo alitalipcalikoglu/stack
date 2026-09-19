@@ -16,6 +16,71 @@ Each sibling folder is a clone of `github.com/alitalipcalikoglu/<name>`. The wor
 
 ## Quick start
 
+### Download, configure, and start the complete suite
+
+Prerequisites: Git, npm, Node 22.13 or newer, and—unless `--no-start` is used—a globally available
+PM2 (`npm i -g pm2`). Clone only this repository, install its CLI dependencies, then let the CLI
+acquire the 14 sibling repositories:
+
+```bash
+git clone https://github.com/alitalipcalikoglu/stack.git
+cd stack
+npm ci
+npm link            # exposes both `stack` and the existing `atc-stack` command names
+stack install:all --admin-password '<choose-a-strong-password>'
+```
+
+`install:all` resolves the workspace from the actual stack checkout, not the shell's current
+directory. It validates prerequisites before mutation, clones missing official repositories,
+validates and reuses safe existing checkouts, runs `npm ci` from every sibling lockfile, delegates
+configuration to the existing `setup` implementation, starts through the existing PM2 `up` path,
+and waits (bounded) for all 13 HTTP services to report ready.
+
+The default is the current supported **production release** (`1.0.0`): every sibling is checked
+against the immutable tag and exact commit recorded in
+[`installation-manifests/v1.0.0.json`](installation-manifests/v1.0.0.json). `service-core` therefore
+resolves `v1.11.1`, while the application repositories resolve `v1.0.0`. This installer descriptor
+is the installation source of truth. [`releases/v1.0.0.json`](releases/v1.0.0.json) remains a
+historical release-validation report and is deliberately not consumed by the installer. The stack
+CLI itself may be newer than the runtime release it installs; notably, the original `v1.0.0`
+service tags predate the canonical OpenAPI work now present on `main`.
+
+Explicit development installation resolves every sibling—including `service-core`—to the current
+official `main` branch and reports the exact resolved commits. It is moving and non-immutable:
+
+```bash
+stack install:all --ref main --admin-password '<choose-a-strong-password>'
+```
+
+Options intentionally stay small:
+
+- `--no-start`: clone/install/configure without requiring PM2 or starting services.
+- `--split-workers`: forward the existing split-worker topology to `stack up`.
+- `--dry-run`: perform read-only prerequisite, remote-ref, and existing-checkout validation and
+  print the plan and resolved commits; no clone, fetch, install, setup, or startup occurs.
+- Existing setup options `--host`, `--public`, `--admin-email`, and `--admin-password` are passed to
+  the established setup path. `install:all` never prints a password; on a fresh install, supply
+  `--admin-password` so the credential is known, or reset the generated credential afterward with
+  Console's admin CLI.
+- `--root <dir>` is available for an explicit workspace root; normally the parent of the executing
+  stack checkout is correct.
+
+Existing directories fail closed unless they are real, clean Git repositories with the exact
+official `origin`. Release mode additionally requires HEAD and the locally/remote-resolved tag to
+match the descriptor's exact commit. Development mode requires the checked-out branch to be
+`main`; it fetches and performs only a fast-forward update. Dirty trees, detached/wrong branches,
+diverged history, spoofed remotes, symlinks, non-Git directories, and commit/tag mismatches are
+never reset, cleaned, stashed, overwritten, or deleted.
+
+The command is safely rerunnable. Repositories cloned before a later network, npm, setup, startup,
+or readiness failure are validated and reused on the next run; existing `.env` values, issued keys,
+secrets, routes, service registry, and first administrator are preserved by the idempotent setup
+machinery. Fix the phase-labelled error and rerun the same command. After a startup/readiness
+failure, inspect `pm2 logs` and `node bin/stack.js status`; use `--no-start` when PM2 is intentionally
+not installed.
+
+### Configure an already-present workspace
+
 ```bash
 git clone https://github.com/alitalipcalikoglu/stack.git && cd stack && npm ci
 npm run setup      # dependencies, secrets, keys, .env files, routes, console build, first admin

@@ -1,10 +1,12 @@
 #!/usr/bin/env node
 import './../src/quiet.js';
-import { resolve } from 'node:path';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { Stack } from '../src/stack.js';
 
 /**
  * atc-stack <command> [options]
+ *   install:all [--ref main] [--no-start] [--split-workers] [--dry-run]
  *   setup    --root <dir> --host <host> --public --install --admin-email <email> --admin-password <pw>
  *   up [--split-workers] | down [--split-workers] | status [--matrix] | dev   --root <dir>
  *   backup   --root <dir> --dir <snapshot dir>                     (default dir: <root>/backups/<timestamp>)
@@ -32,9 +34,30 @@ export class Cli {
   /** @param {string[]} argv */
   static async main(argv) {
     const { command, flags, positional } = Cli.parse(argv);
-    const root = resolve(String(flags.root ?? resolve(new URL('../..', import.meta.url).pathname)));
-    const stack = new Stack({ root });
+    const stackDir = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+    const root = resolve(String(flags.root ?? resolve(stackDir, '..')));
+    const stack = new Stack({ root, stackDir });
     switch (command) {
+      case 'install:all': {
+        const r = await stack.installAll({
+          ref: flags.ref === undefined ? undefined : String(flags.ref), start: flags['no-start'] !== true,
+          splitWorkers: flags['split-workers'] === true, dryRun: flags['dry-run'] === true,
+          host: String(flags.host ?? '127.0.0.1'), local: !flags.public,
+          adminEmail: flags['admin-email'] === undefined ? undefined : String(flags['admin-email']),
+          adminPassword: flags['admin-password'] === undefined ? undefined : String(flags['admin-password']),
+        });
+        console.log(`\ninstall:all ${r.dryRun ? 'plan' : 'complete'}`);
+        console.log(`mode:         ${r.mode} (${r.ref})`);
+        console.log(`workspace:    ${r.root}`);
+        console.log(`repositories: ${r.cloned.length} clone, ${r.reused.length} reuse`);
+        console.log(`dependencies: ${r.dryRun ? 'planned for 14 repositories' : `${r.dependencies.length} installed`}`);
+        console.log(`configuration:${r.configured ? ' complete' : ' planned'}`);
+        console.log(`startup:      ${r.dryRun ? 'planned' : r.started ? (r.splitWorkers ? 'PM2 split workers' : 'PM2 combined') : 'skipped (--no-start)'}`);
+        console.log(`ready:        ${r.started ? `${r.ready}/13` : 'not checked'}`);
+        if (r.adminCreated) console.log('administrator: created (password not printed; use the value supplied with --admin-password, or reset it with the console admin CLI)');
+        if (r.dryRun) for (const [id, commit] of Object.entries(r.commits)) console.log(`  ${id.padEnd(13)} ${commit}`);
+        return 0;
+      }
       case 'setup': {
         const r = await stack.setup({ host: String(flags.host ?? '127.0.0.1'), local: !flags.public, install: flags.install === true, adminEmail: flags['admin-email'] === undefined ? undefined : String(flags['admin-email']), adminPassword: flags['admin-password'] === undefined ? undefined : String(flags['admin-password']) });
         console.log('\nservices:');
@@ -69,7 +92,7 @@ export class Cli {
         return r.errors ? 1 : 0;
       }
       default:
-        console.log('usage: atc-stack setup [--root dir] [--host host] [--public] [--install] [--admin-email e] [--admin-password p] | up [--split-workers] | down [--split-workers] | status [--matrix] | dev | backup [--dir dir] | restore <snapshot dir> [--service id] | maintenance <service>');
+        console.log('usage: atc-stack install:all [--ref main] [--no-start] [--split-workers] [--dry-run] [--root dir] [--admin-email e] [--admin-password p] | setup [--root dir] [--host host] [--public] [--install] [--admin-email e] [--admin-password p] | up [--split-workers] | down [--split-workers] | status [--matrix] | dev | backup [--dir dir] | restore <snapshot dir> [--service id] | maintenance <service>');
         return 2;
     }
   }

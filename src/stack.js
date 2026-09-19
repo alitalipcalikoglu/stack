@@ -3,12 +3,13 @@ import { randomBytes } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { createRequire } from 'node:module';
-import { pathToFileURL } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { EnvFile } from './env-file.js';
 import { runMaintenance } from './media-maintenance.js';
 import { SERVICES } from './manifest.js';
 import { SetupContext } from './setup-context.js';
 import { Snapshot } from './snapshot.js';
+import { Installer } from './installer.js';
 
 /**
  * One row of {@link Stack#matrix}: reachability plus a defensively-parsed `/v1/info`.
@@ -16,10 +17,10 @@ import { Snapshot } from './snapshot.js';
  */
 
 /**
- * The commands: `setup` (dependencies, secrets, keys, env files, routes, console build, first
- * admin), `up`/`down` (PM2), `dev` (foreground, all processes, one terminal), `status` (health and
- * readiness) and its `matrix()` variant (Stage 7: version/contract matrix from each service's own
- * `/v1/info`).
+ * The commands: `install:all` (repository acquisition plus the existing lifecycle), `setup`
+ * (dependencies, secrets, keys, env files, routes, console build, first admin), `up`/`down` (PM2),
+ * `dev` (foreground, all processes, one terminal), `status` (health and readiness) and its
+ * `matrix()` variant (Stage 7: version/contract matrix from each service's own `/v1/info`).
  */
 export class Stack {
   /**
@@ -28,12 +29,23 @@ export class Stack {
    * @param {(line: string) => void} [o.log]
    * @param {(cwd: string, argv: string[], opts?: { stdio?: 'inherit'|'pipe' }) => Promise<{ code: number, out: string }>} [o.exec]
    * @param {typeof fetch} [o.fetch]
+   * @param {string} [o.stackDir] Actual stack checkout; independent of an explicit install root.
    */
-  constructor({ root, log = (l) => console.log(l), exec = Stack.exec, fetch: f = fetch }) {
+  constructor({ root, log = (l) => console.log(l), exec = Stack.exec, fetch: f = fetch, stackDir = resolve(fileURLToPath(new URL('..', import.meta.url))) }) {
     this.root = root;
+    this.stackDir = stackDir;
     this.log = log;
     this.exec = exec;
     this.fetch = f;
+  }
+
+  /**
+   * Acquire, verify, install, configure, start, and verify the complete sibling suite.
+   * Repository mechanics live in Installer; setup and PM2 supervision remain the existing paths.
+   * @param {{ ref?: string, start?: boolean, splitWorkers?: boolean, dryRun?: boolean, host?: string, local?: boolean, adminEmail?: string, adminPassword?: string, readinessTimeoutMs?: number }} [o]
+   */
+  async installAll(o = {}) {
+    return new Installer({ root: this.root, stackDir: this.stackDir, stack: this, exec: this.exec, log: this.log }).install(o);
   }
 
   /**
@@ -144,7 +156,7 @@ export class Stack {
       child.on('exit', (code) => this.log(`${tag} exited (${code})`));
       children.push(child);
     }
-    const ready = await this.#waitReady(20_000);
+    const ready = await this.waitReady(20_000);
     this.log('');
     for (const r of ready) this.log(`${r.id.padEnd(11)} ${r.ok ? 'ready' : 'NOT READY'}  ${r.url}`);
     this.log(`\nconsole: ${SetupContext.service('console') && this.#url('console')}`);
@@ -300,7 +312,7 @@ export class Stack {
     }
 
     for (const id of ids) { this.log(`${id}: pm2 start`); await this.#run(this.root, ['pm2', 'start', id, '--silent']).catch(() => {}); }
-    const ready = await this.#waitReady(20_000, ids);
+    const ready = await this.waitReady(20_000, ids);
     for (const r of ready) this.log(`${r.id.padEnd(11)} ${r.ok ? 'ready' : 'NOT READY'}  ${r.url}`);
 
     if (result.outcome === 'rolled_back') {
@@ -339,16 +351,17 @@ export class Stack {
   }
 
   /** @param {number} timeoutMs @param {string[]} [ids] Restrict to these service ids; default every service. */
-  async #waitReady(timeoutMs, ids) {
+  async waitReady(timeoutMs, ids) {
     const deadline = Date.now() + timeoutMs;
     const pending = new Set(ids ?? SERVICES.map((s) => s.id));
     /** @type {{ id: string, url: string, ok: boolean }[]} */
     const out = [];
     while (pending.size && Date.now() < deadline) {
-      for (const id of pending) {
+      const probes = await Promise.all([...pending].map(async (id) => {
         const url = this.#url(id);
-        if (await this.#probe(`${url}/ready`) === 200) { pending.delete(id); out.push({ id, url, ok: true }); }
-      }
+        return { id, url, ready: await this.#probe(`${url}/ready`) === 200 };
+      }));
+      for (const probe of probes) if (probe.ready) { pending.delete(probe.id); out.push({ id: probe.id, url: probe.url, ok: true }); }
       if (pending.size) await new Promise((r) => setTimeout(r, 500));
     }
     for (const id of pending) out.push({ id, url: this.#url(id), ok: false });
@@ -430,7 +443,8 @@ export class Stack {
   static exec(cwd, argv, { stdio = 'inherit' } = {}) {
     return new Promise((resolve, reject) => {
       const [cmd, ...args] = argv;
-      const child = spawn(cmd, args, { cwd, stdio: stdio === 'pipe' ? ['ignore', 'pipe', 'pipe'] : 'inherit', shell: process.platform === 'win32' });
+      const executable = process.platform === 'win32' && ['npm', 'npx', 'pm2'].includes(cmd) ? `${cmd}.cmd` : cmd;
+      const child = spawn(executable, args, { cwd, stdio: stdio === 'pipe' ? ['ignore', 'pipe', 'pipe'] : 'inherit', shell: false });
       let out = '';
       child.stdout?.on('data', (d) => { out += d; });
       child.stderr?.on('data', (d) => { out += d; });

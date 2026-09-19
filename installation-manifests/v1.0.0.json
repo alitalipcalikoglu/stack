@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "channel": "release",
+  "release": "1.0.0",
+  "note": "Authoritative source of truth for stack install:all release-mode sibling repository resolution. This is intentionally separate from releases/v1.0.0.json, which is a historical validation report.",
+  "repositories": {
+    "service-core": { "tag": "v1.11.1", "commit": "934af4f5a45f4be6fab9c77ba5f24f6c44c37c83" },
+    "gateway": { "tag": "v1.0.0", "commit": "7f51c6213b3be67e90cb75d10dee307467feebe7" },
+    "notify": { "tag": "v1.0.0", "commit": "4606cde80e74d6f36d4095348d8d692a469622fa" },
+    "auth": { "tag": "v1.0.0", "commit": "250652110d85c2c246e819765e105b0a0f21b627" },
+    "media": { "tag": "v1.0.0", "commit": "4c281276afcfef95e83cf60969016f7d37996d37" },
+    "console": { "tag": "v1.0.0", "commit": "96777dba2ccc61a08cb823becbb2f04c04154ae4" },
+    "audit": { "tag": "v1.0.0", "commit": "438f006263e93b4b2debdd4330fa9f22bc3bd312" },
+    "shortlink": { "tag": "v1.0.0", "commit": "9e176dbf387cdebe5da65b4b4ca00613d2227d26" },
+    "flags": { "tag": "v1.0.0", "commit": "d21f3a3c73ec50fb819811aa123721886da45890" },
+    "scheduler": { "tag": "v1.0.0", "commit": "4e3fc34a17a89e7afd0f7efcfaa96c3e20105fe2" },
+    "webhook-out": { "tag": "v1.0.0", "commit": "e27454716c4c8e0ebdc868171f5d6debaf67d9a7" },
+    "search": { "tag": "v1.0.0", "commit": "12fe73ee57a0aba1a4783326aabf52e2d2e53f05" },
+    "ratelimit": { "tag": "v1.0.0", "commit": "760a45e0d0fe1272456d2790b7070b683d66e525" },
+    "geo": { "tag": "v1.0.0", "commit": "7d3eca06a06a06473c1b55744034c81537bb084d" }
+  }
+}
+
