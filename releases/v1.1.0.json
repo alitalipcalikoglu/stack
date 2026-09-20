@@ -114,7 +114,7 @@
     "pointer": "installation-manifests/supported.json",
     "manifest": "installation-manifests/v1.1.0.json",
     "managedRepositories": 14,
-    "freshNoStart": "passed: official clones, remote tag/SHA verification, 14 npm ci, setup, Console build, 13/13 openapi.yaml",
+    "freshNoStart": "passed in one run from an official stack v1.1.0 tag clone: official sibling clones, remote tag/SHA verification, 14 npm ci, setup, Console build, 13/13 openapi.yaml",
     "resume": "an intentionally invalid test password was rejected by Console policy after acquisition/setup; rerun safely reused all 14 repositories and completed with a valid password",
     "idempotency": "passed: 14/14 reused, exact SHAs retained, trees clean, generated secrets/config hashes unchanged",
     "developmentDryRun": "passed: 14 official main heads resolved and disposable workspace remained empty",
