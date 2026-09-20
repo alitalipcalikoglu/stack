@@ -51,7 +51,7 @@ state update is necessarily newer.
 |---|---|---|---|---|
 | audit | HTTP service: append-only audit log | `cc9d60d2e2dfbe5baa95240089eb7f0b6a6fb238` | `v1.1.0` → `cc9d60d2e2dfbe5baa95240089eb7f0b6a6fb238` | HEAD at release |
 | auth | HTTP service: identity and tokens | `28a616c5aa2704faf0842b88aafa915c7d175abd` | `v1.1.0` → `28a616c5aa2704faf0842b88aafa915c7d175abd` | HEAD at release |
-| console | HTTP service: administration UI/API | `71c4191753371bb7383db1371cc8c39d3adb7f54` | `v1.1.0` → `367790d8a1e5d560c93140b4efaaf8724bb4d69a` | Ahead by closed M0 and M1 commits |
+| console | HTTP service: administration UI/API | `dc851b24eed4908f5fff80558d56fbbcd137c4cc` | `v1.1.0` → `367790d8a1e5d560c93140b4efaaf8724bb4d69a` | Ahead by closed M0–M2 commits |
 | flags | HTTP service: feature flags/settings | `9425a74ec2e3b29bf66f0f889b609bb1359ea9c9` | `v1.1.0` → `9425a74ec2e3b29bf66f0f889b609bb1359ea9c9` | HEAD at release |
 | gateway | HTTP service: public edge | `a90eefaa63935409046f7ace8cc9ed8dfaa48605` | `v1.1.0` → `a90eefaa63935409046f7ace8cc9ed8dfaa48605` | HEAD at release |
 | geo | HTTP service: geolocation/reference data | `e7b8ad9678e5d30587d663ff5737b1c5b94e4a3c` | `v1.1.0` → `e7b8ad9678e5d30587d663ff5737b1c5b94e4a3c` | HEAD at release |
@@ -62,7 +62,7 @@ state update is necessarily newer.
 | search | HTTP service: SQLite FTS search | `bddb6f7a9bdade67f7f465c5efd96a1b504b3355` | `v1.1.0` → `bddb6f7a9bdade67f7f465c5efd96a1b504b3355` | HEAD at release |
 | service-core | Shared runtime package | `5a833451fad32864b2639d20d34570aefada3549` | `v1.12.0` → `5a833451fad32864b2639d20d34570aefada3549` | HEAD at release |
 | shortlink | HTTP service: short links and QR | `52d97cd37f45e82bba1ff66d210ae4001c05d991` | `v1.1.0` → `52d97cd37f45e82bba1ff66d210ae4001c05d991` | HEAD at release |
-| stack | Installer/orchestrator/release management | `9cf66d5773f6ccc2aa7a59ad7c0fb56377616a53` | `v1.1.0` → `10e58d108458bbce61c306386b42ced0699e50ff` | Post-release installer and migration-state work; pre-update baseline |
+| stack | Installer/orchestrator/release management | `a6cd96f36f049e52bb933c9330e6e228fa75ab1f` | `v1.1.0` → `10e58d108458bbce61c306386b42ced0699e50ff` | Post-release installer and migration-state work; pre-update baseline |
 | webhook-out | HTTP service: durable outbound webhooks | `0647204f6dfb7e5967b5df533d48b0e28e7a41bb` | `v1.1.0` → `0647204f6dfb7e5967b5df533d48b0e28e7a41bb` | HEAD at release |
 
 ## Immutable releases
@@ -115,7 +115,11 @@ frontend router and static SPA fallback, backed by a Fastify BFF in the same rep
 M0 added tests only. M1 added an independent SvelteKit SSR foundation in canonical `src/routes/`
 with TypeScript and adapter-node, but did not mount either framework into the other or change the
 production start/build/runtime path. Transitional `kit:*` commands exercise the foundation;
-production continues to use Fastify and `vite.legacy.config.js` until later migration stages.
+production continues to use Fastify and `vite.legacy.config.js` until later migration stages. M2
+adds a process-scoped SvelteKit runtime, shared SQLite/maintenance lifecycle, a thin adapter-node
+HTTP/HTTPS wrapper, and filesystem ownership of `/health`, `/ready`, `/v1/info`, and
+`/openapi.yaml`. The migration runtime and legacy production runtime remain mutually exclusive;
+neither framework mounts, calls, or proxies the other.
 
 ### Console target architecture
 
@@ -139,8 +143,8 @@ controller/application-service/domain-service/repository/adapter layering.
 |---|---|---|
 | M0 | **CLOSED** | Contract freeze and migration safety net |
 | M1 | **CLOSED** | SvelteKit + adapter-node + TypeScript skeleton |
-| M2 | **NEXT** | Runtime singleton, config, DB, maintenance, operational endpoints, wrapper |
-| M3 | Planned | Hooks, trace, session, auth, TOTP, roles, CSRF, logout CSRF correction |
+| M2 | **CLOSED** | Runtime singleton, config, DB, maintenance, operational endpoints, wrapper |
+| M3 | **NEXT** | Hooks, trace, session, auth, TOTP, roles, CSRF, logout CSRF correction |
 | M4 | Planned | JSON API filesystem endpoints |
 | M5 | Planned | Streaming and binary special paths |
 | M6 | Planned | Filesystem frontend routes, layouts, SSR |
@@ -175,6 +179,18 @@ M1 closure evidence: clean `npm ci`; 114/114 Console tests; legacy and SvelteKit
 successful unchanged legacy production build; 156/156 Console route parity; 13/13 generated
 clients with no drift; suite catalog 376 operations; and MCP exposure unchanged at 10 tools.
 
+Console M2 is closed at `dc851b24eed4908f5fff80558d56fbbcd137c4cc`
+(`feat: establish SvelteKit runtime foundation`). The SvelteKit migration runtime now owns one
+process-scoped resolved configuration, SQLite connection, maintenance timer, explicit readiness
+and idempotent shutdown lifecycle, and direct filesystem implementations of the four operational
+routes. Root `server.mjs` wraps only adapter-node's handler and Node HTTP/HTTPS process concerns.
+
+M2 closure evidence: clean `npm ci`; 118/118 Console tests; all legacy and SvelteKit typechecks
+with 0 errors/warnings; adapter-node SSR and runtime smoke; real HTTP and native HTTPS/HSTS;
+correct IPC readiness and graceful double-SIGTERM shutdown; byte-identical canonical OpenAPI;
+156/156 derived legacy-plus-SvelteKit route parity; successful legacy production build; 13/13
+generated clients without drift; suite catalog 376 operations; and MCP exposure unchanged at 10.
+
 ## Known debt and deliberate migration deltas
 
 1. **M3 logout CSRF correction:** current logout deliberately retains a CSRF exception frozen by
@@ -193,6 +209,10 @@ clients with no drift; suite catalog 376 operations; and MCP exposure unchanged 
    SvelteKit 2.70.3 transitively pins `cookie` 0.6.0, which npm reports under a low-severity cookie
    attribute validation advisory. No compatible fixed SvelteKit release is currently available;
    monitor upstream rather than applying npm's breaking downgrade suggestion.
+7. **M2 transitional route copies:** the unchanged public Fastify production command retains
+   compatibility copies of the four operational routes until final cutover. The explicit SvelteKit
+   migration runtime owns their new implementations; the runtimes are mutually exclusive and no
+   request crosses between them. Derivational parity treats filesystem routes as migrated owners.
 
 ## Operational constraints
 
@@ -206,10 +226,10 @@ clients with no drift; suite catalog 376 operations; and MCP exposure unchanged 
 
 ## Next controlled stage
 
-**M2 — Runtime singleton, configuration, database, maintenance, operational endpoints, and
-wrapper.** M2 has not started. Its implementation prompt must establish fresh Git baselines, read
-this document and the Console migration oracles, preserve the M1 production/runtime boundary until
-the stage explicitly changes it, and define validation/stop conditions before mutation.
+**M3 — Hooks, trace/request context, sessions, authentication, TOTP, roles, CSRF, and the deliberate
+logout CSRF correction.** M3 has not started. Its implementation prompt must establish fresh Git
+baselines, read this document and the Console migration oracles, preserve M2 process/resource
+ownership, and define validation/stop conditions before mutation.
 
 ## Update checklist
 
