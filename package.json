@@ -1,6 +1,6 @@
 {
   "name": "@atc-web/stack",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "description": "Set up, wire and run every atc-web service with the console in one command: dependencies, secrets, API keys, env files, gateway routes, console services.json, first admin",
   "license": "MIT",

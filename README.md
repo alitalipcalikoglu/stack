@@ -36,14 +36,15 @@ validates and reuses safe existing checkouts, runs `npm ci` from every sibling l
 configuration to the existing `setup` implementation, starts through the existing PM2 `up` path,
 and waits (bounded) for all 13 HTTP services to report ready.
 
-The default is the current supported **production release** (`1.0.0`): every sibling is checked
+The default is the current supported **production release** (`1.1.0`): every sibling is checked
 against the immutable tag and exact commit recorded in
-[`installation-manifests/v1.0.0.json`](installation-manifests/v1.0.0.json). `service-core` therefore
-resolves `v1.11.1`, while the application repositories resolve `v1.0.0`. This installer descriptor
-is the installation source of truth. [`releases/v1.0.0.json`](releases/v1.0.0.json) remains a
-historical release-validation report and is deliberately not consumed by the installer. The stack
-CLI itself may be newer than the runtime release it installs; notably, the original `v1.0.0`
-service tags predate the canonical OpenAPI work now present on `main`.
+[`installation-manifests/v1.1.0.json`](installation-manifests/v1.1.0.json), selected by the explicit
+[`installation-manifests/supported.json`](installation-manifests/supported.json) pointer.
+`service-core` therefore resolves `v1.12.0`, while the application repositories resolve `v1.1.0`.
+The installation manifest is the source of truth. The immutable
+[`installation-manifests/v1.0.0.json`](installation-manifests/v1.0.0.json) remains available as the
+archived original release descriptor; release-validation reports under [`releases/`](releases/)
+are historical evidence and are deliberately not consumed by the installer.
 
 Explicit development installation resolves every sibling—including `service-core`—to the current
 official `main` branch and reports the exact resolved commits. It is moving and non-immutable:

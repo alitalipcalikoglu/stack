@@ -31,9 +31,14 @@ as a **candidate universe** for future phases — it is not the exposed list. Th
 `src/tools/index.mjs`'s explicit array, and only that array. An operation existing in a service's
 `openapi.yaml`, or being classified as safe in the catalog, never makes it a tool by itself.
 
-No destructive, admin, or high-risk tool is exposed in this phase. `auth` and `console` have no
+MCP expansion was intentionally cancelled for the production `1.1.0` suite. The supported scope
+is this explicit 10-tool allowlist over local STDIO only: no destructive/admin tools, no remote
+transport, no MCP-specific authentication, and no package publication. This is a product decision,
+not unfinished release work; the catalog remains an audit/classification artifact, not a roadmap.
+
+No destructive, admin, or high-risk tool is exposed. `auth` and `console` have no
 business-operation tool at all (only their `/health`/`/ready`/`/v1/info` probes are touched, via
-`stack.status` — see Phase 0's flagged security-review items for why the rest of `auth` stays out).
+`stack.status` — see the flagged security-review items for why the rest of `auth` stays out).
 
 ## Install / build / configure / run
 

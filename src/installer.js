@@ -4,7 +4,7 @@ import { join, resolve } from 'node:path';
 import { REPOSITORIES } from './repository-catalog.js';
 
 /** @typedef {{ id: string, remote: string }} Repository */
-/** @typedef {{ tag: string, commit: string }} ReleaseRepository */
+/** @typedef {{ repository?: string, tag: string, commit: string }} ReleaseRepository */
 
 export class InstallError extends Error {
   /** @param {string} phase @param {string} message @param {string} [repository] */
@@ -43,7 +43,14 @@ export class Installer {
   }
 
   static releaseManifest() {
-    return JSON.parse(readFileSync(new URL('../installation-manifests/v1.0.0.json', import.meta.url), 'utf8'));
+    const directory = new URL('../installation-manifests/', import.meta.url);
+    const supported = JSON.parse(readFileSync(new URL('supported.json', directory), 'utf8'));
+    if (supported.schemaVersion !== 1 || !/^\d+\.\d+\.\d+$/.test(supported.release ?? '')) {
+      throw new InstallError('PREFLIGHT', 'supported release pointer is invalid');
+    }
+    const manifest = JSON.parse(readFileSync(new URL(`v${supported.release}.json`, directory), 'utf8'));
+    if (manifest.release !== supported.release) throw new InstallError('PREFLIGHT', 'supported release pointer and installation manifest disagree');
+    return manifest;
   }
 
   /**
@@ -136,6 +143,7 @@ export class Installer {
     for (const repository of this.repositories) {
       const entry = this.release.repositories[repository.id];
       if (!entry || !/^v[^\s]+$/.test(entry.tag) || !/^[0-9a-f]{40}$/.test(entry.commit)) throw new InstallError('PREFLIGHT', 'release descriptor entry is missing or invalid', repository.id);
+      if (entry.repository !== undefined && entry.repository !== repository.remote) throw new InstallError('PREFLIGHT', 'release descriptor repository does not match the official remote', repository.id);
     }
   }
 

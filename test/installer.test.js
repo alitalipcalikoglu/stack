@@ -62,7 +62,16 @@ test('canonical catalog contains exactly the 14 official sibling repositories an
     'flags', 'scheduler', 'webhook-out', 'search', 'ratelimit', 'geo',
   ]);
   for (const repository of REPOSITORIES) assert.equal(repository.remote, `https://github.com/alitalipcalikoglu/${repository.id}.git`);
-  assert.deepEqual(Object.keys(Installer.releaseManifest().repositories).sort(), REPOSITORIES.map((repository) => repository.id).sort());
+  const release = Installer.releaseManifest();
+  assert.equal(release.release, '1.1.0');
+  assert.deepEqual(Object.keys(release.repositories).sort(), REPOSITORIES.map((repository) => repository.id).sort());
+  for (const repository of REPOSITORIES) assert.equal(release.repositories[repository.id].repository, repository.remote);
+});
+
+test('a manifest repository identity cannot disagree with the official catalog', async () => {
+  const f = fixture();
+  const { installer } = harness(f, { release: { schemaVersion: 1, channel: 'release', release: 'bad', repositories: { [f.id]: { repository: 'https://example.invalid/spoof.git', tag: 'v1.0.0', commit: f.commit } } } });
+  await assert.rejects(installer.install({ start: false }), /release descriptor repository does not match the official remote/);
 });
 
 test('fresh release workspace clones exact tag, installs, configures, and reruns idempotently', async () => {
