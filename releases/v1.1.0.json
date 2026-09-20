@@ -1,0 +1,142 @@
+{
+  "release": "1.1.0",
+  "releasedAt": "2026-09-20",
+  "releasePolicy": "immutable annotated Git tags; no GitHub Release object and no GitHub Actions",
+  "versionDecision": {
+    "suite": "1.1.0",
+    "reason": "Backward-compatible distribution, canonical OpenAPI, generated-client, Console API Docs, and MCP-foundation capabilities were added after immutable v1.0.0.",
+    "serviceCore": "1.12.0",
+    "serviceCoreReason": "The backward-compatible exported registerOpenApi public runtime primitive requires a minor bump under service-core/VERSIONING.md."
+  },
+  "initialBaseline": {
+    "audit": "5e39f59df30d26f03cb1142bbc284d073fd06404",
+    "auth": "ab091a26428d4cdae0615e49de08610979119f4d",
+    "console": "1e94d377d1a2bfde490df9f8ffc405e3e2e62c51",
+    "flags": "b797f81b353b48ddc9bafa1567037e6d950f0f13",
+    "gateway": "d7dd32bfee9149b620af1f7168e24740092527cb",
+    "geo": "8babd930ab9f4c65075d762b6988479c92cec5b6",
+    "media": "09bde80291e5d898aa4d721089994227f6547eee",
+    "notify": "d63bc0a825806d14be7ebdade2265eb5f6a3c9a1",
+    "ratelimit": "ee4539b86115be84326d2182cbb7fa8d15bbad8c",
+    "scheduler": "fbd93425581778fa96c7363db7e1fb02e3e683f4",
+    "search": "08db5839da363e377f5ce6952c1e81e763bf764d",
+    "service-core": "31c0d4819e3c54a209569437b5e5a00142eb5486",
+    "shortlink": "89e268e1f1f7457764ddaa93525e658fac03f3a1",
+    "stack": "377223f4eb762f375c826020506bf5e4714547ac",
+    "webhook-out": "59343c281c270d555ddf27b3c2c70d1f91b14daf"
+  },
+  "releaseMatrix": [
+    { "repo": "audit", "version": "1.1.0", "tag": "v1.1.0", "commit": "cc9d60d2e2dfbe5baa95240089eb7f0b6a6fb238" },
+    { "repo": "auth", "version": "1.1.0", "tag": "v1.1.0", "commit": "28a616c5aa2704faf0842b88aafa915c7d175abd" },
+    { "repo": "console", "version": "1.1.0", "tag": "v1.1.0", "commit": "367790d8a1e5d560c93140b4efaaf8724bb4d69a" },
+    { "repo": "flags", "version": "1.1.0", "tag": "v1.1.0", "commit": "9425a74ec2e3b29bf66f0f889b609bb1359ea9c9" },
+    { "repo": "gateway", "version": "1.1.0", "tag": "v1.1.0", "commit": "a90eefaa63935409046f7ace8cc9ed8dfaa48605" },
+    { "repo": "geo", "version": "1.1.0", "tag": "v1.1.0", "commit": "e7b8ad9678e5d30587d663ff5737b1c5b94e4a3c" },
+    { "repo": "media", "version": "1.1.0", "tag": "v1.1.0", "commit": "439210ae50054a499bab43b8121df7fc3902c4e9" },
+    { "repo": "notify", "version": "1.1.0", "tag": "v1.1.0", "commit": "27b9a1b669e26aa253c85f6cff896268a2d44e63" },
+    { "repo": "ratelimit", "version": "1.1.0", "tag": "v1.1.0", "commit": "7a0ee5647fbec96320feb440c0703bb370cca107" },
+    { "repo": "scheduler", "version": "1.1.0", "tag": "v1.1.0", "commit": "f3761c43b30a599f7f5d3c179a66dcb107478805" },
+    { "repo": "search", "version": "1.1.0", "tag": "v1.1.0", "commit": "bddb6f7a9bdade67f7f465c5efd96a1b504b3355" },
+    { "repo": "service-core", "version": "1.12.0", "tag": "v1.12.0", "commit": "5a833451fad32864b2639d20d34570aefada3549" },
+    { "repo": "shortlink", "version": "1.1.0", "tag": "v1.1.0", "commit": "52d97cd37f45e82bba1ff66d210ae4001c05d991" },
+    { "repo": "stack", "version": "1.1.0", "tag": "v1.1.0", "commit": "10e58d108458bbce61c306386b42ced0699e50ff" },
+    { "repo": "webhook-out", "version": "1.1.0", "tag": "v1.1.0", "commit": "0647204f6dfb7e5967b5df533d48b0e28e7a41bb" }
+  ],
+  "preservedTags": {
+    "audit/v1.0.0": "438f006263e93b4b2debdd4330fa9f22bc3bd312",
+    "auth/v1.0.0": "250652110d85c2c246e819765e105b0a0f21b627",
+    "console/v1.0.0": "96777dba2ccc61a08cb823becbb2f04c04154ae4",
+    "flags/v1.0.0": "d21f3a3c73ec50fb819811aa123721886da45890",
+    "gateway/v1.0.0": "7f51c6213b3be67e90cb75d10dee307467feebe7",
+    "geo/v1.0.0": "7d3eca06a06a06473c1b55744034c81537bb084d",
+    "media/v1.0.0": "4c281276afcfef95e83cf60969016f7d37996d37",
+    "notify/v1.0.0": "4606cde80e74d6f36d4095348d8d692a469622fa",
+    "ratelimit/v1.0.0": "760a45e0d0fe1272456d2790b7070b683d66e525",
+    "scheduler/v1.0.0": "4e3fc34a17a89e7afd0f7efcfaa96c3e20105fe2",
+    "search/v1.0.0": "12fe73ee57a0aba1a4783326aabf52e2d2e53f05",
+    "shortlink/v1.0.0": "9e176dbf387cdebe5da65b4b4ca00613d2227d26",
+    "stack/v1.0.0": "0c3bbac3dd6600ccd32baa8baea2ee5e79c01a2e",
+    "webhook-out/v1.0.0": "e27454716c4c8e0ebdc868171f5d6debaf67d9a7",
+    "service-core/v1.11.1": "934af4f5a45f4be6fab9c77ba5f24f6c44c37c83"
+  },
+  "contractCounts": {
+    "canonicalOpenApiOperations": 376,
+    "generatedClientOperations": 376,
+    "mcpCatalogOperations": 376,
+    "mcpExposedTools": 10
+  },
+  "tests": {
+    "repositoryTestsPassed": {
+      "audit": 46,
+      "auth": 43,
+      "console": 81,
+      "flags": 20,
+      "gateway": 52,
+      "geo": 44,
+      "media": 78,
+      "notify": 60,
+      "ratelimit": 33,
+      "scheduler": 46,
+      "search": 14,
+      "service-core": 98,
+      "shortlink": 23,
+      "stack": 90,
+      "webhook-out": 44
+    },
+    "stackIntegrationSkipped": 0,
+    "generatedClientUnit": "6/6",
+    "generatedClientRealSmoke": "3/3",
+    "mcpUnit": "17/17",
+    "mcpRealStdioE2E": "14/14",
+    "typecheck": "15/15 repositories plus generated clients and MCP passed",
+    "consoleProductionBuild": "passed",
+    "clientGeneration": "two consecutive generations were byte-identical"
+  },
+  "security": {
+    "productionDependencyTrees": "valid after clean npm ci",
+    "productionVulnerabilities": 0,
+    "trackedSecretOrEnvFiles": 0,
+    "trackedRuntimeDatabaseLogOrBuildJunk": 0,
+    "githubWorkflowFiles": 0,
+    "canonicalSpecsWithCredentialMaterial": 0,
+    "consoleDocs": "swagger-ui-dist locally bundled; no CDN/telemetry/browser API keys; request execution and authorization persistence disabled"
+  },
+  "docker": {
+    "available": true,
+    "images": ["notify", "gateway", "console"],
+    "build": "3/3 passed",
+    "runtimeUser": "node (3/3)",
+    "endpoints": ["/health", "/ready", "/v1/info", "/openapi.yaml"],
+    "result": "all endpoints returned HTTP 200 for all three smoke targets"
+  },
+  "install": {
+    "defaultRelease": "1.1.0",
+    "pointer": "installation-manifests/supported.json",
+    "manifest": "installation-manifests/v1.1.0.json",
+    "managedRepositories": 14,
+    "freshNoStart": "passed: official clones, remote tag/SHA verification, 14 npm ci, setup, Console build, 13/13 openapi.yaml",
+    "resume": "an intentionally invalid test password was rejected by Console policy after acquisition/setup; rerun safely reused all 14 repositories and completed with a valid password",
+    "idempotency": "passed: 14/14 reused, exact SHAs retained, trees clean, generated secrets/config hashes unchanged",
+    "developmentDryRun": "passed: 14 official main heads resolved and disposable workspace remained empty",
+    "startedReadiness": "not run because PM2 was unavailable in the validation environment",
+    "freshConsoleDocs": "passed: real login, 13/13 service list, notify canonical OpenAPI 3.1.0 v1.1.0 fetched through Console"
+  },
+  "mcpDecision": {
+    "expansion": "intentionally cancelled",
+    "transport": "STDIO only",
+    "allowlist": 10,
+    "destructiveOrAdminTools": false,
+    "remoteTransport": false,
+    "mcpSpecificAuthentication": false,
+    "packagePublication": false,
+    "releaseBlocker": false
+  },
+  "knownLimitations": [
+    "PM2 was unavailable, so the default started install and 13/13 PM2 readiness path were not executed in this environment.",
+    "Some operational operationId naming remains historically inconsistent.",
+    "Historical dead error codes remain documented where identified.",
+    "Specialized internal clients are intentionally not migrated to the generated public clients.",
+    "Console's locally bundled Swagger UI chunk triggers a non-fatal build size advisory."
+  ],
+  "blockers": []
+}
