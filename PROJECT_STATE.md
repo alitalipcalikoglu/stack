@@ -318,8 +318,8 @@ M7 integration/security, and real-Chrome smokes; direct 156/156 SvelteKit API pa
 filesystem frontend routing. Stack's obsolete `src/index.js` and `public/index.html` Console
 assumptions are removed from runtime, preparation, ecosystem checks, integration/migration tests,
 and generated-client smoke. Real Console→Audit and old-schema process tests pass through
-`server.mjs`; generated-client pilots pass 3/3. Stack's full suite passes 62 with 30 explicit
-integration skips (92 tests total), and the targeted real-process tests pass 8/8. All 13 specs
+`server.mjs`; generated-client pilots pass 3/3. Stack's full suite passes 92/92 with
+`STACK_INTEGRATION=1` (the default run passes 62 and explicitly skips 30 process tests). All 13 specs
 remain at 376 operations, clients are 13/13 without drift with 6/6 tests, and MCP remains 376
 catalog entries, 10 exposed tools, and 17/17 tests. Production audit is clean; the accepted lazy
 Swagger bundle and three low-severity full-tree advisories remain. M9 still owns the broader final
