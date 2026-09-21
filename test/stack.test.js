@@ -50,7 +50,7 @@ test('setup wires every service: secrets, keys, URLs, console files; second run 
   await ctx.compute();
   /** @type {Record<string, string>} */ const written = {};
   ctx.save((p, t) => { written[p.replace(`${root}/`, '')] = t; mkdirSync(join(root, p.replace(`${root}/`, '').split('/')[0]), { recursive: true }); writeFileSync(p, t); });
-  assert.deepEqual(ran, [], 'keys and the adapter-node build exist, nothing to prepare');
+  assert.deepEqual(ran, ['console npm run build'], 'Console is rebuilt at every setup boundary so a surviving adapter-node handler cannot be stale');
   const env = (/** @type {string} */ id) => EnvFile.parse(written[`${id}/.env`]).toObject();
   const keys = (/** @type {string} */ id, /** @type {string} */ v) => Object.fromEntries(env(id)[v].split(',').map((e) => { const [h, s, ...r] = e.split(':'); return [h, { secret: s, role: r.join(':') }]; }));
 
@@ -134,7 +134,7 @@ test('setup wires every service: secrets, keys, URLs, console files; second run 
   assert.equal(third.env('console').get('FLAGS_API_KEY'), env('console').FLAGS_API_KEY);
 });
 
-test('setup prepares what is missing: JWT keys and the console build', async () => {
+test('setup prepares missing JWT keys and always refreshes the console build', async () => {
   rmSync(join(root, 'auth', 'keys'), { recursive: true });
   rmSync(join(root, 'console', 'build'), { recursive: true });
   /** @type {string[]} */ const ran = [];

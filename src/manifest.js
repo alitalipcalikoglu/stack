@@ -121,7 +121,9 @@ export const SERVICES = [
     files: (c) => ({ 'services.json': `${JSON.stringify(c.consoleServicesJson(), null, 2)}\n` }),
     prepare: async (c) => {
       if (!c.exists('console', 'server.mjs')) throw new Error('console: canonical adapter-node wrapper server.mjs is missing');
-      if (!c.exists('console', 'build/handler.js')) await c.run('console', ['npm', 'run', 'build']);
+      // A surviving handler can belong to an older source checkout. Setup is the production
+      // preparation boundary, so rebuild here instead of treating file existence as freshness.
+      await c.run('console', ['npm', 'run', 'build']);
     },
   },
 ];

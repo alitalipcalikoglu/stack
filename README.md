@@ -53,6 +53,12 @@ official `main` branch and reports the exact resolved commits. It is moving and 
 stack install:all --ref main --admin-password '<choose-a-strong-password>'
 ```
 
+Use that explicit development mode when running Stack from post-release `main`: its canonical
+Console invariant is `server.mjs` plus an adapter-node build, while the unchanged `v1.1.0`
+installation manifest describes the matching historical release snapshot. Current development
+invariants are not retroactively applied to that immutable snapshot. A future supported release
+must publish a mutually compatible Stack/Console manifest before the default pointer advances.
+
 Options intentionally stay small:
 
 - `--no-start`: clone/install/configure without requiring PM2 or starting services.
@@ -133,7 +139,7 @@ directory — no HTTP route, no new auth system; see [media/README.md](../media/
 4. **Files**: `gateway/routes.json` (auth, media, JWKS through the gateway) and `console/services.json` (every service with its local URL and key variable).
 5. **First admin**: `admin@console.local` with a generated password, printed once. Nothing is created when an administrator already exists.
 
-Running `setup` again is safe: existing secrets, keys and any value you edited by hand are kept; only placeholders and missing entries are filled. Delete a line from a `.env` to get the stack's default back.
+Running `setup` again is safe: existing secrets, keys and any value you edited by hand are kept; only placeholders and missing entries are filled. Delete a line from a `.env` to get the stack's default back. Console's adapter-node application is rebuilt on every setup boundary so a build artifact left by an older source checkout is never accepted as current.
 
 ## Local versus server
 
