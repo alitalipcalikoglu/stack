@@ -51,7 +51,7 @@ state update is necessarily newer.
 |---|---|---|---|---|
 | audit | HTTP service: append-only audit log | `cc9d60d2e2dfbe5baa95240089eb7f0b6a6fb238` | `v1.1.0` → `cc9d60d2e2dfbe5baa95240089eb7f0b6a6fb238` | HEAD at release |
 | auth | HTTP service: identity and tokens | `28a616c5aa2704faf0842b88aafa915c7d175abd` | `v1.1.0` → `28a616c5aa2704faf0842b88aafa915c7d175abd` | HEAD at release |
-| console | HTTP service: administration UI/API | `6fca9bba4cee6f0519948ff6a80d6b93c440b32c` | `v1.1.0` → `367790d8a1e5d560c93140b4efaaf8724bb4d69a` | Ahead by closed M0–M4 commits |
+| console | HTTP service: administration UI/API | `087204e887cb8250f89b0137dcb9aa1a743486a7` | `v1.1.0` → `367790d8a1e5d560c93140b4efaaf8724bb4d69a` | Ahead by closed M0–M5 commits |
 | flags | HTTP service: feature flags/settings | `9425a74ec2e3b29bf66f0f889b609bb1359ea9c9` | `v1.1.0` → `9425a74ec2e3b29bf66f0f889b609bb1359ea9c9` | HEAD at release |
 | gateway | HTTP service: public edge | `a90eefaa63935409046f7ace8cc9ed8dfaa48605` | `v1.1.0` → `a90eefaa63935409046f7ace8cc9ed8dfaa48605` | HEAD at release |
 | geo | HTTP service: geolocation/reference data | `e7b8ad9678e5d30587d663ff5737b1c5b94e4a3c` | `v1.1.0` → `e7b8ad9678e5d30587d663ff5737b1c5b94e4a3c` | HEAD at release |
@@ -62,7 +62,7 @@ state update is necessarily newer.
 | search | HTTP service: SQLite FTS search | `bddb6f7a9bdade67f7f465c5efd96a1b504b3355` | `v1.1.0` → `bddb6f7a9bdade67f7f465c5efd96a1b504b3355` | HEAD at release |
 | service-core | Shared runtime package | `5a833451fad32864b2639d20d34570aefada3549` | `v1.12.0` → `5a833451fad32864b2639d20d34570aefada3549` | HEAD at release |
 | shortlink | HTTP service: short links and QR | `52d97cd37f45e82bba1ff66d210ae4001c05d991` | `v1.1.0` → `52d97cd37f45e82bba1ff66d210ae4001c05d991` | HEAD at release |
-| stack | Installer/orchestrator/release management | `8acdac1e0683a1ce66e3df8e9cd8d183b5611b25` | `v1.1.0` → `10e58d108458bbce61c306386b42ced0699e50ff` | Post-release installer and migration-state work; pre-update baseline |
+| stack | Installer/orchestrator/release management | `cca0642bf69484b0a0c331449d02f8b95624753f` | `v1.1.0` → `10e58d108458bbce61c306386b42ced0699e50ff` | Post-release installer and migration-state work; pre-update baseline |
 | webhook-out | HTTP service: durable outbound webhooks | `0647204f6dfb7e5967b5df533d48b0e28e7a41bb` | `v1.1.0` → `0647204f6dfb7e5967b5df533d48b0e28e7a41bb` | HEAD at release |
 
 ## Immutable releases
@@ -121,9 +121,12 @@ HTTP/HTTPS wrapper, and filesystem ownership of `/health`, `/ready`, `/v1/info`,
 `/openapi.yaml`. M3 adds the native hooks request/security lifecycle and 10 explicit auth/session
 filesystem operations, bringing SvelteKit ownership to 14 operations. M4 migrates all 138 ordinary
 JSON operations into explicit filesystem endpoints, bringing SvelteKit ownership to 152
-operations; Fastify remains authoritative only for the four streaming/binary operations reserved
-for M5. The migration runtime and legacy production runtime remain mutually exclusive; neither
-framework mounts, calls, or proxies the other.
+operations; at its closure Fastify remained authoritative only for the four streaming/binary
+operations reserved for M5. M5 migrates those final four operations with explicit filesystem routes,
+bringing SvelteKit canonical implementation ownership to all 156 operations and Fastify migration
+ownership to zero. Fastify compatibility source/runtime remains until M8. The migration runtime
+and legacy production runtime remain mutually exclusive; neither framework mounts, calls, or
+proxies the other.
 
 ### Console target architecture
 
@@ -150,8 +153,8 @@ controller/application-service/domain-service/repository/adapter layering.
 | M2 | **CLOSED** | Runtime singleton, config, DB, maintenance, operational endpoints, wrapper |
 | M3 | **CLOSED** | Hooks, trace, session, auth, TOTP, roles, CSRF, logout CSRF correction |
 | M4 | **CLOSED** | JSON API filesystem endpoints |
-| M5 | **NEXT** | Streaming and binary special paths |
-| M6 | Planned | Filesystem frontend routes, layouts, SSR |
+| M5 | **CLOSED** | Streaming and binary special paths |
+| M6 | **NEXT** | Filesystem frontend routes, layouts, SSR |
 | M7 | Planned | API Docs, PWA, theme, i18n, toast |
 | M8 | Planned | Remove Fastify, old layers, `ui/`, custom router, SPA fallback |
 | M9 | Planned | Docker, PM2, admin CLI, stack integration |
@@ -239,6 +242,25 @@ clients, 376/376 generated operations without drift, and 6/6 client tests; MCP c
 explicit exposure unchanged at 10 tools, and 17/17 MCP tests. Production dependency audit is
 clean; the existing three low-severity development-only advisories remain unchanged.
 
+Console M5 is closed at `087204e887cb8250f89b0137dcb9aa1a743486a7`
+(`feat: migrate streaming routes to SvelteKit`). The media upload, media-byte download, audit
+export, and shortlink QR PNG operations now have explicit filesystem owners. Uploads stream with
+backpressure and actual-byte counting under the exact 512 MiB limit; the downstream request keeps
+its 300-second timeout and propagates cancellation. Media bytes and audit exports stream without
+read-all buffering; QR preserves its small buffered PNG contract. The established binary-header
+filter, hostile-SVG neutralization with byte identity, effective API `no-store`, and intentional
+non-forwarding of inbound `Range` are unchanged.
+
+M5 closure evidence: 124/124 Console tests; legacy and SvelteKit typechecks with 0 errors/warnings;
+successful legacy and adapter-node builds; M1–M4 smokes plus a real adapter-node M5 black-box smoke
+covering synchronized upload backpressure, declared and streamed size enforcement, byte/header
+identity, abort propagation, and graceful shutdown during an active export. Derivational parity is
+156 SvelteKit-owned plus zero Fastify migration-owned operations for exact 156/156 coverage.
+Console remains at 122 paths / 156 operations and the suite at 376 operations; 13/13 generated
+clients have 376/376 coverage without drift, while MCP remains 376 catalog operations, 10 exposed
+tools, and 17/17 tests. Production dependency audit is clean; the existing three low-severity
+development-only advisories remain unchanged.
+
 ## Known debt and deliberate migration deltas
 
 1. **SSR:** current pages are SPA-delivered. The target requires SvelteKit SSR; HTML byte equality
@@ -254,12 +276,11 @@ clean; the existing three low-severity development-only advisories remain unchan
    SvelteKit 2.70.3 transitively pins `cookie` 0.6.0, which npm reports under a low-severity cookie
    attribute validation advisory. No compatible fixed SvelteKit release is currently available;
    monitor upstream rather than applying npm's breaking downgrade suggestion.
-6. **M1–M4 transitional route copies:** the unchanged public Fastify production command retains
-   compatibility copies of the 152 SvelteKit-owned operations until final cutover. The explicit
-   SvelteKit migration runtime owns their new implementations; the runtimes are mutually exclusive
-   and no request crosses between them. Derivational parity treats those 152 filesystem operations
-   as migrated owners. Only the four M5 streaming/binary operations remain Fastify-owned; no new
-   non-transitional debt was accepted in M4.
+6. **M1–M5 transitional route copies:** the unchanged public Fastify production command retains
+   compatibility copies of all 156 SvelteKit-owned operations until final cutover. The explicit
+   SvelteKit migration runtime owns every canonical implementation for migration purposes; Fastify
+   owns zero. The runtimes are mutually exclusive and no request crosses between them. No new
+   non-transitional debt was accepted in M5.
 
 ## Operational constraints
 
@@ -273,11 +294,10 @@ clean; the existing three low-severity development-only advisories remain unchan
 
 ## Next controlled stage
 
-**M5 — streaming and binary special paths.** M5 must migrate only the media upload, media byte
-download, audit export, and shortlink QR operations listed above. It must preserve streaming and
-backpressure, upload/body limits, byte/range and content-disposition behavior, headers, auth/CSRF,
-audit semantics, and process-owned resource lifecycles without buffering large payloads or adding
-a generic proxy/catch-all.
+**M6 — filesystem frontend routes, layouts, and SSR.** M6 replaces the 34 legacy frontend URL
+patterns with SvelteKit pages/layouts and server rendering while preserving the approved product
+contract. API Docs/PWA work remains M7, legacy Fastify/UI cleanup remains M8, and deployment/stack
+integration remains M9.
 
 ## Update checklist
 
