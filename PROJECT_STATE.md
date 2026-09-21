@@ -51,7 +51,7 @@ state update is necessarily newer.
 |---|---|---|---|---|
 | audit | HTTP service: append-only audit log | `cc9d60d2e2dfbe5baa95240089eb7f0b6a6fb238` | `v1.1.0` → `cc9d60d2e2dfbe5baa95240089eb7f0b6a6fb238` | HEAD at release |
 | auth | HTTP service: identity and tokens | `28a616c5aa2704faf0842b88aafa915c7d175abd` | `v1.1.0` → `28a616c5aa2704faf0842b88aafa915c7d175abd` | HEAD at release |
-| console | HTTP service: administration UI/API | `c5932bfd84144842b45ec6cdb8d78dd68e6a589e` | `v1.1.0` → `367790d8a1e5d560c93140b4efaaf8724bb4d69a` | Ahead by closed M0–M6 commits |
+| console | HTTP service: administration UI/API | `2b81ffb7a489a4cacfa387430b614108a5381d0a` | `v1.1.0` → `367790d8a1e5d560c93140b4efaaf8724bb4d69a` | Ahead by closed M0–M6 commits |
 | flags | HTTP service: feature flags/settings | `9425a74ec2e3b29bf66f0f889b609bb1359ea9c9` | `v1.1.0` → `9425a74ec2e3b29bf66f0f889b609bb1359ea9c9` | HEAD at release |
 | gateway | HTTP service: public edge | `a90eefaa63935409046f7ace8cc9ed8dfaa48605` | `v1.1.0` → `a90eefaa63935409046f7ace8cc9ed8dfaa48605` | HEAD at release |
 | geo | HTTP service: geolocation/reference data | `e7b8ad9678e5d30587d663ff5737b1c5b94e4a3c` | `v1.1.0` → `e7b8ad9678e5d30587d663ff5737b1c5b94e4a3c` | HEAD at release |
@@ -264,9 +264,10 @@ clients have 376/376 coverage without drift, while MCP remains 376 catalog opera
 tools, and 17/17 tests. Production dependency audit is clean; the existing three low-severity
 development-only advisories remain unchanged.
 
-Console M6 is closed at `c5932bfd84144842b45ec6cdb8d78dd68e6a589e` across implementation
+Console M6 is closed at `2b81ffb7a489a4cacfa387430b614108a5381d0a` across implementation
 commit `4c387fd774c2ffd6f1de08eb15491d68cd0afa9b` and parity-evidence commit
-`c5932bfd84144842b45ec6cdb8d78dd68e6a589e`. All 34 frozen browser URL patterns now have native
+`c5932bfd84144842b45ec6cdb8d78dd68e6a589e`, followed by runtime-smoke refresh commit
+`2b81ffb7a489a4cacfa387430b614108a5381d0a`. All 34 frozen browser URL patterns now have native
 `src/routes/**/+page.svelte` owners under public and authenticated route groups. Root server data
 contains only the safe principal summary and TOTP-pending flag; authenticated and admin-only
 guards execute before protected SSR HTML is rendered. The shared shell, login/TOTP UI, same-origin
