@@ -31,7 +31,8 @@ const TEMPLATES = /** @type {Record<string, string>} */ ({
 });
 for (const [id, text] of Object.entries(TEMPLATES)) { mkdirSync(join(root, id), { recursive: true }); writeFileSync(join(root, id, '.env.example'), text); }
 mkdirSync(join(root, 'auth', 'keys'), { recursive: true }); writeFileSync(join(root, 'auth', 'keys', 'jwt-private.pem'), 'x');
-mkdirSync(join(root, 'console', 'public'), { recursive: true }); writeFileSync(join(root, 'console', 'public', 'index.html'), '<html></html>');
+writeFileSync(join(root, 'console', 'server.mjs'), '// canonical adapter-node wrapper\n');
+mkdirSync(join(root, 'console', 'build'), { recursive: true }); writeFileSync(join(root, 'console', 'build', 'handler.js'), '// adapter-node handler\n');
 
 test('EnvFile: parse, get, needs, set, serialise', () => {
   const e = EnvFile.parse('# c\nA=1\nB=REPLACE_WITH_X\nC=\nD="quoted value"\nKEYS=a:REPLACE_WITH_64,b:sec\n');
@@ -49,7 +50,7 @@ test('setup wires every service: secrets, keys, URLs, console files; second run 
   await ctx.compute();
   /** @type {Record<string, string>} */ const written = {};
   ctx.save((p, t) => { written[p.replace(`${root}/`, '')] = t; mkdirSync(join(root, p.replace(`${root}/`, '').split('/')[0]), { recursive: true }); writeFileSync(p, t); });
-  assert.deepEqual(ran, [], 'keys and public/ exist, nothing to prepare');
+  assert.deepEqual(ran, [], 'keys and the adapter-node build exist, nothing to prepare');
   const env = (/** @type {string} */ id) => EnvFile.parse(written[`${id}/.env`]).toObject();
   const keys = (/** @type {string} */ id, /** @type {string} */ v) => Object.fromEntries(env(id)[v].split(',').map((e) => { const [h, s, ...r] = e.split(':'); return [h, { secret: s, role: r.join(':') }]; }));
 
@@ -135,18 +136,26 @@ test('setup wires every service: secrets, keys, URLs, console files; second run 
 
 test('setup prepares what is missing: JWT keys and the console build', async () => {
   rmSync(join(root, 'auth', 'keys'), { recursive: true });
-  rmSync(join(root, 'console', 'public'), { recursive: true });
+  rmSync(join(root, 'console', 'build'), { recursive: true });
   /** @type {string[]} */ const ran = [];
   const ctx = new SetupContext({ root, host: '127.0.0.1', local: true, run: async (id, argv) => { ran.push(`${id} ${argv.join(' ')}`); } });
   await ctx.compute();
   assert.deepEqual(ran, ['auth npm run keygen', 'console npm run build']);
 });
 
+test('setup rejects an obsolete Console checkout without the canonical adapter-node wrapper', async () => {
+  rmSync(join(root, 'console', 'server.mjs'));
+  const ctx = new SetupContext({ root, host: '127.0.0.1', local: true, run: async () => {} });
+  await assert.rejects(ctx.compute(), /canonical adapter-node wrapper server\.mjs is missing/);
+  writeFileSync(join(root, 'console', 'server.mjs'), '// canonical adapter-node wrapper\n');
+});
+
 test('server mode keeps secure defaults and operator URLs', async () => {
   const root2 = mkdtempSync(join(tmpdir(), 'atc-stack-srv-'));
   for (const [id, text] of Object.entries(TEMPLATES)) { mkdirSync(join(root2, id), { recursive: true }); writeFileSync(join(root2, id, '.env.example'), text); }
   mkdirSync(join(root2, 'auth', 'keys'), { recursive: true }); writeFileSync(join(root2, 'auth', 'keys', 'jwt-private.pem'), 'x');
-  mkdirSync(join(root2, 'console', 'public'), { recursive: true }); writeFileSync(join(root2, 'console', 'public', 'index.html'), '');
+  writeFileSync(join(root2, 'console', 'server.mjs'), '// canonical adapter-node wrapper\n');
+  mkdirSync(join(root2, 'console', 'build'), { recursive: true }); writeFileSync(join(root2, 'console', 'build', 'handler.js'), '// adapter-node handler\n');
   writeFileSync(join(root2, 'media', '.env'), 'PORT=3003\nHOST=0.0.0.0\nPUBLIC_BASE_URL=https://media.mysite.com\nMEDIA_API_KEYS=shop:' + 's'.repeat(64) + '\nSIGNING_SECRET=' + 'a'.repeat(64) + '\nCORS_ORIGINS=https://mysite.com\n');
   const ctx = new SetupContext({ root: root2, host: '10.0.0.5', local: false, run: async () => {} });
   await ctx.compute();

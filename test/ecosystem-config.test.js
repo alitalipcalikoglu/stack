@@ -4,6 +4,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { test } from 'node:test';
 import { SERVICES } from '../src/manifest.js';
+import { Stack } from '../src/stack.js';
 
 /**
  * Post-production R1: `geo/ecosystem.config.cjs` had a real, deployment-blocking syntax error (a
@@ -29,8 +30,17 @@ test('every real service ecosystem.config.cjs parses and has the shape stack its
     assert.equal(config.apps.length, 1, `${s.id}: expected exactly one app in the combined config`);
     const app = config.apps[0];
     assert.equal(app.name, s.id, `${s.id}: app name must match the service id`);
-    assert.equal(app.script, 'src/index.js', `${s.id}: combined app must start src/index.js`);
+    assert.equal(app.script, Stack.entry(s), `${s.id}: ecosystem and stack dev must use the same canonical entrypoint`);
     assert.equal(typeof app.kill_timeout, 'number', `${s.id}: kill_timeout must be a number`);
     assert.equal(typeof app.max_memory_restart, 'string', `${s.id}: max_memory_restart must be a string`);
+  }
+});
+
+test('runtime metadata selects adapter-node only for Console and preserves sibling entrypoints', () => {
+  const consoleService = SERVICES.find((s) => s.id === 'console');
+  assert.ok(consoleService);
+  assert.equal(Stack.entry(consoleService), 'server.mjs');
+  for (const service of SERVICES.filter((s) => s.id !== 'console')) {
+    assert.equal(Stack.entry(service), 'src/index.js', `${service.id}: sibling runtime must remain unchanged`);
   }
 });

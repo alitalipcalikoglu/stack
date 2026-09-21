@@ -44,6 +44,11 @@ function fixtureDir(scratch, serviceId) {
   mkdirSync(dir, { recursive: true });
   symlinkSync(join(real, 'src'), join(dir, 'src'), 'dir');
   symlinkSync(join(real, 'node_modules'), join(dir, 'node_modules'), 'dir');
+  if (serviceId === 'console') {
+    symlinkSync(join(real, 'build'), join(dir, 'build'), 'dir');
+    cpSync(join(real, 'server.mjs'), join(dir, 'server.mjs'));
+    cpSync(join(real, 'openapi.yaml'), join(dir, 'openapi.yaml'));
+  }
   cpSync(join(real, 'package.json'), join(dir, 'package.json'));
   return dir;
 }
@@ -89,7 +94,7 @@ test('console -> audit: the trace console generates for a real admin request con
   seedDb.close();
 
   const consoleProc = new ServiceProcess({
-    name: 'console', cwd: consoleDir, entry: 'src/index.js', port: consolePort,
+    name: 'console', cwd: consoleDir, entry: 'server.mjs', port: consolePort,
     env: {
       PATH: process.env.PATH ?? '', PORT: String(consolePort), HOST: '127.0.0.1', LOG_LEVEL: 'info', DB_PATH: './data/console.db',
       SERVICES_FILE: servicesFile, AUDIT_API_KEY: consoleToAuditSecret,

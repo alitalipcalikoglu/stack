@@ -250,7 +250,7 @@ test('console: real old-schema (v1) fixture with an existing admin migrates thro
 
   await positiveMigrationE2E({
     serviceId: 'console',
-    entry: 'src/index.js',
+    entry: 'server.mjs',
     seed: (db) => {
       const id = '22222222-2222-4222-8222-222222222222';
       const now = Date.now();
@@ -265,7 +265,7 @@ test('console: real old-schema (v1) fixture with an existing admin migrates thro
     },
     verify: async ({ proc, dbPath }) => {
       const res = await fetch(`${proc.baseUrl}/api/session/login`, {
-        method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ email, password }),
+        method: 'POST', headers: { 'content-type': 'application/json', 'x-console-request': '1' }, body: JSON.stringify({ email, password }),
       });
       assert.equal(res.status, 200);
       const body = await res.json();
@@ -445,4 +445,3 @@ test('auth: a real process refuses to start against a database one schema versio
     },
   });
 });
-

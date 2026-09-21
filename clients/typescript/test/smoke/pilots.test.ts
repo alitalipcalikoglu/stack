@@ -211,7 +211,7 @@ test('console pilot: cookie login -> session read -> expected error, via the gen
 
   const port = await freePort();
   const console_ = new ServiceProcess({
-    name: 'console', cwd: join(WORKSPACE_ROOT, 'console'), entry: 'src/index.js', port,
+    name: 'console', cwd: join(WORKSPACE_ROOT, 'console'), entry: 'server.mjs', port,
     env: {
       PATH: process.env.PATH ?? '', PORT: String(port), HOST: '127.0.0.1', LOG_LEVEL: 'warn',
       DB_PATH: dbPath, SERVICES_FILE: join(scratch, 'console-services.json'),

@@ -5,6 +5,8 @@
  * @typedef {object} Service
  * @property {string} id            Folder name under the workspace root, PM2 app name, console service id.
  * @property {number} port
+ * @property {string} [entry]       Runtime entry relative to the service root. Defaults to
+ *   `src/index.js`; Console explicitly uses its adapter-node wrapper.
  * @property {string} [keysVar]     Env variable holding `id:secret[:role…]` API keys this service issues.
  * @property {(ctx: import('./setup-context.js').SetupContext) => Record<string, string>} env
  *   Values written to the service's `.env` for a local stack (secrets and cross-service keys included).
@@ -110,14 +112,17 @@ export const SERVICES = [
     console: { type: 'gateway', label: 'Gateway', metricsTokenEnv: 'GATEWAY_METRICS_TOKEN' },
   },
   {
-    id: 'console', port: 3004,
+    id: 'console', port: 3004, entry: 'server.mjs',
     env: (c) => ({
       COOKIE_SECURE: c.local ? 'false' : 'true',
       GATEWAY_METRICS_TOKEN: c.secret('gateway', 'METRICS_TOKEN'),
       ...Object.fromEntries(c.consoleServices().filter((s) => s.console?.keyEnv).map((s) => [/** @type {string} */ (s.console?.keyEnv), c.issue(s.id, 'console', c.consoleRole(s.id))])),
     }),
     files: (c) => ({ 'services.json': `${JSON.stringify(c.consoleServicesJson(), null, 2)}\n` }),
-    prepare: async (c) => { if (!c.exists('console', 'public/index.html')) await c.run('console', ['npm', 'run', 'build']); },
+    prepare: async (c) => {
+      if (!c.exists('console', 'server.mjs')) throw new Error('console: canonical adapter-node wrapper server.mjs is missing');
+      if (!c.exists('console', 'build/handler.js')) await c.run('console', ['npm', 'run', 'build']);
+    },
   },
 ];
 

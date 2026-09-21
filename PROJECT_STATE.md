@@ -1,6 +1,6 @@
 # ATC-WEB Project State
 
-Last source verification: 2026-09-21. This is a concise living handoff, not a specification or
+Last source verification: 2026-09-22. This is a concise living handoff, not a specification or
 history log.
 
 ## Purpose and update rules
@@ -51,7 +51,7 @@ state update is necessarily newer.
 |---|---|---|---|---|
 | audit | HTTP service: append-only audit log | `cc9d60d2e2dfbe5baa95240089eb7f0b6a6fb238` | `v1.1.0` → `cc9d60d2e2dfbe5baa95240089eb7f0b6a6fb238` | HEAD at release |
 | auth | HTTP service: identity and tokens | `28a616c5aa2704faf0842b88aafa915c7d175abd` | `v1.1.0` → `28a616c5aa2704faf0842b88aafa915c7d175abd` | HEAD at release |
-| console | HTTP service: administration UI/API | `2fa62941bb1057765e9926097b2e6527de80e1e6` | `v1.1.0` → `367790d8a1e5d560c93140b4efaaf8724bb4d69a` | Ahead by closed M0–M7 commits |
+| console | HTTP service: administration UI/API | `fdd530a8c2566f790c5879254371694c32c2a03b` | `v1.1.0` → `367790d8a1e5d560c93140b4efaaf8724bb4d69a` | Ahead by closed M0–M8 commits |
 | flags | HTTP service: feature flags/settings | `9425a74ec2e3b29bf66f0f889b609bb1359ea9c9` | `v1.1.0` → `9425a74ec2e3b29bf66f0f889b609bb1359ea9c9` | HEAD at release |
 | gateway | HTTP service: public edge | `a90eefaa63935409046f7ace8cc9ed8dfaa48605` | `v1.1.0` → `a90eefaa63935409046f7ace8cc9ed8dfaa48605` | HEAD at release |
 | geo | HTTP service: geolocation/reference data | `e7b8ad9678e5d30587d663ff5737b1c5b94e4a3c` | `v1.1.0` → `e7b8ad9678e5d30587d663ff5737b1c5b94e4a3c` | HEAD at release |
@@ -62,7 +62,7 @@ state update is necessarily newer.
 | search | HTTP service: SQLite FTS search | `bddb6f7a9bdade67f7f465c5efd96a1b504b3355` | `v1.1.0` → `bddb6f7a9bdade67f7f465c5efd96a1b504b3355` | HEAD at release |
 | service-core | Shared runtime package | `5a833451fad32864b2639d20d34570aefada3549` | `v1.12.0` → `5a833451fad32864b2639d20d34570aefada3549` | HEAD at release |
 | shortlink | HTTP service: short links and QR | `52d97cd37f45e82bba1ff66d210ae4001c05d991` | `v1.1.0` → `52d97cd37f45e82bba1ff66d210ae4001c05d991` | HEAD at release |
-| stack | Installer/orchestrator/release management | `798f57e834ce5f04f5423a9a96a30f2fb9eb3307` | `v1.1.0` → `10e58d108458bbce61c306386b42ced0699e50ff` | Post-release installer and migration-state work; pre-update baseline |
+| stack | Installer/orchestrator/release management | `761a8ce2e9c0f903388581b845b0aa4487d8ee84` | `v1.1.0` → `10e58d108458bbce61c306386b42ced0699e50ff` | Post-release installer and M8 runtime-consumer cutover; pre-update baseline |
 | webhook-out | HTTP service: durable outbound webhooks | `0647204f6dfb7e5967b5df533d48b0e28e7a41bb` | `v1.1.0` → `0647204f6dfb7e5967b5df533d48b0e28e7a41bb` | HEAD at release |
 
 ## Immutable releases
@@ -110,30 +110,21 @@ manifests, tags, or release manifests as a side effect of unrelated work.
 
 ### Console current architecture
 
-The released and current production implementation remains a Svelte 5 + Vite SPA with a custom
-frontend router and static SPA fallback, backed by a Fastify BFF in the same repository/process.
-M0 added tests only. M1 added an independent SvelteKit SSR foundation in canonical `src/routes/`
-with TypeScript and adapter-node, but did not mount either framework into the other or change the
-production start/build/runtime path. Transitional `kit:*` commands exercise the foundation;
-production continues to use Fastify and `vite.legacy.config.js` until later migration stages. M2
-adds a process-scoped SvelteKit runtime, shared SQLite/maintenance lifecycle, a thin adapter-node
-HTTP/HTTPS wrapper, and filesystem ownership of `/health`, `/ready`, `/v1/info`, and
-`/openapi.yaml`. M3 adds the native hooks request/security lifecycle and 10 explicit auth/session
-filesystem operations, bringing SvelteKit ownership to 14 operations. M4 migrates all 138 ordinary
-JSON operations into explicit filesystem endpoints, bringing SvelteKit ownership to 152
-operations; at its closure Fastify remained authoritative only for the four streaming/binary
-operations reserved for M5. M5 migrates those final four operations with explicit filesystem routes,
-bringing SvelteKit canonical implementation ownership to all 156 operations and Fastify migration
-ownership to zero. M6 moves all 34 browser URL patterns, the shared authenticated shell, and the
-login flow to SSR-enabled SvelteKit filesystem pages. Server layouts now make the initial session,
-TOTP-pending, and admin-only decisions; operational dashboard data still loads after hydration.
-Fastify and the old `ui/` SPA remain compatibility source/runtime until M8, but neither is canonical
-for migrated frontend or backend ownership. The migration runtime and legacy production runtime
-remain mutually exclusive; neither framework mounts, calls, or proxies the other.
-M7 completes the canonical cross-cutting frontend integrations: `/docs` renders the fixed service
-catalog with a local, lazy, reference-only Swagger UI; the native SvelteKit worker caches only
-owned public/build assets and bypasses every navigation and `/api` request; and root/app layouts
-own theme, Turkish/English i18n, PWA lifecycle, and a single text-only toast host.
+Console is now one full-stack SvelteKit 2 application on adapter-node: one Node process, one HTTP
+framework, one filesystem router, SSR-enabled pages, and explicit filesystem API/operational
+endpoints. Root `server.mjs` is the thin HTTP/HTTPS, IPC-readiness, and graceful-shutdown wrapper
+around the generated adapter handler. `src/hooks.server.ts` owns the request/security/session
+lifecycle, while the process-scoped runtime preserves the existing SQLite, maintenance, client,
+documentation, and audit primitives. All 156 API operations and all 34 browser patterns are owned
+directly by `src/routes/`. `/docs`, the local lazy Swagger UI, PWA lifecycle, theme, i18n, and toast
+host remain canonical SvelteKit integrations.
+
+M8 removed the Fastify application, compatibility route copies, legacy `ui/` SPA, custom router,
+`App.svelte`, SPA fallback, legacy Vite build, and legacy service worker source. The canonical
+worker retains bounded cleanup for old Console cache names so deployed browsers upgrade safely.
+Stack now records Console's `server.mjs` entry explicitly, prepares `build/handler.js`, and uses
+that metadata for `stack dev`; sibling services retain `src/index.js`. There is no selectable
+legacy Console runtime or compatibility entry file.
 
 ### Console target architecture
 
@@ -163,8 +154,8 @@ controller/application-service/domain-service/repository/adapter layering.
 | M5 | **CLOSED** | Streaming and binary special paths |
 | M6 | **CLOSED** | Filesystem frontend routes, layouts, SSR |
 | M7 | **CLOSED** | API Docs, PWA, theme, i18n, toast |
-| M8 | **NEXT** | Remove Fastify, old layers, `ui/`, custom router, SPA fallback |
-| M9 | Planned | Docker, PM2, admin CLI, stack integration |
+| M8 | **CLOSED** | Remove Fastify, old layers, `ui/`, custom router, SPA fallback; cut Stack consumers over |
+| M9 | **NEXT** | Final Docker, PM2, admin CLI, and stack integration audit |
 | M10 | Planned | Full parity/E2E/security/browser/stream/runtime audit and release-candidate preparation |
 
 There are no intermediate migration tags. Do not begin a later stage before its prerequisites and
@@ -313,6 +304,28 @@ without drift, and MCP remains 376 catalog entries with 10 exposed tools. Produc
 client/SSR/service-worker/browser-storage secret scans are clean. The known local lazy Swagger
 chunk remains 1,425,215 bytes, and the three existing low-severity development advisories remain.
 
+Console M8 is closed at `fdd530a8c2566f790c5879254371694c32c2a03b`
+(`refactor: complete SvelteKit runtime cutover`). The legacy Fastify entry/application/session/API
+layers, all compatibility route copies, `ui/`, custom router, `App.svelte`, SPA fallback, legacy
+Vite configuration, and legacy worker source are physically removed. Direct `fastify` and
+`@fastify/static` dependencies are gone; `fastify@5.12.4` remains only as service-core's optional
+peer resolution and is neither imported nor executed by Console. Canonical `start`, build, test,
+PM2, and container entrypoints now use adapter-node and `server.mjs`.
+
+M8 closure evidence: clean `npm ci`; 128/128 Console tests; typecheck/Svelte check with 0 errors
+and 0 warnings; HTTP/HTTPS, IPC, graceful shutdown, auth, M4 JSON, M5 streaming/binary, M6 route,
+M7 integration/security, and real-Chrome smokes; direct 156/156 SvelteKit API parity and 34/34
+filesystem frontend routing. Stack's obsolete `src/index.js` and `public/index.html` Console
+assumptions are removed from runtime, preparation, ecosystem checks, integration/migration tests,
+and generated-client smoke. Real Console→Audit and old-schema process tests pass through
+`server.mjs`; generated-client pilots pass 3/3. Stack's full suite passes 62 with 30 explicit
+integration skips (92 tests total), and the targeted real-process tests pass 8/8. All 13 specs
+remain at 376 operations, clients are 13/13 without drift with 6/6 tests, and MCP remains 376
+catalog entries, 10 exposed tools, and 17/17 tests. Production audit is clean; the accepted lazy
+Swagger bundle and three low-severity full-tree advisories remain. M9 still owns the broader final
+Docker, PM2, admin CLI, and end-to-end stack deployment audit; M8 performed only the required
+consumer cutover.
+
 ## Known debt and deliberate migration deltas
 
 1. **Range:** the current media-byte path does not forward inbound `Range` downstream. M0 freezes
@@ -327,13 +340,6 @@ chunk remains 1,425,215 bytes, and the three existing low-severity development a
 4. **Swagger bundle size:** local Swagger UI remains a 1,425,215-byte lazy production chunk. It is
    not an application entry, is not eagerly downloaded on ordinary pages, and remains accepted
    until a separately justified optimization.
-5. **M1–M7 transitional compatibility:** the unchanged public Fastify production command retains
-   compatibility copies of all 156 SvelteKit-owned operations until final cutover. The explicit
-   SvelteKit migration runtime owns every canonical implementation for migration purposes; Fastify
-   owns zero. The unchanged `ui/` SPA, custom router, `App.svelte`, legacy service worker, and fallback
-   remain compatibility evidence until M8 but are not canonical frontend dependencies. The
-   runtimes are mutually exclusive and no request crosses between them. No new non-transitional
-   architecture debt was accepted in M7.
 
 ## Operational constraints
 
@@ -347,10 +353,9 @@ chunk remains 1,425,215 bytes, and the three existing low-severity development a
 
 ## Next controlled stage
 
-**M8 — remove legacy architecture.** M7's 34-route SvelteKit frontend, 156-operation SvelteKit
-backend, and completed docs/PWA/theme/i18n/toast integrations are the baseline. Remove Fastify,
-the old layers, `ui/`, custom router, legacy service worker, and SPA fallback without changing the
-canonical contracts. Deployment/stack integration remains M9.
+**M9 — final deployment integration.** Audit and validate the canonical SvelteKit runtime across
+Docker, PM2, the admin CLI, and the full Stack lifecycle. M8's minimal Stack consumer cutover is
+already complete; do not restore a legacy Console runtime or broaden M9 into a product redesign.
 
 ## Update checklist
 

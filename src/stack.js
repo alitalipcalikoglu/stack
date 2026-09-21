@@ -23,6 +23,13 @@ import { Installer } from './installer.js';
  * `matrix()` variant (Stage 7: version/contract matrix from each service's own `/v1/info`).
  */
 export class Stack {
+  /** Canonical foreground entrypoint; only services that differ declare it in the manifest.
+   * @param {import('./manifest.js').Service} service
+   */
+  static entry(service) {
+    return service.entry ?? 'src/index.js';
+  }
+
   /**
    * @param {object} o
    * @param {string} o.root
@@ -149,7 +156,7 @@ export class Stack {
     for (const s of SERVICES) {
       const dir = join(this.root, s.id);
       if (!existsSync(join(dir, '.env'))) throw new Error(`${s.id}: no .env; run setup first`);
-      const child = spawn(process.execPath, ['--disable-warning=ExperimentalWarning', `--env-file=${join(dir, '.env')}`, 'src/index.js'], { cwd: dir, stdio: ['ignore', 'pipe', 'pipe'] });
+      const child = spawn(process.execPath, ['--disable-warning=ExperimentalWarning', `--env-file=${join(dir, '.env')}`, Stack.entry(s)], { cwd: dir, stdio: ['ignore', 'pipe', 'pipe'] });
       const tag = s.id.padEnd(11);
       const pipe = (/** @type {import('node:stream').Readable|null} */ stream) => stream?.on('data', (d) => { for (const line of String(d).split('\n')) if (line) this.log(`${tag} ${Stack.pretty(line)}`); });
       pipe(child.stdout); pipe(child.stderr);
