@@ -160,7 +160,7 @@ export interface paths {
         put?: never;
         /**
          * Sign out.
-         * @description The one mutating route with no CSRF header requirement: it does not call `requireSession`, it checks `request.admin`/`request.consoleSession` by hand, so the `x-console-request` gate never runs. Documented here as it really behaves — Phase 0 flagged the exemption as a design question for the team, and this document does not paper over it. It also never rejects: with no session it just clears the cookie and answers `204`. The blast radius is limited to a forced sign-out (the `SameSite=Strict` cookie still means a cross-site form post carries no session, so a third-party page cannot even reach an authenticated version of this route).
+         * @description Ends the resolved session and clears its cookie. As of the M3 security correction, an authenticated logout requires `x-console-request: 1`, matching every other authenticated mutation. Login and pending-session TOTP remain pre-session exceptions. With no resolved session this route still clears the cookie and answers `204`.
          */
         post: operations["console.session.logout"];
         delete?: never;
@@ -3753,7 +3753,10 @@ export interface operations {
     "console.session.logout": {
         parameters: {
             query?: never;
-            header?: never;
+            header: {
+                /** @description CSRF guard. `requireSession`/`requireAdmin` reject every non-GET/HEAD request whose value is not exactly `"1"` with `403 FORBIDDEN`. A browser cannot set a custom header cross-site without a CORS pre-flight the console never approves, which — together with the `SameSite=Strict` session cookie — is the whole CSRF defence. */
+                "x-console-request": components["parameters"]["CsrfHeader"];
+            };
             path?: never;
             cookie?: never;
         };
@@ -3768,6 +3771,7 @@ export interface operations {
                 };
                 content?: never;
             };
+            403: components["responses"]["Forbidden"];
         };
     };
     "console.me.sessions.list": {
