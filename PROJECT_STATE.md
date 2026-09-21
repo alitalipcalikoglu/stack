@@ -51,10 +51,10 @@ state update is necessarily newer.
 |---|---|---|---|---|
 | audit | HTTP service: append-only audit log | `cc9d60d2e2dfbe5baa95240089eb7f0b6a6fb238` | `v1.1.0` → `cc9d60d2e2dfbe5baa95240089eb7f0b6a6fb238` | HEAD at release |
 | auth | HTTP service: identity and tokens | `28a616c5aa2704faf0842b88aafa915c7d175abd` | `v1.1.0` → `28a616c5aa2704faf0842b88aafa915c7d175abd` | HEAD at release |
-| console | HTTP service: administration UI/API | `fdd530a8c2566f790c5879254371694c32c2a03b` | `v1.1.0` → `367790d8a1e5d560c93140b4efaaf8724bb4d69a` | Ahead by closed M0–M8 commits |
+| console | HTTP service: administration UI/API | `c7951f68c72699c5166c073a4d1f38147084342b` | `v1.1.0` → `367790d8a1e5d560c93140b4efaaf8724bb4d69a` | Ahead by closed M0–M9 commits |
 | flags | HTTP service: feature flags/settings | `9425a74ec2e3b29bf66f0f889b609bb1359ea9c9` | `v1.1.0` → `9425a74ec2e3b29bf66f0f889b609bb1359ea9c9` | HEAD at release |
 | gateway | HTTP service: public edge | `a90eefaa63935409046f7ace8cc9ed8dfaa48605` | `v1.1.0` → `a90eefaa63935409046f7ace8cc9ed8dfaa48605` | HEAD at release |
-| geo | HTTP service: geolocation/reference data | `e7b8ad9678e5d30587d663ff5737b1c5b94e4a3c` | `v1.1.0` → `e7b8ad9678e5d30587d663ff5737b1c5b94e4a3c` | HEAD at release |
+| geo | HTTP service: geolocation/reference data | `da43d4c84f8e93c412f09e3f62b09963e48b9cf6` | `v1.1.0` → `e7b8ad9678e5d30587d663ff5737b1c5b94e4a3c` | Canonical country dataset now included in clean clones |
 | media | HTTP service: uploads and delivery | `439210ae50054a499bab43b8121df7fc3902c4e9` | `v1.1.0` → `439210ae50054a499bab43b8121df7fc3902c4e9` | HEAD at release |
 | notify | HTTP service: queued notifications | `27b9a1b669e26aa253c85f6cff896268a2d44e63` | `v1.1.0` → `27b9a1b669e26aa253c85f6cff896268a2d44e63` | HEAD at release |
 | ratelimit | HTTP service: policies and quotas | `7a0ee5647fbec96320feb440c0703bb370cca107` | `v1.1.0` → `7a0ee5647fbec96320feb440c0703bb370cca107` | HEAD at release |
@@ -62,7 +62,7 @@ state update is necessarily newer.
 | search | HTTP service: SQLite FTS search | `bddb6f7a9bdade67f7f465c5efd96a1b504b3355` | `v1.1.0` → `bddb6f7a9bdade67f7f465c5efd96a1b504b3355` | HEAD at release |
 | service-core | Shared runtime package | `5a833451fad32864b2639d20d34570aefada3549` | `v1.12.0` → `5a833451fad32864b2639d20d34570aefada3549` | HEAD at release |
 | shortlink | HTTP service: short links and QR | `52d97cd37f45e82bba1ff66d210ae4001c05d991` | `v1.1.0` → `52d97cd37f45e82bba1ff66d210ae4001c05d991` | HEAD at release |
-| stack | Installer/orchestrator/release management | `761a8ce2e9c0f903388581b845b0aa4487d8ee84` | `v1.1.0` → `10e58d108458bbce61c306386b42ced0699e50ff` | Post-release installer and M8 runtime-consumer cutover; pre-update baseline |
+| stack | Installer/orchestrator/release management | `18ee802f10945f485484d016fc14ba669cb0acbb` | `v1.1.0` → `10e58d108458bbce61c306386b42ced0699e50ff` | Post-release installer and closed M8–M9 integration; pre-update baseline |
 | webhook-out | HTTP service: durable outbound webhooks | `0647204f6dfb7e5967b5df533d48b0e28e7a41bb` | `v1.1.0` → `0647204f6dfb7e5967b5df533d48b0e28e7a41bb` | HEAD at release |
 
 ## Immutable releases
@@ -75,6 +75,10 @@ state update is necessarily newer.
   `service-core` `v1.11.1` at `934af4f5a45f4be6fab9c77ba5f24f6c44c37c83`.
 - The authoritative install matrix is `installation-manifests/v1.1.0.json`, selected by
   `installation-manifests/supported.json`. Historical manifests are immutable. Never move tags.
+- Development `main` is intentionally newer: current Stack expects the canonical `server.mjs`
+  Console, while the untouched v1.1.0 snapshot contains its historical Console architecture.
+  M9 validation therefore uses `install:all --ref main`. A new mutually compatible immutable
+  suite manifest is required, and default installation must be revalidated, before release readiness.
 
 ## Current suite contract
 
@@ -122,9 +126,10 @@ host remain canonical SvelteKit integrations.
 M8 removed the Fastify application, compatibility route copies, legacy `ui/` SPA, custom router,
 `App.svelte`, SPA fallback, legacy Vite build, and legacy service worker source. The canonical
 worker retains bounded cleanup for old Console cache names so deployed browsers upgrade safely.
-Stack now records Console's `server.mjs` entry explicitly, prepares `build/handler.js`, and uses
-that metadata for `stack dev`; sibling services retain `src/index.js`. There is no selectable
-legacy Console runtime or compatibility entry file.
+Stack records Console's `server.mjs` entry explicitly, rebuilds the adapter-node output at every
+setup boundary so an old `build/handler.js` cannot masquerade as current, and uses that metadata
+for `stack dev`; sibling services retain `src/index.js`. There is no selectable legacy Console
+runtime or compatibility entry file.
 
 ### Console target architecture
 
@@ -155,8 +160,8 @@ controller/application-service/domain-service/repository/adapter layering.
 | M6 | **CLOSED** | Filesystem frontend routes, layouts, SSR |
 | M7 | **CLOSED** | API Docs, PWA, theme, i18n, toast |
 | M8 | **CLOSED** | Remove Fastify, old layers, `ui/`, custom router, SPA fallback; cut Stack consumers over |
-| M9 | **NEXT** | Final Docker, PM2, admin CLI, and stack integration audit |
-| M10 | Planned | Full parity/E2E/security/browser/stream/runtime audit and release-candidate preparation |
+| M9 | **CLOSED** | Final Docker, PM2, admin CLI, and canonical-main Stack production integration |
+| M10 | **NEXT** | Full parity/E2E/security/browser/stream/runtime audit and release-candidate preparation |
 
 There are no intermediate migration tags. Do not begin a later stage before its prerequisites and
 the preceding stage's gates are closed.
@@ -326,6 +331,34 @@ Swagger bundle and three low-severity full-tree advisories remain. M9 still owns
 Docker, PM2, admin CLI, and end-to-end stack deployment audit; M8 performed only the required
 consumer cutover.
 
+Console M9 is closed at `c7951f68c72699c5166c073a4d1f38147084342b`
+(`feat: finalize production runtime integration`), with Stack integration at
+`18ee802f10945f485484d016fc14ba669cb0acbb` and the clean-clone Geo reference-data packaging fix at
+`da43d4c84f8e93c412f09e3f62b09963e48b9cf6`. Docker builds the adapter-node application and runs
+the one canonical `server.mjs` process as unprivileged `node`; its healthcheck follows configured
+`PORT`, runtime contents exclude route/client/test tooling, and `/data` plus `/config` remain the
+persistent/configuration contract. PM2 remains one fork-mode process with IPC readiness and the
+35-second shutdown window. The admin CLI shares canonical Config/DB/store/auth primitives and now
+accepts injected container environment without requiring a physical `.env` file.
+
+M9 closure evidence: deterministic image build; real non-root HTTP/custom-port and native HTTPS
+containers; health/readiness, HSTS, SSR/deep links, local docs/static/PWA assets, persistent
+SQLite/WAL/SHM, restart/reopen/integrity, fail-closed config, admin creation plus canonical login,
+and clean shutdown. Real isolated PM2 start/readiness/restart/stop/delete and foreground Stack dev
+shutdown passed without duplicate Console processes or leaked ports. Console passes 131/131 tests,
+typecheck/Svelte check with 0 errors and 0 warnings, all M4–M7/runtime/auth/browser smokes, 156/156
+API parity and 34/34 frontend routes. Stack passes 92/92 with `STACK_INTEGRATION=1`; setup now always
+refreshes Console's build. A fresh isolated `install:all --ref main` cloned 14 official repos, ran
+14 lockfile installs, configured and built the canonical Console; repeated final remote-main runs
+reused 14/14 safely, and start mode reached 13/13 ready before clean `down`. Geo's documented
+249-country source table is now tracked so a clean clone matches its runtime contract; API/DB
+semantics are unchanged. All 13 specs remain at 376 operations, clients are 13/13 and 376/376
+without drift, and MCP remains 376 catalog entries with 10 exposed tools. Production audit is zero;
+the accepted lazy Swagger bundle and three low-severity full-tree development advisories remain.
+Direct Fastify dependencies/imports remain absent; `fastify@5.12.4` is still only service-core's
+transitive optional peer. No API/OpenAPI, schema, auth/session, service-core, workflow, tag, release,
+supported pointer, or historical installation manifest changed.
+
 ## Known debt and deliberate migration deltas
 
 1. **Range:** the current media-byte path does not forward inbound `Range` downstream. M0 freezes
@@ -340,6 +373,12 @@ consumer cutover.
 4. **Swagger bundle size:** local Swagger UI remains a 1,425,215-byte lazy production chunk. It is
    not an application entry, is not eagerly downloaded on ordinary pages, and remains accepted
    until a separately justified optimization.
+5. **Release boundary:** the default supported immutable install remains the untouched v1.1.0
+   suite, including its historical Console architecture. Current development Stack intentionally
+   enforces the post-M8 `server.mjs` invariant and has no legacy fallback or version-dispatch layer,
+   so default installation from development Stack main is not claimed as an M9 pass. M10/release
+   preparation must establish a mutually compatible immutable Stack/Console manifest and revalidate
+   default `install:all` before declaring release readiness.
 
 ## Operational constraints
 
@@ -353,9 +392,11 @@ consumer cutover.
 
 ## Next controlled stage
 
-**M9 — final deployment integration.** Audit and validate the canonical SvelteKit runtime across
-Docker, PM2, the admin CLI, and the full Stack lifecycle. M8's minimal Stack consumer cutover is
-already complete; do not restore a legacy Console runtime or broaden M9 into a product redesign.
+**M10 — final migration audit and release-candidate preparation.** Re-run the comprehensive
+parity/E2E/security/browser/stream/Docker/PM2 audit against the closed canonical architecture. Do
+not declare release readiness until a new immutable, mutually compatible Stack/Console release
+manifest exists and default `install:all` passes against it. Do not restore or dispatch to the
+historical Console runtime.
 
 ## Update checklist
 
