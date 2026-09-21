@@ -51,7 +51,7 @@ state update is necessarily newer.
 |---|---|---|---|---|
 | audit | HTTP service: append-only audit log | `cc9d60d2e2dfbe5baa95240089eb7f0b6a6fb238` | `v1.1.0` → `cc9d60d2e2dfbe5baa95240089eb7f0b6a6fb238` | HEAD at release |
 | auth | HTTP service: identity and tokens | `28a616c5aa2704faf0842b88aafa915c7d175abd` | `v1.1.0` → `28a616c5aa2704faf0842b88aafa915c7d175abd` | HEAD at release |
-| console | HTTP service: administration UI/API | `2b81ffb7a489a4cacfa387430b614108a5381d0a` | `v1.1.0` → `367790d8a1e5d560c93140b4efaaf8724bb4d69a` | Ahead by closed M0–M6 commits |
+| console | HTTP service: administration UI/API | `2fa62941bb1057765e9926097b2e6527de80e1e6` | `v1.1.0` → `367790d8a1e5d560c93140b4efaaf8724bb4d69a` | Ahead by closed M0–M7 commits |
 | flags | HTTP service: feature flags/settings | `9425a74ec2e3b29bf66f0f889b609bb1359ea9c9` | `v1.1.0` → `9425a74ec2e3b29bf66f0f889b609bb1359ea9c9` | HEAD at release |
 | gateway | HTTP service: public edge | `a90eefaa63935409046f7ace8cc9ed8dfaa48605` | `v1.1.0` → `a90eefaa63935409046f7ace8cc9ed8dfaa48605` | HEAD at release |
 | geo | HTTP service: geolocation/reference data | `e7b8ad9678e5d30587d663ff5737b1c5b94e4a3c` | `v1.1.0` → `e7b8ad9678e5d30587d663ff5737b1c5b94e4a3c` | HEAD at release |
@@ -62,7 +62,7 @@ state update is necessarily newer.
 | search | HTTP service: SQLite FTS search | `bddb6f7a9bdade67f7f465c5efd96a1b504b3355` | `v1.1.0` → `bddb6f7a9bdade67f7f465c5efd96a1b504b3355` | HEAD at release |
 | service-core | Shared runtime package | `5a833451fad32864b2639d20d34570aefada3549` | `v1.12.0` → `5a833451fad32864b2639d20d34570aefada3549` | HEAD at release |
 | shortlink | HTTP service: short links and QR | `52d97cd37f45e82bba1ff66d210ae4001c05d991` | `v1.1.0` → `52d97cd37f45e82bba1ff66d210ae4001c05d991` | HEAD at release |
-| stack | Installer/orchestrator/release management | `1914375bae3b1f9be2bac5b1dbb2702f1303228b` | `v1.1.0` → `10e58d108458bbce61c306386b42ced0699e50ff` | Post-release installer and migration-state work; pre-update baseline |
+| stack | Installer/orchestrator/release management | `798f57e834ce5f04f5423a9a96a30f2fb9eb3307` | `v1.1.0` → `10e58d108458bbce61c306386b42ced0699e50ff` | Post-release installer and migration-state work; pre-update baseline |
 | webhook-out | HTTP service: durable outbound webhooks | `0647204f6dfb7e5967b5df533d48b0e28e7a41bb` | `v1.1.0` → `0647204f6dfb7e5967b5df533d48b0e28e7a41bb` | HEAD at release |
 
 ## Immutable releases
@@ -130,6 +130,10 @@ TOTP-pending, and admin-only decisions; operational dashboard data still loads a
 Fastify and the old `ui/` SPA remain compatibility source/runtime until M8, but neither is canonical
 for migrated frontend or backend ownership. The migration runtime and legacy production runtime
 remain mutually exclusive; neither framework mounts, calls, or proxies the other.
+M7 completes the canonical cross-cutting frontend integrations: `/docs` renders the fixed service
+catalog with a local, lazy, reference-only Swagger UI; the native SvelteKit worker caches only
+owned public/build assets and bypasses every navigation and `/api` request; and root/app layouts
+own theme, Turkish/English i18n, PWA lifecycle, and a single text-only toast host.
 
 ### Console target architecture
 
@@ -158,8 +162,8 @@ controller/application-service/domain-service/repository/adapter layering.
 | M4 | **CLOSED** | JSON API filesystem endpoints |
 | M5 | **CLOSED** | Streaming and binary special paths |
 | M6 | **CLOSED** | Filesystem frontend routes, layouts, SSR |
-| M7 | **NEXT** | API Docs, PWA, theme, i18n, toast |
-| M8 | Planned | Remove Fastify, old layers, `ui/`, custom router, SPA fallback |
+| M7 | **CLOSED** | API Docs, PWA, theme, i18n, toast |
+| M8 | **NEXT** | Remove Fastify, old layers, `ui/`, custom router, SPA fallback |
 | M9 | Planned | Docker, PM2, admin CLI, stack integration |
 | M10 | Planned | Full parity/E2E/security/browser/stream/runtime audit and release-candidate preparation |
 
@@ -287,27 +291,49 @@ paths / 156 operations and the suite 376. All 13 specs validate, generated clien
 376/376 without drift, and MCP remains 376 catalog entries with 10 exposed tools. Production audit
 is clean; the three existing low-severity development-only advisories are unchanged.
 
+Console M7 is closed at `2fa62941bb1057765e9926097b2e6527de80e1e6`
+(`feat: complete SvelteKit frontend integrations`). Authenticated `/docs` uses the server-owned
+13-service catalog and same-origin documentation endpoints; Swagger assets are local, dynamically
+loaded only on the docs route, request execution/Try-it-out and authorization persistence are
+disabled, and no service credential reaches browser requests, DOM, or storage. The canonical
+SvelteKit service worker uses a build-versioned owned cache, precaches only manifest/icons/robots,
+caches generated build assets on demand, and bypasses all navigation, non-GET, cross-origin, and
+`/api` requests. Activation removes only canonical/legacy Console caches, preserves unrelated
+origin caches, and safely supersedes the legacy worker. Manifest and icon references were
+validated; real Chrome registered and activated the worker.
+
+M7 closure evidence: 131/131 Console tests; both legacy and canonical Svelte checks with 0 errors
+and 0 warnings; successful legacy and adapter-node production builds; all M1–M7 runtime smokes;
+real Chrome coverage for anonymous/admin/viewer docs, two service selections, local rendering,
+external-network isolation, theme light/dark/system, Turkish/English persistence, singleton toast
+lifecycle, legacy-worker migration, cache inspection, narrow viewport, and logout/offline protected
+content. Frontend remains 34/34 filesystem routes and backend 156/156 SvelteKit operations, including
+M5 streaming/binary bypass. All 13 specs validate, generated clients remain 13/13 and 376/376
+without drift, and MCP remains 376 catalog entries with 10 exposed tools. Production audit and
+client/SSR/service-worker/browser-storage secret scans are clean. The known local lazy Swagger
+chunk remains 1,425,215 bytes, and the three existing low-severity development advisories remain.
+
 ## Known debt and deliberate migration deltas
 
-1. **PWA:** current SPA caching is frozen. The future service worker must not cache authenticated
-   APIs or session-aware SSR HTML and must use a secret-free offline response.
-2. **Range:** the current media-byte path does not forward inbound `Range` downstream. M0 freezes
+1. **Range:** the current media-byte path does not forward inbound `Range` downstream. M0 freezes
    that behavior; any change requires an explicit behavior/security decision.
-3. Current media-byte and QR responses effectively receive `Cache-Control: no-store` from the
+2. Current media-byte and QR responses effectively receive `Cache-Control: no-store` from the
    shared API response hook, overriding route-local cache directives. Treat the observable header
    as the migration oracle unless deliberately changed and reviewed.
-4. **M1 development-tooling advisory:** production dependencies audit clean. The latest selected
+3. **M1 development-tooling advisory:** production dependencies audit clean. The latest selected
    SvelteKit 2.70.3 transitively pins `cookie` 0.6.0, which npm reports under a low-severity cookie
    attribute validation advisory. No compatible fixed SvelteKit release is currently available;
    monitor upstream rather than applying npm's breaking downgrade suggestion.
-5. **M1–M6 transitional compatibility:** the unchanged public Fastify production command retains
+4. **Swagger bundle size:** local Swagger UI remains a 1,425,215-byte lazy production chunk. It is
+   not an application entry, is not eagerly downloaded on ordinary pages, and remains accepted
+   until a separately justified optimization.
+5. **M1–M7 transitional compatibility:** the unchanged public Fastify production command retains
    compatibility copies of all 156 SvelteKit-owned operations until final cutover. The explicit
    SvelteKit migration runtime owns every canonical implementation for migration purposes; Fastify
-   owns zero. The unchanged `ui/` SPA, custom router, `App.svelte`, service worker, and fallback
-   remain compatibility evidence until M8 but are not canonical frontend dependencies. API Docs,
-   PWA, and theme/i18n/toast final integration remain the explicit M7 boundary. The runtimes are
-   mutually exclusive and no request crosses between them. No new non-transitional debt was
-   accepted in M6.
+   owns zero. The unchanged `ui/` SPA, custom router, `App.svelte`, legacy service worker, and fallback
+   remain compatibility evidence until M8 but are not canonical frontend dependencies. The
+   runtimes are mutually exclusive and no request crosses between them. No new non-transitional
+   architecture debt was accepted in M7.
 
 ## Operational constraints
 
@@ -321,10 +347,10 @@ is clean; the three existing low-severity development-only advisories are unchan
 
 ## Next controlled stage
 
-**M7 — API Docs, PWA, theme, i18n, and toast integration.** The 34-route SvelteKit frontend and
-server-known session layout are now the baseline. M7 completes the staged browser integrations
-without reintroducing a custom router or caching authenticated SSR/API responses. Legacy
-Fastify/`ui/` cleanup remains M8, and deployment/stack integration remains M9.
+**M8 — remove legacy architecture.** M7's 34-route SvelteKit frontend, 156-operation SvelteKit
+backend, and completed docs/PWA/theme/i18n/toast integrations are the baseline. Remove Fastify,
+the old layers, `ui/`, custom router, legacy service worker, and SPA fallback without changing the
+canonical contracts. Deployment/stack integration remains M9.
 
 ## Update checklist
 
