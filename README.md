@@ -36,15 +36,16 @@ validates and reuses safe existing checkouts, runs `npm ci` from every sibling l
 configuration to the existing `setup` implementation, starts through the existing PM2 `up` path,
 and waits (bounded) for all 13 HTTP services to report ready.
 
-The default is the current supported **production release** (`1.1.0`): every sibling is checked
+The default is the current supported **production release** (`1.1.1`): every sibling is checked
 against the immutable tag and exact commit recorded in
-[`installation-manifests/v1.1.0.json`](installation-manifests/v1.1.0.json), selected by the explicit
+[`installation-manifests/v1.1.1.json`](installation-manifests/v1.1.1.json), selected by the explicit
 [`installation-manifests/supported.json`](installation-manifests/supported.json) pointer.
-`service-core` therefore resolves `v1.12.0`, while the application repositories resolve `v1.1.0`.
+`service-core` therefore resolves `v1.12.0`, while the application repositories resolve `v1.1.1`.
 The installation manifest is the source of truth. The immutable
-[`installation-manifests/v1.0.0.json`](installation-manifests/v1.0.0.json) remains available as the
-archived original release descriptor; release-validation reports under [`releases/`](releases/)
-are historical evidence and are deliberately not consumed by the installer.
+[`installation-manifests/v1.0.0.json`](installation-manifests/v1.0.0.json) and
+[`installation-manifests/v1.1.0.json`](installation-manifests/v1.1.0.json) descriptors remain
+available as immutable release history; release-validation reports under [`releases/`](releases/)
+are evidence and are deliberately not consumed by the installer.
 
 Explicit development installation resolves every sibling—including `service-core`—to the current
 official `main` branch and reports the exact resolved commits. It is moving and non-immutable:
@@ -53,11 +54,10 @@ official `main` branch and reports the exact resolved commits. It is moving and 
 stack install:all --ref main --admin-password '<choose-a-strong-password>'
 ```
 
-Use that explicit development mode when running Stack from post-release `main`: its canonical
-Console invariant is `server.mjs` plus an adapter-node build, while the unchanged `v1.1.0`
-installation manifest describes the matching historical release snapshot. Current development
-invariants are not retroactively applied to that immutable snapshot. A future supported release
-must publish a mutually compatible Stack/Console manifest before the default pointer advances.
+Use that explicit development mode only when intentionally following moving `main` heads. The
+supported `v1.1.1` release and current development mode both require Console's canonical
+`server.mjs` plus adapter-node build; historical manifests remain unchanged and retain their own
+matching runtime snapshots.
 
 Options intentionally stay small:
 

@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "channel": "release",
+  "release": "1.1.1",
+  "note": "Authoritative source of truth for stack install:all release-mode sibling repository resolution. Every entry binds the official repository, immutable annotated tag, and peeled commit.",
+  "repositories": {
+    "service-core": { "repository": "https://github.com/alitalipcalikoglu/service-core.git", "tag": "v1.12.0", "commit": "5a833451fad32864b2639d20d34570aefada3549" },
+    "gateway": { "repository": "https://github.com/alitalipcalikoglu/gateway.git", "tag": "v1.1.1", "commit": "bcb474ed24706762fa7d0c3d276eb3b6e2ad1067" },
+    "notify": { "repository": "https://github.com/alitalipcalikoglu/notify.git", "tag": "v1.1.1", "commit": "23310f3c699012b9f154c543c7a1cb2fc2fbc8e3" },
+    "auth": { "repository": "https://github.com/alitalipcalikoglu/auth.git", "tag": "v1.1.1", "commit": "009ed0e970f7c3f9a236c668ad6018903161cc47" },
+    "media": { "repository": "https://github.com/alitalipcalikoglu/media.git", "tag": "v1.1.1", "commit": "c9dcb7521f1c7095db92160c5826982c572114d5" },
+    "console": { "repository": "https://github.com/alitalipcalikoglu/console.git", "tag": "v1.1.1", "commit": "7c7760936b076441db3ed8ab1ba7cba365b49de8" },
+    "audit": { "repository": "https://github.com/alitalipcalikoglu/audit.git", "tag": "v1.1.1", "commit": "bd06bbc3e39477317fcb94e7f19f59d1dd0b3fb7" },
+    "shortlink": { "repository": "https://github.com/alitalipcalikoglu/shortlink.git", "tag": "v1.1.1", "commit": "585cedba3e548f8487a2f9c28bb218e78db68a97" },
+    "flags": { "repository": "https://github.com/alitalipcalikoglu/flags.git", "tag": "v1.1.1", "commit": "40ea3fdbc339cbc3d41bf0f0cd3c1030236c55a0" },
+    "scheduler": { "repository": "https://github.com/alitalipcalikoglu/scheduler.git", "tag": "v1.1.1", "commit": "5b1834d2858b687618396909aea3f08cea46fb87" },
+    "webhook-out": { "repository": "https://github.com/alitalipcalikoglu/webhook-out.git", "tag": "v1.1.1", "commit": "21f47efce57196564be740d377b1d9558202aaed" },
+    "search": { "repository": "https://github.com/alitalipcalikoglu/search.git", "tag": "v1.1.1", "commit": "40e3f910641b4f50b14590247e57fe98ef339dc2" },
+    "ratelimit": { "repository": "https://github.com/alitalipcalikoglu/ratelimit.git", "tag": "v1.1.1", "commit": "4abf25cef63b0adf5695c572ae69a0929aa67ab4" },
+    "geo": { "repository": "https://github.com/alitalipcalikoglu/geo.git", "tag": "v1.1.1", "commit": "1671a11b97e9a3f3901ef12bd8c5a5c5fb7b6929" }
+  }
+}
