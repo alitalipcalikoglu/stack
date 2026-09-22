@@ -63,7 +63,7 @@ test('canonical catalog contains exactly the 14 official sibling repositories an
   ]);
   for (const repository of REPOSITORIES) assert.equal(repository.remote, `https://github.com/alitalipcalikoglu/${repository.id}.git`);
   const release = Installer.releaseManifest();
-  assert.equal(release.release, '1.1.1');
+  assert.equal(release.release, '1.1.2');
   assert.deepEqual(Object.keys(release.repositories).sort(), REPOSITORIES.map((repository) => repository.id).sort());
   for (const repository of REPOSITORIES) assert.equal(release.repositories[repository.id].repository, repository.remote);
 });

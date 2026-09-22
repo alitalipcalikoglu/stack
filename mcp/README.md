@@ -31,7 +31,7 @@ as a **candidate universe** for future phases — it is not the exposed list. Th
 `src/tools/index.mjs`'s explicit array, and only that array. An operation existing in a service's
 `openapi.yaml`, or being classified as safe in the catalog, never makes it a tool by itself.
 
-MCP expansion was intentionally cancelled for the production `1.1.1` suite. The supported scope
+MCP expansion was intentionally cancelled for the production `1.1.2` suite. The supported scope
 is this explicit 10-tool allowlist over local STDIO only: no destructive/admin tools, no remote
 transport, no MCP-specific authentication, and no package publication. This is a product decision,
 not unfinished release work; the catalog remains an audit/classification artifact, not a roadmap.

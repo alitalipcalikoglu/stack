@@ -36,14 +36,15 @@ validates and reuses safe existing checkouts, runs `npm ci` from every sibling l
 configuration to the existing `setup` implementation, starts through the existing PM2 `up` path,
 and waits (bounded) for all 13 HTTP services to report ready.
 
-The default is the current supported **production release** (`1.1.1`): every sibling is checked
+The default is the current supported **production release** (`1.1.2`): every sibling is checked
 against the immutable tag and exact commit recorded in
-[`installation-manifests/v1.1.1.json`](installation-manifests/v1.1.1.json), selected by the explicit
+[`installation-manifests/v1.1.2.json`](installation-manifests/v1.1.2.json), selected by the explicit
 [`installation-manifests/supported.json`](installation-manifests/supported.json) pointer.
-`service-core` therefore resolves `v1.12.0`, while the application repositories resolve `v1.1.1`.
+`service-core` therefore resolves `v1.12.0`, while the application repositories resolve `v1.1.2`.
 The installation manifest is the source of truth. The immutable
 [`installation-manifests/v1.0.0.json`](installation-manifests/v1.0.0.json) and
-[`installation-manifests/v1.1.0.json`](installation-manifests/v1.1.0.json) descriptors remain
+[`installation-manifests/v1.1.0.json`](installation-manifests/v1.1.0.json) and
+[`installation-manifests/v1.1.1.json`](installation-manifests/v1.1.1.json) descriptors remain
 available as immutable release history; release-validation reports under [`releases/`](releases/)
 are evidence and are deliberately not consumed by the installer.
 
@@ -55,7 +56,7 @@ stack install:all --ref main --admin-password '<choose-a-strong-password>'
 ```
 
 Use that explicit development mode only when intentionally following moving `main` heads. The
-supported `v1.1.1` release and current development mode both require Console's canonical
+supported `v1.1.2` release and current development mode both require Console's canonical
 `server.mjs` plus adapter-node build; historical manifests remain unchanged and retain their own
 matching runtime snapshots.
 
