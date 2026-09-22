@@ -49,36 +49,35 @@ state update is necessarily newer.
 
 | Repository | Role | Verified development HEAD | Immutable current release | State / note |
 |---|---|---|---|---|
-| audit | HTTP service: append-only audit log | `cc9d60d2e2dfbe5baa95240089eb7f0b6a6fb238` | `v1.1.0` → `cc9d60d2e2dfbe5baa95240089eb7f0b6a6fb238` | HEAD at release |
-| auth | HTTP service: identity and tokens | `28a616c5aa2704faf0842b88aafa915c7d175abd` | `v1.1.0` → `28a616c5aa2704faf0842b88aafa915c7d175abd` | HEAD at release |
-| console | HTTP service: administration UI/API | `c7951f68c72699c5166c073a4d1f38147084342b` | `v1.1.0` → `367790d8a1e5d560c93140b4efaaf8724bb4d69a` | Ahead by closed M0–M9 commits |
-| flags | HTTP service: feature flags/settings | `9425a74ec2e3b29bf66f0f889b609bb1359ea9c9` | `v1.1.0` → `9425a74ec2e3b29bf66f0f889b609bb1359ea9c9` | HEAD at release |
-| gateway | HTTP service: public edge | `a90eefaa63935409046f7ace8cc9ed8dfaa48605` | `v1.1.0` → `a90eefaa63935409046f7ace8cc9ed8dfaa48605` | HEAD at release |
-| geo | HTTP service: geolocation/reference data | `da43d4c84f8e93c412f09e3f62b09963e48b9cf6` | `v1.1.0` → `e7b8ad9678e5d30587d663ff5737b1c5b94e4a3c` | Canonical country dataset now included in clean clones |
-| media | HTTP service: uploads and delivery | `439210ae50054a499bab43b8121df7fc3902c4e9` | `v1.1.0` → `439210ae50054a499bab43b8121df7fc3902c4e9` | HEAD at release |
-| notify | HTTP service: queued notifications | `27b9a1b669e26aa253c85f6cff896268a2d44e63` | `v1.1.0` → `27b9a1b669e26aa253c85f6cff896268a2d44e63` | HEAD at release |
-| ratelimit | HTTP service: policies and quotas | `7a0ee5647fbec96320feb440c0703bb370cca107` | `v1.1.0` → `7a0ee5647fbec96320feb440c0703bb370cca107` | HEAD at release |
-| scheduler | HTTP service: scheduled HTTP jobs | `f3761c43b30a599f7f5d3c179a66dcb107478805` | `v1.1.0` → `f3761c43b30a599f7f5d3c179a66dcb107478805` | HEAD at release |
-| search | HTTP service: SQLite FTS search | `bddb6f7a9bdade67f7f465c5efd96a1b504b3355` | `v1.1.0` → `bddb6f7a9bdade67f7f465c5efd96a1b504b3355` | HEAD at release |
+| audit | HTTP service: append-only audit log | `df5b592364914b772927b3051eb86362253cb75e` | `v1.1.2` → `df5b592364914b772927b3051eb86362253cb75e` | HEAD at release |
+| auth | HTTP service: identity and tokens | `e0402b90986d16741cefb9eb7e01ca67eb885479` | `v1.1.2` → `e0402b90986d16741cefb9eb7e01ca67eb885479` | HEAD at release |
+| console | HTTP service: administration UI/API | `8c18bf0d35cf01982a4d08c5e76553b459eb7200` | `v1.1.2` → `8c18bf0d35cf01982a4d08c5e76553b459eb7200` | Migration complete; independent package-version oracles |
+| flags | HTTP service: feature flags/settings | `c6a0680081fe300de4bcf3b6a7b3517cd7099b39` | `v1.1.2` → `c6a0680081fe300de4bcf3b6a7b3517cd7099b39` | HEAD at release |
+| gateway | HTTP service: public edge | `c40fa55b279d110f194c6298c01fde6140282fa8` | `v1.1.2` → `c40fa55b279d110f194c6298c01fde6140282fa8` | Independent package-version oracle |
+| geo | HTTP service: geolocation/reference data | `447df55e7bc9356db902ebebb378fa199db5c6d1` | `v1.1.2` → `447df55e7bc9356db902ebebb378fa199db5c6d1` | Canonical country dataset included |
+| media | HTTP service: uploads and delivery | `1fab36c5257d628a8d04e34eae75a5b6e6a898bd` | `v1.1.2` → `1fab36c5257d628a8d04e34eae75a5b6e6a898bd` | HEAD at release |
+| notify | HTTP service: queued notifications | `5a58ca8281d9e19535a9646b8d308b3b8635322b` | `v1.1.2` → `5a58ca8281d9e19535a9646b8d308b3b8635322b` | HEAD at release |
+| ratelimit | HTTP service: policies and quotas | `df2df94bf1aed1634b6a543828fde4f52c35524d` | `v1.1.2` → `df2df94bf1aed1634b6a543828fde4f52c35524d` | HEAD at release |
+| scheduler | HTTP service: scheduled HTTP jobs | `61cc5b101815b3bf9a13880dc7b7786e14d0af04` | `v1.1.2` → `61cc5b101815b3bf9a13880dc7b7786e14d0af04` | HEAD at release |
+| search | HTTP service: SQLite FTS search | `92b2f7a752c04b931e091b5feb36dab142b60385` | `v1.1.2` → `92b2f7a752c04b931e091b5feb36dab142b60385` | HEAD at release |
 | service-core | Shared runtime package | `5a833451fad32864b2639d20d34570aefada3549` | `v1.12.0` → `5a833451fad32864b2639d20d34570aefada3549` | HEAD at release |
-| shortlink | HTTP service: short links and QR | `52d97cd37f45e82bba1ff66d210ae4001c05d991` | `v1.1.0` → `52d97cd37f45e82bba1ff66d210ae4001c05d991` | HEAD at release |
-| stack | Installer/orchestrator/release management | `18ee802f10945f485484d016fc14ba669cb0acbb` | `v1.1.0` → `10e58d108458bbce61c306386b42ced0699e50ff` | Post-release installer and closed M8–M9 integration; pre-update baseline |
-| webhook-out | HTTP service: durable outbound webhooks | `0647204f6dfb7e5967b5df533d48b0e28e7a41bb` | `v1.1.0` → `0647204f6dfb7e5967b5df533d48b0e28e7a41bb` | HEAD at release |
+| shortlink | HTTP service: short links and QR | `bd198508fc667ef5a10064b7c5063ba0f3c9d9e4` | `v1.1.2` → `bd198508fc667ef5a10064b7c5063ba0f3c9d9e4` | HEAD at release |
+| stack | Installer/orchestrator/release management | `352ffb1a4bae20005f7779741de5d60c1c5fc161` | `v1.1.2` → `4747229ea30511f9fde6e44d7a9d6e5b2198355b` | Supported pointer published; pre-closure-update baseline |
+| webhook-out | HTTP service: durable outbound webhooks | `39cfe42822d56f93a50bb5acc1d7c276aeaa98bf` | `v1.1.2` → `39cfe42822d56f93a50bb5acc1d7c276aeaa98bf` | HEAD at release |
 
 ## Immutable releases
 
-- Supported production suite: application repositories and stack `v1.1.0`; shared runtime
+- Supported production suite: application repositories and stack `v1.1.2`; shared runtime
   `service-core` `v1.12.0`.
-- `stack` `v1.1.0` peels to `10e58d108458bbce61c306386b42ced0699e50ff`;
+- `stack` `v1.1.2` peels to `4747229ea30511f9fde6e44d7a9d6e5b2198355b`;
   `service-core` `v1.12.0` peels to `5a833451fad32864b2639d20d34570aefada3549`.
-- Historical first suite release remains immutable: application repositories and stack `v1.0.0`;
-  `service-core` `v1.11.1` at `934af4f5a45f4be6fab9c77ba5f24f6c44c37c83`.
-- The authoritative install matrix is `installation-manifests/v1.1.0.json`, selected by
+- `v1.1.1` remains immutable and unchanged. Its exact-SHA installation and 13/13 runtime readiness
+  succeeded, but final tagged Console and Gateway tests exposed stale version assertions; `v1.1.2`
+  supersedes it as the supported fully verified patch release.
+- Historical suite releases `v1.0.0` and `v1.1.0` remain immutable; `service-core` `v1.11.1`
+  remains at `934af4f5a45f4be6fab9c77ba5f24f6c44c37c83`.
+- The authoritative install matrix is `installation-manifests/v1.1.2.json`, selected by
   `installation-manifests/supported.json`. Historical manifests are immutable. Never move tags.
-- Development `main` is intentionally newer: current Stack expects the canonical `server.mjs`
-  Console, while the untouched v1.1.0 snapshot contains its historical Console architecture.
-  M9 validation therefore uses `install:all --ref main`. A new mutually compatible immutable
-  suite manifest is required, and default installation must be revalidated, before release readiness.
 
 ## Current suite contract
 
@@ -161,10 +160,9 @@ controller/application-service/domain-service/repository/adapter layering.
 | M7 | **CLOSED** | API Docs, PWA, theme, i18n, toast |
 | M8 | **CLOSED** | Remove Fastify, old layers, `ui/`, custom router, SPA fallback; cut Stack consumers over |
 | M9 | **CLOSED** | Final Docker, PM2, admin CLI, and canonical-main Stack production integration |
-| M10 | **NEXT** | Full parity/E2E/security/browser/stream/runtime audit and release-candidate preparation |
+| M10 | **CLOSED** | Full parity/E2E/security/browser/stream/runtime audit and immutable v1.1.2 release |
 
-There are no intermediate migration tags. Do not begin a later stage before its prerequisites and
-the preceding stage's gates are closed.
+The Console SvelteKit migration is complete. There is no M11 or further migration stage.
 
 ## Closed work
 
@@ -359,6 +357,32 @@ Direct Fastify dependencies/imports remain absent; `fastify@5.12.4` is still onl
 transitive optional peer. No API/OpenAPI, schema, auth/session, service-core, workflow, tag, release,
 supported pointer, or historical installation manifest changed.
 
+Console M10 is closed by immutable suite `v1.1.2`, with Console at
+`8c18bf0d35cf01982a4d08c5e76553b459eb7200`, Gateway at
+`c40fa55b279d110f194c6298c01fde6140282fa8`, and the Stack tag at
+`4747229ea30511f9fde6e44d7a9d6e5b2198355b`. The patch corrects stale current-version test
+oracles using package metadata read through independent test paths; it does not change runtime
+behavior or public contracts. Every suite package was versioned `1.1.2` before the complete final
+test gate. `service-core` remains independently at `v1.12.0`.
+
+M10 closure evidence: all version-bumped repositories passed their full suites after the final
+version change (Console 131/131, Gateway 52/52, Stack 92/92 with integration and zero skips; exact
+counts for every repository are in `releases/v1.1.2.json`). Console check reported zero errors and
+warnings; parity remained 156/156 API and 34/34 frontend; the suite remained 13 specs and 376
+operations. Clients remained 13/13 and 376/376 with 6/6 unit tests and 3/3 real pilots. MCP remained
+376 catalog operations, 10 explicit tools, and 17/17 tests. Docker, non-loopback host publication,
+PM2, foreground dev, real Chrome, streaming, auth/security, persistence, TLS, shutdown, and failure
+gates passed. Production audit remained zero; the three accepted low development advisories remain.
+
+Pre-publication `install:all --ref main` matched the candidate manifest 14/14 and reached 13/13
+ready. After remote annotated tags and the supported pointer were published, a completely fresh
+official default `install:all` selected `1.1.2`, cloned 14/14 immutable refs, ran 14 deterministic
+installs and setup, built the canonical Console, and reached 13/13 ready. The immutable installed
+Console and Gateway suites passed 131/131 and 52/52. Installed identities, architecture, parity,
+Docs/PWA/downstream/trace/logout integration, generated-client pilots, 14/14 reuse, and dirty/
+wrong-origin/wrong-SHA fail-closed behavior passed. `v1.1.1` and all earlier tags were verified
+unchanged; no installer bypass or legacy fallback was introduced.
+
 ## Known debt and deliberate migration deltas
 
 1. **Range:** the current media-byte path does not forward inbound `Range` downstream. M0 freezes
@@ -373,12 +397,6 @@ supported pointer, or historical installation manifest changed.
 4. **Swagger bundle size:** local Swagger UI remains a 1,425,215-byte lazy production chunk. It is
    not an application entry, is not eagerly downloaded on ordinary pages, and remains accepted
    until a separately justified optimization.
-5. **Release boundary:** the default supported immutable install remains the untouched v1.1.0
-   suite, including its historical Console architecture. Current development Stack intentionally
-   enforces the post-M8 `server.mjs` invariant and has no legacy fallback or version-dispatch layer,
-   so default installation from development Stack main is not claimed as an M9 pass. M10/release
-   preparation must establish a mutually compatible immutable Stack/Console manifest and revalidate
-   default `install:all` before declaring release readiness.
 
 ## Operational constraints
 
@@ -392,11 +410,9 @@ supported pointer, or historical installation manifest changed.
 
 ## Next controlled stage
 
-**M10 — final migration audit and release-candidate preparation.** Re-run the comprehensive
-parity/E2E/security/browser/stream/Docker/PM2 audit against the closed canonical architecture. Do
-not declare release readiness until a new immutable, mutually compatible Stack/Console release
-manifest exists and default `install:all` passes against it. Do not restore or dispatch to the
-historical Console runtime.
+None. The Console SvelteKit migration is complete at the verified immutable `v1.1.2` suite. Do not
+create M11 or another migration stage. Future work is ordinary product maintenance and must preserve
+the canonical architecture, immutable release history, and accepted debt unless explicitly scoped.
 
 ## Update checklist
 

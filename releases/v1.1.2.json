@@ -1,0 +1,162 @@
+{
+  "schemaVersion": 1,
+  "release": "1.1.2",
+  "releasedAt": "2026-09-22",
+  "status": "verified",
+  "releasePolicy": "immutable annotated Git tags; no GitHub Release object and no GitHub Actions",
+  "versionDecision": {
+    "suite": "1.1.2",
+    "reason": "Corrective patch for stale current-version test oracles discovered during immutable v1.1.1 final verification; no public API or intended runtime behavior change.",
+    "serviceCore": "1.12.0",
+    "serviceCoreReason": "Independent shared-runtime release remained unchanged."
+  },
+  "recovery": {
+    "supersedes": "1.1.1",
+    "v1.1.1Status": "Immutable and successfully installable with 13/13 runtime readiness, but not fully verified because tagged Console and Gateway tests retained stale version expectations.",
+    "v1.1.1Rewritten": false,
+    "runtimeBehaviorChanged": false,
+    "publicApiChanged": false,
+    "operationCountChanged": false
+  },
+  "releaseMatrix": [
+    { "repo": "audit", "version": "1.1.2", "tag": "v1.1.2", "tagObject": "a125f66ad5c6e01e8ba6e1fefb1b11bebd8b5ac1", "commit": "df5b592364914b772927b3051eb86362253cb75e" },
+    { "repo": "auth", "version": "1.1.2", "tag": "v1.1.2", "tagObject": "e0bf14b315c9110ca6ce203fd8d6eaddccad062f", "commit": "e0402b90986d16741cefb9eb7e01ca67eb885479" },
+    { "repo": "console", "version": "1.1.2", "tag": "v1.1.2", "tagObject": "f055a822c0f593b35f5f563c7352799b46288084", "commit": "8c18bf0d35cf01982a4d08c5e76553b459eb7200" },
+    { "repo": "flags", "version": "1.1.2", "tag": "v1.1.2", "tagObject": "88c303dafe2d5474cfe89c3ff215ea69907bfc0e", "commit": "c6a0680081fe300de4bcf3b6a7b3517cd7099b39" },
+    { "repo": "gateway", "version": "1.1.2", "tag": "v1.1.2", "tagObject": "62d6e07c5a6d82928e5c7a6f12bc25d66a3aaa68", "commit": "c40fa55b279d110f194c6298c01fde6140282fa8" },
+    { "repo": "geo", "version": "1.1.2", "tag": "v1.1.2", "tagObject": "b3c7cd3cc0eb6dc2d2a9f7f25267bf55c9a9c351", "commit": "447df55e7bc9356db902ebebb378fa199db5c6d1" },
+    { "repo": "media", "version": "1.1.2", "tag": "v1.1.2", "tagObject": "1801ef9c14e57e03a338d8c9bb8f0392d7d2dcdb", "commit": "1fab36c5257d628a8d04e34eae75a5b6e6a898bd" },
+    { "repo": "notify", "version": "1.1.2", "tag": "v1.1.2", "tagObject": "a8624e5ee9eac35beb5115ba0175575cb88001e0", "commit": "5a58ca8281d9e19535a9646b8d308b3b8635322b" },
+    { "repo": "ratelimit", "version": "1.1.2", "tag": "v1.1.2", "tagObject": "750a1ce07ee1c1fbdd747a44ad6bdc1bf7b99cfe", "commit": "df2df94bf1aed1634b6a543828fde4f52c35524d" },
+    { "repo": "scheduler", "version": "1.1.2", "tag": "v1.1.2", "tagObject": "c73e8c8a223cad451d153164b6ae42317fc72006", "commit": "61cc5b101815b3bf9a13880dc7b7786e14d0af04" },
+    { "repo": "search", "version": "1.1.2", "tag": "v1.1.2", "tagObject": "66ace225c93704c5409359afb08ec8dcae5171ae", "commit": "92b2f7a752c04b931e091b5feb36dab142b60385" },
+    { "repo": "service-core", "version": "1.12.0", "tag": "v1.12.0", "tagObject": "565b38aed44c7abde5b98f793b0615ce953aa2a2", "commit": "5a833451fad32864b2639d20d34570aefada3549" },
+    { "repo": "shortlink", "version": "1.1.2", "tag": "v1.1.2", "tagObject": "5d0576d059abe004562e5ad73576fc686eb0fada", "commit": "bd198508fc667ef5a10064b7c5063ba0f3c9d9e4" },
+    { "repo": "stack", "version": "1.1.2", "tag": "v1.1.2", "tagObject": "143a8cbc321c3b645f0ae64cd034f39f95a507d2", "commit": "4747229ea30511f9fde6e44d7a9d6e5b2198355b" },
+    { "repo": "webhook-out", "version": "1.1.2", "tag": "v1.1.2", "tagObject": "f003dbf2c5dc5242dd84d57691cf459dd62d268b", "commit": "39cfe42822d56f93a50bb5acc1d7c276aeaa98bf" }
+  ],
+  "v1.1.1Integrity": [
+    { "repo": "audit", "tagObject": "cf1f62d526057f8525e4bd2ef43fdbab35fd2dc7", "commit": "bd06bbc3e39477317fcb94e7f19f59d1dd0b3fb7" },
+    { "repo": "auth", "tagObject": "8f5ce5501da295888740797ea337c19b3c134152", "commit": "009ed0e970f7c3f9a236c668ad6018903161cc47" },
+    { "repo": "console", "tagObject": "cc21b0ba6b2cc49aef75e70d7dfce6e3090b2f5c", "commit": "7c7760936b076441db3ed8ab1ba7cba365b49de8" },
+    { "repo": "flags", "tagObject": "ffcdfaa9f011f12d11a406c9a97856ab011ae83d", "commit": "40ea3fdbc339cbc3d41bf0f0cd3c1030236c55a0" },
+    { "repo": "gateway", "tagObject": "e1f1383a99f47fa208805c9c021f1b6090b44b28", "commit": "bcb474ed24706762fa7d0c3d276eb3b6e2ad1067" },
+    { "repo": "geo", "tagObject": "9ac5d15ed7b8fb79f3c31c570ad7e965e5afbf3c", "commit": "1671a11b97e9a3f3901ef12bd8c5a5c5fb7b6929" },
+    { "repo": "media", "tagObject": "1029077133810d990927a727e31095a7c21713f0", "commit": "c9dcb7521f1c7095db92160c5826982c572114d5" },
+    { "repo": "notify", "tagObject": "320ea0310f2fc71564487aaccc59cccce2ec6783", "commit": "23310f3c699012b9f154c543c7a1cb2fc2fbc8e3" },
+    { "repo": "ratelimit", "tagObject": "3d590652ec60b72ec5b61d4ca770575ac0def667", "commit": "4abf25cef63b0adf5695c572ae69a0929aa67ab4" },
+    { "repo": "scheduler", "tagObject": "2d1ff14c366c46e6251f7e993a09e4acea532b70", "commit": "5b1834d2858b687618396909aea3f08cea46fb87" },
+    { "repo": "search", "tagObject": "ee039408260b395db09b522cc5f7949e67f4b171", "commit": "40e3f910641b4f50b14590247e57fe98ef339dc2" },
+    { "repo": "shortlink", "tagObject": "94a2e93fa25efefb0ada43206feb9efe45b6e537", "commit": "585cedba3e548f8487a2f9c28bb218e78db68a97" },
+    { "repo": "stack", "tagObject": "7d7a3281d8929352b28a2e167918b6484166907f", "commit": "1a4c9846b1c17dcdef0d3c204860896c85fcc8ce" },
+    { "repo": "webhook-out", "tagObject": "34672395fb71469d3adc6a9ad995b24cdc6154d6", "commit": "21f47efce57196564be740d377b1d9558202aaed" }
+  ],
+  "publication": {
+    "candidateManifest": "installation-manifests/v1.1.2.json",
+    "supportedPointer": "installation-manifests/supported.json",
+    "supportedRelease": "1.1.2",
+    "stackTagCommit": "4747229ea30511f9fde6e44d7a9d6e5b2198355b",
+    "releaseMetadataCommit": "352ffb1a4bae20005f7779741de5d60c1c5fc161",
+    "remoteTagsVerified": 14,
+    "forcePushUsed": false,
+    "historicalTagsMoved": false
+  },
+  "tests": {
+    "repositoryTestsPassed": {
+      "audit": 46,
+      "auth": 43,
+      "console": 131,
+      "flags": 20,
+      "gateway": 52,
+      "geo": 44,
+      "media": 78,
+      "notify": 60,
+      "ratelimit": 33,
+      "scheduler": 46,
+      "search": 14,
+      "service-core": 98,
+      "shortlink": 23,
+      "stack": 92,
+      "webhook-out": 44
+    },
+    "stackIntegrationSkipped": 0,
+    "typecheck": "15/15 repositories passed; Console 0 errors and 0 warnings; generated clients and MCP passed",
+    "consoleFilesystemParity": "156/156",
+    "consoleFrontendParity": "34/34",
+    "generatedClients": "13/13 services, 376/376 operations, no drift, 6/6 unit tests, 3/3 real pilots",
+    "mcp": "376-operation catalog, 10 explicit tools, 17/17 unit tests, 14/14 real STDIO E2E",
+    "immutableInstalledConsole": "131/131, 0 failures, 0 skips",
+    "immutableInstalledGateway": "52/52, 0 failures, 0 skips"
+  },
+  "contracts": {
+    "canonicalSpecs": 13,
+    "canonicalOperations": 376,
+    "consolePaths": 122,
+    "consoleOperations": 156,
+    "apiChanges": 0
+  },
+  "candidateInstall": {
+    "mode": "development --ref main from official origins",
+    "repositories": "14/14 exact candidate manifest commits",
+    "dependencies": "14 deterministic npm ci",
+    "readiness": "13/13",
+    "reuse": "14/14",
+    "pm2": "passed",
+    "foregroundDev": "passed",
+    "docker": "non-root, health/ready/SSR/docs/PWA/persistence/admin CLI/TLS/failure modes/clean shutdown passed",
+    "dockerHostBind": "HOST=0.0.0.0; container listen non-loopback; published host mapping reachable",
+    "browser": "real Chrome anonymous/admin/viewer/docs/PWA/offline/theme/i18n/toast/storage/logout passed with no unexpected console errors"
+  },
+  "defaultInstall": {
+    "source": "fresh official Stack clone",
+    "refOverride": false,
+    "selectedRelease": "1.1.2",
+    "clones": 14,
+    "exactManifestCommits": "14/14",
+    "deterministicInstalls": 14,
+    "setup": "passed",
+    "consoleBuild": "passed",
+    "readiness": "13/13",
+    "versionIdentity": "13 suite applications report 1.1.2; service-core consumers report 1.12.0; Gateway service-core is null",
+    "integration": "login, SSR, dynamic route, Docs, PWA, Console to Audit, trace response, logout, and generated-client pilots passed",
+    "reuse": "0 clone, 14 reuse, exact commits unchanged, 13/13 ready",
+    "failClosed": "dirty repository, wrong origin, and wrong release HEAD/SHA rejected without destructive repair",
+    "verificationBypass": false,
+    "legacyFallback": false
+  },
+  "architecture": {
+    "svelteKitApplications": 1,
+    "httpFrameworks": 1,
+    "filesystemRouters": 1,
+    "nodeApplicationRuntimes": 1,
+    "canonicalProductionEntrypoint": "server.mjs",
+    "fastifyApplication": false,
+    "legacyUiSpa": false,
+    "customApplicationRouter": false,
+    "spaFallback": false
+  },
+  "security": {
+    "productionVulnerabilities": 0,
+    "fullTreeAcceptedLowDevelopmentAdvisories": 3,
+    "authCsrfCookieRoleTrustProxyValidation": "passed",
+    "trackedSecretOrEnvFiles": 0,
+    "clientBundleSecretLeaks": 0,
+    "imageSecretLeaks": 0,
+    "githubWorkflowFiles": 0
+  },
+  "historicalIntegrity": {
+    "suiteV1.0.0": "remote tag objects and peeled commits verified unchanged",
+    "suiteV1.1.0": "remote tag objects and peeled commits verified unchanged",
+    "suiteV1.1.1": "remote tag objects and peeled commits verified unchanged",
+    "serviceCoreV1.11.1": "934af4f5a45f4be6fab9c77ba5f24f6c44c37c83",
+    "serviceCoreV1.12.0TagObject": "565b38aed44c7abde5b98f793b0615ce953aa2a2",
+    "serviceCoreV1.12.0Commit": "5a833451fad32864b2639d20d34570aefada3549"
+  },
+  "acceptedDebt": [
+    "Locally bundled lazy Swagger UI chunk retains its non-fatal size advisory.",
+    "Three low-severity development-only advisories remain accepted.",
+    "Inbound media Range behavior remains intentionally frozen.",
+    "PWA and cache behavior remains intentionally conservative."
+  ],
+  "blockers": []
+}
