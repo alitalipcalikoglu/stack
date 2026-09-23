@@ -1,6 +1,6 @@
 # ATC-WEB Project State
 
-Last source verification: 2026-09-22. This is a concise living handoff, not a specification or
+Last source verification: 2026-09-23. This is a concise living handoff, not a specification or
 history log.
 
 ## Purpose and update rules
@@ -62,7 +62,7 @@ state update is necessarily newer.
 | search | HTTP service: SQLite FTS search | `92b2f7a752c04b931e091b5feb36dab142b60385` | `v1.1.2` → `92b2f7a752c04b931e091b5feb36dab142b60385` | HEAD at release |
 | service-core | Shared runtime package | `5a833451fad32864b2639d20d34570aefada3549` | `v1.12.0` → `5a833451fad32864b2639d20d34570aefada3549` | HEAD at release |
 | shortlink | HTTP service: short links and QR | `bd198508fc667ef5a10064b7c5063ba0f3c9d9e4` | `v1.1.2` → `bd198508fc667ef5a10064b7c5063ba0f3c9d9e4` | HEAD at release |
-| stack | Installer/orchestrator/release management | `352ffb1a4bae20005f7779741de5d60c1c5fc161` | `v1.1.2` → `4747229ea30511f9fde6e44d7a9d6e5b2198355b` | Supported pointer published; pre-closure-update baseline |
+| stack | Installer/orchestrator/release management | `781e893783b5d50fbc76de0669de1c86f8d271da` | `v1.1.2` → `4747229ea30511f9fde6e44d7a9d6e5b2198355b` | M10 closure and release audit published; pre-current-update baseline |
 | webhook-out | HTTP service: durable outbound webhooks | `39cfe42822d56f93a50bb5acc1d7c276aeaa98bf` | `v1.1.2` → `39cfe42822d56f93a50bb5acc1d7c276aeaa98bf` | HEAD at release |
 
 ## Immutable releases
