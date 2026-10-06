@@ -1,0 +1,221 @@
+{
+  "schemaVersion": 1,
+  "release": "1.1.3",
+  "releasedAt": "2026-10-06",
+  "status": "verified",
+  "releasePolicy": "immutable annotated Git tags; no GitHub Release object and no GitHub Actions",
+  "versionDecision": {
+    "suite": "1.1.3",
+    "reason": "Security patch: auth session revocation requires the write role; media, scheduler and webhook-out audit events no longer forward credentials; Fastify and devalue advisories closed.",
+    "serviceCore": "1.12.1",
+    "serviceCoreReason": "Fastify peer and development pin raised from 5.12.4 to 5.12.5 for GHSA-4mh8-r7rc-xpvc."
+  },
+  "recovery": {
+    "supersedes": "1.1.2",
+    "runtimeBehaviorChanged": true,
+    "runtimeBehaviorChange": "A read-only auth API key now receives 403 FORBIDDEN on DELETE /v1/users/{id}/sessions and DELETE /v1/users/{id}/sessions/{sid}; audit meta for three events carries less data.",
+    "publicApiChanged": true,
+    "publicApiChange": "auth.sessions.revokeAll and auth.sessions.revokeOne document a 403 response; no operation added, removed or renamed.",
+    "operationCountChanged": false
+  },
+  "releaseMatrix": [
+    {
+      "repo": "audit",
+      "version": "1.1.3",
+      "tag": "v1.1.3",
+      "tagObject": "cf9b02f548e137dac2636997d735c815ea616b11",
+      "commit": "a0c0bf4dff468e70516a3185190991c3e46ec83a"
+    },
+    {
+      "repo": "auth",
+      "version": "1.1.3",
+      "tag": "v1.1.3",
+      "tagObject": "5e84a315faafa4d420b59c7f6cf51cd85d049da8",
+      "commit": "f8d79186045df8e1c2d88e39bfb8cfbcbcba58b4"
+    },
+    {
+      "repo": "console",
+      "version": "1.1.3",
+      "tag": "v1.1.3",
+      "tagObject": "2288fb4031973c05c37cce61ec3cbd49d6164b95",
+      "commit": "e34f04e59b4a09bc3fbaaf753df22784302b5588"
+    },
+    {
+      "repo": "flags",
+      "version": "1.1.3",
+      "tag": "v1.1.3",
+      "tagObject": "3ab1417207a2dd2af46569453034e1cf4f78748c",
+      "commit": "416082839651371c4619778c9e84be650162c076"
+    },
+    {
+      "repo": "gateway",
+      "version": "1.1.3",
+      "tag": "v1.1.3",
+      "tagObject": "111434b21196489dc6a0a5e5a358060e6ba4fb08",
+      "commit": "6c79590738abf8d82834f7437855449cb2bb0a60"
+    },
+    {
+      "repo": "geo",
+      "version": "1.1.3",
+      "tag": "v1.1.3",
+      "tagObject": "e7dbc76af0d52d6ae0e58a7d8e0c6f2bc9394bba",
+      "commit": "c9dd21d0d707b2008a4129d3fbe76e45371160aa"
+    },
+    {
+      "repo": "media",
+      "version": "1.1.3",
+      "tag": "v1.1.3",
+      "tagObject": "4c75a6cc5ffafa8c392033dbe29534b317cafa9b",
+      "commit": "d6ecf1e382c1f9e070cd120a955660f91fec25a9"
+    },
+    {
+      "repo": "notify",
+      "version": "1.1.3",
+      "tag": "v1.1.3",
+      "tagObject": "52d19892d3a2cdeb44b7123690d66e771c7e8463",
+      "commit": "c4747517c53aec0fd09ee5a52f9885b718048416"
+    },
+    {
+      "repo": "ratelimit",
+      "version": "1.1.3",
+      "tag": "v1.1.3",
+      "tagObject": "85cf53434b7018f6666ff4af36114f212d90ad07",
+      "commit": "1e56c92d46e70671da533958629e31b563fdbdc4"
+    },
+    {
+      "repo": "scheduler",
+      "version": "1.1.3",
+      "tag": "v1.1.3",
+      "tagObject": "af6771f9deeb305cfac37d9ec86f5bd2f16cc1c0",
+      "commit": "012da507b25eaad79fe4026cf58e0f2d881b1db6"
+    },
+    {
+      "repo": "search",
+      "version": "1.1.3",
+      "tag": "v1.1.3",
+      "tagObject": "f5b75915943994734ee444296336020fcf2b025d",
+      "commit": "67ba71c11122f802b12e9aaef66c71da4e7fad8e"
+    },
+    {
+      "repo": "service-core",
+      "version": "1.12.1",
+      "tag": "v1.12.1",
+      "tagObject": "bfe290aeee33abb02d38159a2abeafe99248815f",
+      "commit": "74201f253cfb10b9a4abbe8995485ccda902afb2"
+    },
+    {
+      "repo": "shortlink",
+      "version": "1.1.3",
+      "tag": "v1.1.3",
+      "tagObject": "59b2202460e1010701ed1a0eb91cc6c048889f7f",
+      "commit": "276224d81700196ee68a735a24a8ccd11cf65c4c"
+    },
+    {
+      "repo": "stack",
+      "version": "1.1.3",
+      "tag": "v1.1.3",
+      "tagObject": "22fb6008f38ddb622dd4c65d687f90890ad5ad8b",
+      "commit": "30c487ad0317b511ea272012aae3bc17bb2e84b8"
+    },
+    {
+      "repo": "webhook-out",
+      "version": "1.1.3",
+      "tag": "v1.1.3",
+      "tagObject": "d8c68e1359716aef9ce751f38e0fc982560fde00",
+      "commit": "83400e3a3ded96a6ae6d5840572bdf1560201595"
+    }
+  ],
+  "publication": {
+    "candidateManifest": "installation-manifests/v1.1.3.json",
+    "supportedPointer": "installation-manifests/supported.json",
+    "supportedRelease": "1.1.3",
+    "stackTagCommit": "30c487ad0317b511ea272012aae3bc17bb2e84b8",
+    "releaseMetadataCommit": "6065497941022b4adbfdaad49fc1552ad374af4a",
+    "remoteTagsVerified": 15,
+    "forcePushUsed": false,
+    "historicalTagsMoved": false
+  },
+  "tests": {
+    "repositoryTestsPassed": {
+      "audit": 46,
+      "auth": 43,
+      "console": 131,
+      "flags": 20,
+      "gateway": 52,
+      "geo": 44,
+      "media": 79,
+      "notify": 60,
+      "ratelimit": 33,
+      "scheduler": 47,
+      "search": 14,
+      "service-core": 98,
+      "shortlink": 23,
+      "stack": 92,
+      "webhook-out": 45
+    },
+    "stackIntegrationSkipped": 0,
+    "typecheck": "15/15 repositories passed; Console 0 errors; generated clients and MCP passed",
+    "consoleSmokes": "build, runtime, auth, M4, M5, M6, M7 and real-Chrome M7 browser passed",
+    "generatedClients": "13/13 services, 376/376 operations, no drift, 6/6 unit tests, 3/3 real pilots",
+    "mcp": "376-operation catalog, 10 explicit tools, 17/17 unit tests, 14/14 real STDIO E2E",
+    "immutableInstalledSuites": "Console 131/131, Gateway 52/52, Auth 43/43, Media 79/79, Scheduler 47/47, Webhook-out 45/45"
+  },
+  "contracts": {
+    "canonicalSpecs": 13,
+    "canonicalOperations": 376,
+    "consolePaths": 122,
+    "consoleOperations": 156,
+    "apiChanges": "auth: 403 response added to two session-revocation operations"
+  },
+  "candidateInstall": {
+    "mode": "development --ref main from official origins, isolated PM2_HOME",
+    "repositories": "14/14 exact candidate manifest commits",
+    "dependencies": "14 installs",
+    "readiness": "13/13",
+    "versionIdentity": "13 applications report 1.1.3; service-core consumers report 1.12.1; Gateway service-core is null"
+  },
+  "defaultInstall": {
+    "source": "fresh official Stack clone",
+    "refOverride": false,
+    "selectedRelease": "1.1.3",
+    "clones": 14,
+    "exactTags": "14/14 at manifest tags, clean",
+    "deterministicInstalls": 14,
+    "setup": "passed",
+    "consoleBuild": "passed",
+    "readiness": "13/13",
+    "versionIdentity": "13 applications report 1.1.3; service-core consumers report 1.12.1; Gateway service-core is null",
+    "reuse": "0 clone, 14 reuse, 13/13 ready",
+    "verificationBypass": false,
+    "legacyFallback": false
+  },
+  "notRerunThisRelease": [
+    "Docker image build and container gates",
+    "foreground stack dev",
+    "fail-closed dirty/wrong-origin/wrong-SHA installer checks (covered by the unchanged installer unit suite)"
+  ],
+  "security": {
+    "productionVulnerabilities": 0,
+    "fullTreeAcceptedLowDevelopmentAdvisories": 3,
+    "resolvedAdvisories": [
+      "fastify GHSA-4mh8-r7rc-xpvc (moderate)",
+      "devalue <=5.9.2 (high, Console)",
+      "source-map-js <1.2.2 (high, Console build tooling)"
+    ],
+    "githubWorkflowFiles": 0
+  },
+  "historicalIntegrity": {
+    "suiteV1.0.0": "auth and stack tag commits spot-checked unchanged",
+    "suiteV1.1.0": "auth and stack tag commits spot-checked unchanged",
+    "suiteV1.1.1": "14/14 remote tag objects and peeled commits verified unchanged",
+    "suiteV1.1.2": "15/15 remote tag objects and peeled commits verified unchanged (including service-core v1.12.0)",
+    "serviceCoreV1.11.1": "934af4f5a45f4be6fab9c77ba5f24f6c44c37c83"
+  },
+  "acceptedDebt": [
+    "Locally bundled lazy Swagger UI chunk retains its non-fatal size advisory.",
+    "Three low-severity development-only cookie advisories remain accepted.",
+    "Inbound media Range behavior remains intentionally frozen.",
+    "Auth verification-resend enumeration signal (409 and resend throttle) remains an open design decision."
+  ],
+  "blockers": []
+}
