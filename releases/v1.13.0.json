@@ -1,0 +1,207 @@
+{
+  "schemaVersion": 1,
+  "release": "1.13.0",
+  "releasedAt": "2026-10-06",
+  "status": "verified",
+  "releasePolicy": "immutable annotated Git tags; no GitHub Release object and no GitHub Actions",
+  "versionDecision": {
+    "suite": "1.13.0",
+    "serviceCore": "1.13.0",
+    "reason": "Unified versioning across all 15 repositories, above both previous lines (suite 1.1.3, service-core 1.12.1); ships the auth silent resend/forgot change."
+  },
+  "recovery": {
+    "supersedes": "1.1.3",
+    "runtimeBehaviorChanged": true,
+    "runtimeBehaviorChange": "auth verify-email/resend and password/forgot always return 202; ALREADY_VERIFIED and TOO_MANY_REQUESTS removed.",
+    "publicApiChanged": true,
+    "operationCountChanged": false,
+    "dependencyVersionsChanged": false
+  },
+  "releaseMatrix": [
+    {
+      "repo": "audit",
+      "version": "1.13.0",
+      "tag": "v1.13.0",
+      "tagObject": "1a5d5ef0331c0186ac69677981f8a9c237cd30d5",
+      "commit": "9004eedb8fcb15bae117f6030dfda0c631aaed1b"
+    },
+    {
+      "repo": "auth",
+      "version": "1.13.0",
+      "tag": "v1.13.0",
+      "tagObject": "bb12c448771ad576fb5e07f25b1ea922d43a80b1",
+      "commit": "f50e0fd3ba9c9243b8f877c21fcdb95c3119b11c"
+    },
+    {
+      "repo": "console",
+      "version": "1.13.0",
+      "tag": "v1.13.0",
+      "tagObject": "a816c187045dfffdc9ac9fe6c42514886bce6914",
+      "commit": "08e52bf119cc6fc77d02c456d181f4579cfd1e12"
+    },
+    {
+      "repo": "flags",
+      "version": "1.13.0",
+      "tag": "v1.13.0",
+      "tagObject": "f0586f4ae45c36016e325df9799f29a8884ddc31",
+      "commit": "36c7d301ff84400195d56dca2279706daa585434"
+    },
+    {
+      "repo": "gateway",
+      "version": "1.13.0",
+      "tag": "v1.13.0",
+      "tagObject": "3103adfc1ab61878a57621e160e068242ba0cb71",
+      "commit": "5d7f4234a23bc9fa471f7945a297e494849af5eb"
+    },
+    {
+      "repo": "geo",
+      "version": "1.13.0",
+      "tag": "v1.13.0",
+      "tagObject": "316cbb74fae09da0beb4d2f92c929c92a17231bd",
+      "commit": "915498167590d8d11507d276722d7c575aea60e3"
+    },
+    {
+      "repo": "media",
+      "version": "1.13.0",
+      "tag": "v1.13.0",
+      "tagObject": "1a7339e3afca0a4bc71e1327c0abd138cdcbda4f",
+      "commit": "de049d5e8457fcccf24987bd91982ae8d09a6bda"
+    },
+    {
+      "repo": "notify",
+      "version": "1.13.0",
+      "tag": "v1.13.0",
+      "tagObject": "8c5e0d3756d344d7a515fc8a96cded3d3bfa961c",
+      "commit": "2531e405e6babc942f373ed1e3626dccaf2260aa"
+    },
+    {
+      "repo": "ratelimit",
+      "version": "1.13.0",
+      "tag": "v1.13.0",
+      "tagObject": "f8b894b0b85ffd2d71a5638b7128f7b88669dc34",
+      "commit": "884e6c4d73c0805d1f933fc2cbfabce5e1cd402a"
+    },
+    {
+      "repo": "scheduler",
+      "version": "1.13.0",
+      "tag": "v1.13.0",
+      "tagObject": "60951bbd118d8682dc69f35abefafe46bfb86c47",
+      "commit": "d43f504817902503ecb921dea75ff0f2d9cba909"
+    },
+    {
+      "repo": "search",
+      "version": "1.13.0",
+      "tag": "v1.13.0",
+      "tagObject": "82a9991944eb6087fd2cfda062e31c323f5b3f1d",
+      "commit": "338a1cf2b6777276113a2a204c83cd50993e0d88"
+    },
+    {
+      "repo": "service-core",
+      "version": "1.13.0",
+      "tag": "v1.13.0",
+      "tagObject": "367252e4ad091864b9881fcbd30d311700a014ad",
+      "commit": "2097f4ee46d37c2cb84a26944e5e9f3a255b9c9d"
+    },
+    {
+      "repo": "shortlink",
+      "version": "1.13.0",
+      "tag": "v1.13.0",
+      "tagObject": "32043d73811f68b995db16765864cd55ae894042",
+      "commit": "20f759fdc598e0253e1d835de135312987950665"
+    },
+    {
+      "repo": "stack",
+      "version": "1.13.0",
+      "tag": "v1.13.0",
+      "tagObject": "8b40c6cce8688410e8404fc7c5d0bafd403dd3f5",
+      "commit": "060e45d446881f85ce35f04b228fc53c71ab39ae"
+    },
+    {
+      "repo": "webhook-out",
+      "version": "1.13.0",
+      "tag": "v1.13.0",
+      "tagObject": "4a83d12de213919cfe38e97addc5761deefc0673",
+      "commit": "95746b7349bce4ef35f02baec21e06f9e62ea366"
+    }
+  ],
+  "publication": {
+    "candidateManifest": "installation-manifests/v1.13.0.json",
+    "supportedPointer": "installation-manifests/supported.json",
+    "supportedRelease": "1.13.0",
+    "stackTagCommit": "060e45d446881f85ce35f04b228fc53c71ab39ae",
+    "releaseMetadataCommit": "cdfdd6334ceb87fffb4a7e498691479ab98ec78d",
+    "remoteTagsVerified": 15,
+    "forcePushUsed": false,
+    "historicalTagsMoved": false
+  },
+  "tests": {
+    "repositoryTestsPassed": {
+      "audit": 46,
+      "auth": 44,
+      "console": 131,
+      "flags": 20,
+      "gateway": 52,
+      "geo": 44,
+      "media": 79,
+      "notify": 60,
+      "ratelimit": 33,
+      "scheduler": 47,
+      "search": 14,
+      "service-core": 98,
+      "shortlink": 23,
+      "stack": 92,
+      "webhook-out": 45
+    },
+    "stackIntegrationSkipped": 0,
+    "typecheck": "15/15 repositories passed",
+    "consoleSmokes": "runtime passed",
+    "generatedClients": "13/13 services, 376/376 operations, no drift, 6/6 unit tests, 3/3 real pilots",
+    "mcp": "376-operation catalog, 10 explicit tools, 17/17 unit tests, 14/14 real STDIO E2E",
+    "immutableInstalledSuites": "Console 131/131, Gateway 52/52, Auth 44/44"
+  },
+  "contracts": {
+    "canonicalSpecs": 13,
+    "canonicalOperations": 376,
+    "consolePaths": 122,
+    "consoleOperations": 156,
+    "apiChanges": "auth: 409 and domain 429 responses removed from resend and forgot"
+  },
+  "candidateInstall": {
+    "mode": "development --ref main, isolated PM2_HOME",
+    "repositories": "14/14 exact candidate manifest commits",
+    "readiness": "13/13",
+    "versionIdentity": "all report 1.13.0; Gateway service-core is null"
+  },
+  "defaultInstall": {
+    "source": "fresh official Stack clone",
+    "refOverride": false,
+    "selectedRelease": "1.13.0",
+    "clones": 14,
+    "exactTags": "14/14 at v1.13.0, clean",
+    "deterministicInstalls": 14,
+    "readiness": "13/13",
+    "versionIdentity": "13 applications and service-core consumers report 1.13.0; Gateway service-core is null",
+    "reuse": "0 clone, 14 reuse, 13/13 ready",
+    "verificationBypass": false,
+    "legacyFallback": false
+  },
+  "notRerunThisRelease": [
+    "Docker image build and container gates",
+    "foreground stack dev",
+    "Console build/auth/M4-M7 and browser smokes (no Console code change since v1.1.3)"
+  ],
+  "security": {
+    "productionVulnerabilities": 0,
+    "fullTreeAcceptedLowDevelopmentAdvisories": 3,
+    "githubWorkflowFiles": 0
+  },
+  "historicalIntegrity": {
+    "suiteV1.1.3AndServiceCoreV1.12.1": "15/15 remote tag objects and peeled commits verified unchanged"
+  },
+  "acceptedDebt": [
+    "Locally bundled lazy Swagger UI chunk retains its non-fatal size advisory.",
+    "Three low-severity development-only cookie advisories remain until the deferred SvelteKit 3 upgrade.",
+    "Inbound media Range behavior remains intentionally frozen."
+  ],
+  "blockers": []
+}

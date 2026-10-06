@@ -1,6 +1,6 @@
 # ATC-WEB Project State
 
-Last source verification: 2026-10-06. This is a concise living handoff, not a specification or
+Last source verification: 2026-10-06 (v1.13.0). This is a concise living handoff, not a specification or
 history log.
 
 ## Purpose and update rules
@@ -49,33 +49,31 @@ state update is necessarily newer.
 
 | Repository | Role | Verified development HEAD | Immutable current release | State / note |
 |---|---|---|---|---|
-| audit | HTTP service: append-only audit log | `a0c0bf4dff468e70516a3185190991c3e46ec83a` | `v1.1.3` → `a0c0bf4dff468e70516a3185190991c3e46ec83a` | HEAD at release |
-| auth | HTTP service: identity and tokens | `f8d79186045df8e1c2d88e39bfb8cfbcbcba58b4` | `v1.1.3` → `f8d79186045df8e1c2d88e39bfb8cfbcbcba58b4` | HEAD at release; session revoke requires `write` |
-| console | HTTP service: administration UI/API | `e34f04e59b4a09bc3fbaaf753df22784302b5588` | `v1.1.3` → `e34f04e59b4a09bc3fbaaf753df22784302b5588` | SvelteKit; `fastify` dev-only for service-core JSDoc types |
-| flags | HTTP service: feature flags/settings | `416082839651371c4619778c9e84be650162c076` | `v1.1.3` → `416082839651371c4619778c9e84be650162c076` | HEAD at release |
-| gateway | HTTP service: public edge | `6c79590738abf8d82834f7437855449cb2bb0a60` | `v1.1.3` → `6c79590738abf8d82834f7437855449cb2bb0a60` | Independent package-version oracle |
-| geo | HTTP service: geolocation/reference data | `c9dd21d0d707b2008a4129d3fbe76e45371160aa` | `v1.1.3` → `c9dd21d0d707b2008a4129d3fbe76e45371160aa` | Canonical country dataset included |
-| media | HTTP service: uploads and delivery | `d6ecf1e382c1f9e070cd120a955660f91fec25a9` | `v1.1.3` → `d6ecf1e382c1f9e070cd120a955660f91fec25a9` | HEAD at release; ticket audited by hash |
-| notify | HTTP service: queued notifications | `c4747517c53aec0fd09ee5a52f9885b718048416` | `v1.1.3` → `c4747517c53aec0fd09ee5a52f9885b718048416` | HEAD at release |
-| ratelimit | HTTP service: policies and quotas | `1e56c92d46e70671da533958629e31b563fdbdc4` | `v1.1.3` → `1e56c92d46e70671da533958629e31b563fdbdc4` | HEAD at release |
-| scheduler | HTTP service: scheduled HTTP jobs | `012da507b25eaad79fe4026cf58e0f2d881b1db6` | `v1.1.3` → `012da507b25eaad79fe4026cf58e0f2d881b1db6` | HEAD at release; job audit meta redacted |
-| search | HTTP service: SQLite FTS search | `67ba71c11122f802b12e9aaef66c71da4e7fad8e` | `v1.1.3` → `67ba71c11122f802b12e9aaef66c71da4e7fad8e` | HEAD at release |
-| service-core | Shared runtime package | `74201f253cfb10b9a4abbe8995485ccda902afb2` | `v1.12.1` → `74201f253cfb10b9a4abbe8995485ccda902afb2` | HEAD at release; Fastify 5.12.5 |
-| shortlink | HTTP service: short links and QR | `276224d81700196ee68a735a24a8ccd11cf65c4c` | `v1.1.3` → `276224d81700196ee68a735a24a8ccd11cf65c4c` | HEAD at release |
-| stack | Installer/orchestrator/release management | `6065497941022b4adbfdaad49fc1552ad374af4a` | `v1.1.3` → `30c487ad0317b511ea272012aae3bc17bb2e84b8` | v1.1.3 published and verified; pre-current-update baseline |
-| webhook-out | HTTP service: durable outbound webhooks | `83400e3a3ded96a6ae6d5840572bdf1560201595` | `v1.1.3` → `83400e3a3ded96a6ae6d5840572bdf1560201595` | HEAD at release; subscription audit meta redacted |
+| audit | HTTP service: append-only audit log | `9004eedb8fcb15bae117f6030dfda0c631aaed1b` | `v1.13.0` → `9004eedb8fcb15bae117f6030dfda0c631aaed1b` | HEAD at release |
+| auth | HTTP service: identity and tokens | `f50e0fd3ba9c9243b8f877c21fcdb95c3119b11c` | `v1.13.0` → `f50e0fd3ba9c9243b8f877c21fcdb95c3119b11c` | HEAD at release; silent resend/forgot; session revoke requires `write` |
+| console | HTTP service: administration UI/API | `08e52bf119cc6fc77d02c456d181f4579cfd1e12` | `v1.13.0` → `08e52bf119cc6fc77d02c456d181f4579cfd1e12` | SvelteKit; `fastify` dev-only for service-core JSDoc types |
+| flags | HTTP service: feature flags/settings | `36c7d301ff84400195d56dca2279706daa585434` | `v1.13.0` → `36c7d301ff84400195d56dca2279706daa585434` | HEAD at release |
+| gateway | HTTP service: public edge | `5d7f4234a23bc9fa471f7945a297e494849af5eb` | `v1.13.0` → `5d7f4234a23bc9fa471f7945a297e494849af5eb` | Independent package-version oracle |
+| geo | HTTP service: geolocation/reference data | `915498167590d8d11507d276722d7c575aea60e3` | `v1.13.0` → `915498167590d8d11507d276722d7c575aea60e3` | Canonical country dataset included |
+| media | HTTP service: uploads and delivery | `de049d5e8457fcccf24987bd91982ae8d09a6bda` | `v1.13.0` → `de049d5e8457fcccf24987bd91982ae8d09a6bda` | HEAD at release; ticket audited by hash |
+| notify | HTTP service: queued notifications | `2531e405e6babc942f373ed1e3626dccaf2260aa` | `v1.13.0` → `2531e405e6babc942f373ed1e3626dccaf2260aa` | HEAD at release |
+| ratelimit | HTTP service: policies and quotas | `884e6c4d73c0805d1f933fc2cbfabce5e1cd402a` | `v1.13.0` → `884e6c4d73c0805d1f933fc2cbfabce5e1cd402a` | HEAD at release |
+| scheduler | HTTP service: scheduled HTTP jobs | `d43f504817902503ecb921dea75ff0f2d9cba909` | `v1.13.0` → `d43f504817902503ecb921dea75ff0f2d9cba909` | HEAD at release; job audit meta redacted |
+| search | HTTP service: SQLite FTS search | `338a1cf2b6777276113a2a204c83cd50993e0d88` | `v1.13.0` → `338a1cf2b6777276113a2a204c83cd50993e0d88` | HEAD at release |
+| service-core | Shared runtime package | `2097f4ee46d37c2cb84a26944e5e9f3a255b9c9d` | `v1.13.0` → `2097f4ee46d37c2cb84a26944e5e9f3a255b9c9d` | HEAD at release; unified version |
+| shortlink | HTTP service: short links and QR | `20f759fdc598e0253e1d835de135312987950665` | `v1.13.0` → `20f759fdc598e0253e1d835de135312987950665` | HEAD at release |
+| stack | Installer/orchestrator/release management | `cdfdd6334ceb87fffb4a7e498691479ab98ec78d` | `v1.13.0` → `060e45d446881f85ce35f04b228fc53c71ab39ae` | v1.13.0 published and verified; pre-current-update baseline |
+| webhook-out | HTTP service: durable outbound webhooks | `95746b7349bce4ef35f02baec21e06f9e62ea366` | `v1.13.0` → `95746b7349bce4ef35f02baec21e06f9e62ea366` | HEAD at release; subscription audit meta redacted |
 
 ## Immutable releases
 
-- Supported production suite: application repositories and stack `v1.1.3`; shared runtime
-  `service-core` `v1.12.1`.
-- `stack` `v1.1.3` peels to `30c487ad0317b511ea272012aae3bc17bb2e84b8`;
-  `service-core` `v1.12.1` peels to `74201f253cfb10b9a4abbe8995485ccda902afb2`.
-- `v1.1.3` is a security patch over `v1.1.2`; see `releases/v1.1.3.md`.
-- Historical suite releases `v1.0.0`, `v1.1.0`, `v1.1.1` and `v1.1.2` remain immutable;
-  `service-core` `v1.11.1` (`934af4f5a45f4be6fab9c77ba5f24f6c44c37c83`) and `v1.12.0`
-  (`5a833451fad32864b2639d20d34570aefada3549`) remain unchanged.
-- The authoritative install matrix is `installation-manifests/v1.1.3.json`, selected by
+- Supported production suite: all 15 repositories at `v1.13.0`. From `1.13.0` on, every repository,
+  `service-core` included, shares one version number.
+- `stack` `v1.13.0` peels to `060e45d446881f85ce35f04b228fc53c71ab39ae`;
+  `service-core` `v1.13.0` peels to `2097f4ee46d37c2cb84a26944e5e9f3a255b9c9d`.
+- Historical suite tags `v1.0.0` to `v1.1.3` and `service-core` tags `v1.11.1` to `v1.12.1` remain
+  immutable.
+- The authoritative install matrix is `installation-manifests/v1.13.0.json`, selected by
   `installation-manifests/supported.json`. Historical manifests are immutable. Never move tags.
 
 ## Current suite contract
@@ -393,6 +391,12 @@ including real Chrome, contracts unchanged at 376 operations, production audit z
 `--ref main` and fresh default installs 14/14 exact and 13/13 ready, 14/14 reuse, historical tags
 unchanged. Docker and foreground-dev gates were not re-run for this patch.
 
+Release `v1.13.0` is published and verified (`releases/v1.13.0.json`). It unifies versioning across
+all 15 repositories and ships the auth enumeration fix: `verify-email/resend` and `password/forgot`
+always return `202`, and `ALREADY_VERIFIED`/`TOO_MANY_REQUESTS` are removed. No dependency changed.
+Candidate and fresh default installs matched 14/14 and reached 13/13 ready with 14/14 reuse;
+`v1.1.3` tags were verified unchanged. SvelteKit 3 is deliberately deferred.
+
 ## Known debt and deliberate migration deltas
 
 1. **Range:** the current media-byte path does not forward inbound `Range` downstream. M0 freezes
@@ -407,10 +411,6 @@ unchanged. Docker and foreground-dev gates were not re-run for this patch.
 4. **Swagger bundle size:** local Swagger UI remains a 1,425,215-byte lazy production chunk. It is
    not an application entry, is not eagerly downloaded on ordinary pages, and remains accepted
    until a separately justified optimization.
-5. **Auth resend enumeration (fixed on `main`, unreleased):** `verify-email/resend` and
-   `password/forgot` now always return `202`; verified, disabled and cooldown cases are silent and
-   `ALREADY_VERIFIED`/`TOO_MANY_REQUESTS` are removed. `v1.1.3` still carries the old behavior;
-   remove this entry when a release ships it.
 
 ## Operational constraints
 
