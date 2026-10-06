@@ -358,7 +358,7 @@ export interface paths {
         put?: never;
         /**
          * Re-send the verification email
-         * @description Silent (still `202`) when the email is unknown, to avoid account enumeration. A known, already-verified email returns `409 ALREADY_VERIFIED` instead — this is itself a (minor, two-way) enumeration signal, confirmed and flagged in the Phase 0 audit, not fixed here. A per-user cooldown (`RESEND_COOLDOWN_SEC`, default 60s) throttles repeat requests with `429 TOO_MANY_REQUESTS`; a separate, unrelated self-throttle (`429 RATE_LIMITED`) can also apply per API key.
+         * @description Always `202` for a valid request, so the response never reveals whether an account exists. Unknown emails, already-verified emails, and repeats inside the per-user cooldown (`RESEND_COOLDOWN_SEC`, default 60s) are silent no-ops. The per-API-key self-throttle (`429 RATE_LIMITED`) still applies.
          */
         post: operations["auth.emailVerification.resend"];
         delete?: never;
@@ -378,7 +378,7 @@ export interface paths {
         put?: never;
         /**
          * Request a password-reset email
-         * @description NOT unconditionally `202`: an unknown email or a disabled account resolves silently with `202` (no enumeration signal), and a known active account normally also gets `202` — but a request that arrives inside the per-user resend cooldown (`RESEND_COOLDOWN_SEC`, default 60s) gets `429 TOO_MANY_REQUESTS` instead, a real, source-confirmed exception to "always 202" (flagged explicitly in the Phase 0 audit — do not assume unconditional 202 for this endpoint).
+         * @description Always `202` for a valid request, so the response never reveals whether an account exists. Unknown emails, disabled accounts, and repeats inside the per-user cooldown (`RESEND_COOLDOWN_SEC`, default 60s) are silent no-ops. The per-API-key self-throttle (`429 RATE_LIMITED`) still applies.
          */
         post: operations["auth.password.forgot"];
         delete?: never;
@@ -715,7 +715,7 @@ export interface components {
                 "application/json": components["schemas"]["ErrorEnvelope"];
             };
         };
-        /** @description RATE_LIMITED — this API key's own request rate exceeded `RATE_LIMIT_MAX` (default 600) per minute. Distinct from the domain `TOO_MANY_REQUESTS` cooldown on the email-resend endpoints. */
+        /** @description RATE_LIMITED — this API key's own request rate exceeded `RATE_LIMIT_MAX` (default 600) per minute. */
         RateLimited: {
             headers: {
                 "retry-after"?: number;
@@ -727,27 +727,6 @@ export interface components {
                  *       "error": {
                  *         "code": "RATE_LIMITED",
                  *         "message": "rate limit exceeded, retry in 42 seconds"
-                 *       }
-                 *     }
-                 */
-                "application/json": components["schemas"]["ErrorEnvelope"];
-            };
-        };
-        /** @description TOO_MANY_REQUESTS — an email for this purpose was already sent within the resend cooldown (`RESEND_COOLDOWN_SEC`, default 60s). Carries `retry-after` and `details.retryAfterSec`. */
-        ResendThrottled: {
-            headers: {
-                "retry-after"?: number;
-                [name: string]: unknown;
-            };
-            content: {
-                /**
-                 * @example {
-                 *       "error": {
-                 *         "code": "TOO_MANY_REQUESTS",
-                 *         "message": "an email was sent recently, wait before requesting another",
-                 *         "details": {
-                 *           "retryAfterSec": 60
-                 *         }
                  *       }
                  *     }
                  */
@@ -1441,7 +1420,7 @@ export interface operations {
             };
         };
         responses: {
-            /** @description Accepted — either the mail was queued, or the email is unknown (both look identical to the caller by design). */
+            /** @description Accepted — the mail was queued, or the request was a silent no-op (all cases look identical to the caller by design). */
             202: {
                 headers: {
                     [name: string]: unknown;
@@ -1452,24 +1431,7 @@ export interface operations {
             };
             400: components["responses"]["ValidationFailed"];
             401: components["responses"]["Unauthorized"];
-            /** @description ALREADY_VERIFIED — this email belongs to an already-verified account. */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "ALREADY_VERIFIED",
-                     *         "message": "email is already verified"
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorEnvelope"];
-                };
-            };
-            429: components["responses"]["ResendThrottled"];
+            429: components["responses"]["RateLimited"];
         };
     };
     "auth.password.forgot": {
@@ -1485,7 +1447,7 @@ export interface operations {
             };
         };
         responses: {
-            /** @description Accepted, or silently a no-op for an unknown/disabled account. */
+            /** @description Accepted, or silently a no-op for an unknown, disabled, or throttled account. */
             202: {
                 headers: {
                     [name: string]: unknown;
@@ -1496,7 +1458,7 @@ export interface operations {
             };
             400: components["responses"]["ValidationFailed"];
             401: components["responses"]["Unauthorized"];
-            429: components["responses"]["ResendThrottled"];
+            429: components["responses"]["RateLimited"];
         };
     };
     "auth.password.reset": {

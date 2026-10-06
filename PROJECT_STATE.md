@@ -407,9 +407,10 @@ unchanged. Docker and foreground-dev gates were not re-run for this patch.
 4. **Swagger bundle size:** local Swagger UI remains a 1,425,215-byte lazy production chunk. It is
    not an application entry, is not eagerly downloaded on ordinary pages, and remains accepted
    until a separately justified optimization.
-5. **Auth resend enumeration:** `POST /v1/auth/verify-email/resend` returns `409 ALREADY_VERIFIED`
-   for verified emails, and its throttle returns `429` only for known emails. Closing it needs a
-   silent-throttle design decision; any API key can already look users up by email.
+5. **Auth resend enumeration (fixed on `main`, unreleased):** `verify-email/resend` and
+   `password/forgot` now always return `202`; verified, disabled and cooldown cases are silent and
+   `ALREADY_VERIFIED`/`TOO_MANY_REQUESTS` are removed. `v1.1.3` still carries the old behavior;
+   remove this entry when a release ships it.
 
 ## Operational constraints
 
