@@ -194,7 +194,7 @@ export interface paths {
         post?: never;
         /**
          * Revoke every active session for a user
-         * @description Returns the count revoked. Note this endpoint returns `200` with a body, **not** `204` — unlike the single-session revoke below, the handler sends a JSON object (confirmed in source: no `reply.code(204)` on this route).
+         * @description Returns the count revoked. Note this endpoint returns `200` with a body, **not** `204` — unlike the single-session revoke below, the handler sends a JSON object (confirmed in source: no `reply.code(204)` on this route). Requires an API key with the `write` role.
          */
         delete: operations["auth.sessions.revokeAll"];
         options?: never;
@@ -219,7 +219,7 @@ export interface paths {
         post?: never;
         /**
          * Revoke a single session
-         * @description Idempotent create-then-delete semantics aside, a session that does not exist or does not belong to `id` returns `SESSION_NOT_FOUND` — this route does not separately check whether `id` itself refers to a real user first.
+         * @description Idempotent create-then-delete semantics aside, a session that does not exist or does not belong to `id` returns `SESSION_NOT_FOUND` — this route does not separately check whether `id` itself refers to a real user first. Requires an API key with the `write` role.
          */
         delete: operations["auth.sessions.revokeOne"];
         options?: never;
@@ -1151,6 +1151,7 @@ export interface operations {
             };
             400: components["responses"]["ValidationFailed"];
             401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
             404: components["responses"]["UserNotFound"];
             429: components["responses"]["RateLimited"];
         };
@@ -1178,6 +1179,7 @@ export interface operations {
             };
             400: components["responses"]["ValidationFailed"];
             401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
             /** @description SESSION_NOT_FOUND — no such session for this user. */
             404: {
                 headers: {
